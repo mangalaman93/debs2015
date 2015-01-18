@@ -2,7 +2,7 @@ import java.util.Vector;
 
 public class TenMax<T> {
   private Vector<T> maxElems;
-  
+
   public TenMax() {
     maxElems = new Vector<T>(10);
   }

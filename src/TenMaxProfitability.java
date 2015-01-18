@@ -11,8 +11,8 @@ class Triplet {
 
 public class TenMaxProfitability extends TenMax<Area> {
   private Map<Area, Triplet> data;
-  
+
   public void addElem() {
-    
+
   }
 }
