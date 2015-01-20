@@ -7,27 +7,27 @@ import java.util.Vector;
  * value from the data give the key. We may want to store data in
  * the vector of 10 max keys as well.
  */
-public abstract class TenMax<Tkey, Tdata> {
-  // should we keep Tdata with Tkey in maxElems?
-  private Vector<Tkey> maxElems;
-  protected abstract Number getValue(Tkey key);
+public abstract class TenMax<T> {
+  // should we keep Tdata with T in maxElems?
+  private Vector<T> maxElems;
+  protected abstract Number getValue(T key);
 
   public TenMax() {
-    maxElems = new Vector<Tkey>(10);
+    maxElems = new Vector<T>(10);
   }
 
-  public boolean incrFreqency(Tkey key) {
+  public boolean incrFreqency(T key) {
     // TODO
     return false;
   }
 
-  public boolean decrFrequency(Tkey key) {
+  public boolean decrFrequency(T key) {
     // TODO
     return false;
   }
 
   // unsafe
-  public Vector<Tkey> getTenMax() {
+  public Vector<T> getTenMax() {
     return maxElems;
   }
 }

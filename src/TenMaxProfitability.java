@@ -1,18 +1,29 @@
 import java.util.Map;
 
 class Profitability {
+  // TODO
 }
 
 class Triplet {
   Profitability ptb;
   Mc profit;
-  int emptyTaxis;
+  int numEmptyTaxis;
 }
 
 public class TenMaxProfitability extends TenMax<Area> {
   private Map<Area, Triplet> data;
 
-  public void addElem() {
+  public TenMaxProfitability() {
+    // TODO
+  }
 
+  @Override
+  protected Number getValue(Area a) {
+    // TODO
+    return 0;
+  }
+
+  public void insert() {
+    // TODO
   }
 }

@@ -111,10 +111,10 @@ class Q2Process implements Runnable {
 }
 
 public class debs2015 {
-  private BlockingQueue<Q1Elem> queueForQ1;
-  private BlockingQueue<Q2Elem> queueForQ2;
+  private static BlockingQueue<Q1Elem> queueForQ1;
+  private static BlockingQueue<Q2Elem> queueForQ2;
 
-  public void main(String[] args) {
+  public static void main(String[] args) {
     final int QueueCapacity = 1000;
 
     // Initializing queues
