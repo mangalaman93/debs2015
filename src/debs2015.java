@@ -78,13 +78,14 @@ class IoProcess implements Runnable {
 
   @Override
   public void run() {
+    Q1Elem q1Event = new Q1Elem();
+    Q2Elem q2Event = new Q2Elem();
+
     //Read from file
     try{
       BufferedReader in = new BufferedReader(new FileReader("../test/test.csv"));
 
       String line;
-      Q1Elem q1Event = new Q1Elem();
-      Q2Elem q2Event = new Q2Elem();
       while ((line = in.readLine()) != null){
         StringTokenizer st = new StringTokenizer(line, ",");
 
@@ -133,6 +134,27 @@ class IoProcess implements Runnable {
         queueForQ1.put(q1Event);
         queueForQ2.put(q2Event);
       }
+
+      //Add sentinel
+      q1Event.pickup_datetime = "sentinel";
+      q1Event.dropoff_datetime = "sentinel";
+      q1Event.pickup_longitude = 0;
+      q1Event.pickup_latitude = 0;
+      q1Event.dropoff_longitude = 0;
+      q1Event.dropoff_latitude = 0;
+      queueForQ1.put(q1Event);
+
+      q2Event.medallion         = "sentinel";
+      q2Event.hack_license      = "sentinel";
+      q2Event.pickup_datetime   = "sentinel";
+      q2Event.dropoff_datetime  = "sentinel";
+      q2Event.pickup_longitude  = 0;
+      q2Event.pickup_latitude   = 0;
+      q2Event.dropoff_longitude = 0;
+      q2Event.dropoff_latitude  = 0;
+      q2Event.fare_amount       = 0;
+      q2Event.tip_amount        = 0;
+      queueForQ2.put(q2Event);
       in.close();
     }
     catch(Exception e){
@@ -159,9 +181,13 @@ class Q1Process implements Runnable {
   public void run() {
     try{
       BufferedWriter out = new BufferedWriter(new FileWriter("../test/q1_out.csv"));
+
       Q1Elem newEvent = queue.take();
-      out.write(newEvent.pickup_datetime);
-      out.newLine();
+      while(newEvent.pickup_datetime.equals("sentinel") == false){
+        out.write(newEvent.pickup_datetime);
+        out.newLine();
+        newEvent = queue.take();
+      }
       out.close();
     }
     catch(Exception e){
@@ -190,9 +216,14 @@ class Q2Process implements Runnable {
     // TODO
     try{
       BufferedWriter out = new BufferedWriter(new FileWriter("../test/q2_out.csv"));
+
       Q2Elem newEvent = queue.take();
-      out.write(newEvent.medallion);
-      out.newLine();
+      while(newEvent.medallion.equals("sentinel") == false){
+        out.write(newEvent.medallion);
+        out.newLine();
+        newEvent = queue.take();
+      }
+
       out.close();
     }
     catch(Exception e){
