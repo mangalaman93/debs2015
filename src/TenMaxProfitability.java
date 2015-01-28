@@ -25,5 +25,11 @@ public class TenMaxProfitability extends TenMax<Area> {
 
   public void insert() {
     // TODO
+    System.out.println("inserted");
+  }
+
+  public void remove() {
+    //TODO
+    System.out.println("removed");
   }
 }

@@ -1,14 +1,19 @@
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.StringTokenizer;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Date;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.util.StringTokenizer;
+import java.text.SimpleDateFormat;
+import java.sql.Timestamp;
 
 class Q1Elem {
-  public String pickup_datetime;
-  public String dropoff_datetime;
+  public Timestamp pickup_datetime;
+  public Timestamp dropoff_datetime;
   public float pickup_longitude;
   public float pickup_latitude;
   public float dropoff_longitude;
@@ -16,7 +21,7 @@ class Q1Elem {
 
   public Q1Elem(){}
 
-  public Q1Elem(String pickup_datetime, String dropoff_datetime,
+  public Q1Elem(Timestamp pickup_datetime, Timestamp dropoff_datetime,
       float pickup_longitude, float pickup_latitude,
       float dropoff_longitude, float dropoff_latitude) {
     this.pickup_datetime   = pickup_datetime;
@@ -31,8 +36,8 @@ class Q1Elem {
 class Q2Elem {
   public String medallion;
   public String hack_license;
-  public String pickup_datetime;
-  public String dropoff_datetime;
+  public Timestamp pickup_datetime;
+  public Timestamp dropoff_datetime;
   public float pickup_longitude;
   public float pickup_latitude;
   public float dropoff_longitude;
@@ -43,7 +48,7 @@ class Q2Elem {
   public Q2Elem(){}
 
   public Q2Elem(String medallion, String hack_license,
-      String pickup_datetime, String dropoff_datetime,
+      Timestamp pickup_datetime, Timestamp dropoff_datetime,
       float pickup_longitude, float pickup_latitude,
       float dropoff_longitude, float dropoff_latitude,
       float fare_amount, float tip_amount) {
@@ -78,27 +83,28 @@ class IoProcess implements Runnable {
 
   @Override
   public void run() {
-    Q1Elem q1Event = new Q1Elem();
-    Q2Elem q2Event = new Q2Elem();
-
     //Read from file
     try{
       BufferedReader in = new BufferedReader(new FileReader("../test/test.csv"));
-
+      SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
       String line;
       while ((line = in.readLine()) != null){
         StringTokenizer st = new StringTokenizer(line, ",");
+        Q1Elem q1Event = new Q1Elem();
+        Q2Elem q2Event = new Q2Elem();
 
         //medallion
         q2Event.medallion = st.nextToken();
         //hack license
         q2Event.hack_license = st.nextToken();
         //pickup datetime
-        q1Event.pickup_datetime = st.nextToken();
-        q2Event.pickup_datetime = q1Event.pickup_datetime;
+        Date parsedDate = dateFormat.parse(st.nextToken());
+        q1Event.pickup_datetime = new java.sql.Timestamp(parsedDate.getTime());
+        q2Event.pickup_datetime = new java.sql.Timestamp(parsedDate.getTime());
         //dropoff datetime
-        q1Event.dropoff_datetime = st.nextToken();
-        q2Event.dropoff_datetime = q1Event.dropoff_datetime;
+        parsedDate = dateFormat.parse(st.nextToken());
+        q1Event.dropoff_datetime = new java.sql.Timestamp(parsedDate.getTime());
+        q2Event.dropoff_datetime = new java.sql.Timestamp(parsedDate.getTime());
         //trip time in secs
         st.nextToken();
         //trip distance
@@ -135,9 +141,11 @@ class IoProcess implements Runnable {
         queueForQ2.put(q2Event);
       }
 
+      Q1Elem q1Event = new Q1Elem();
+      Q2Elem q2Event = new Q2Elem();
       //Add sentinel
-      q1Event.pickup_datetime = "sentinel";
-      q1Event.dropoff_datetime = "sentinel";
+      q1Event.pickup_datetime = new java.sql.Timestamp(0);
+      q1Event.dropoff_datetime = new java.sql.Timestamp(0);
       q1Event.pickup_longitude = 0;
       q1Event.pickup_latitude = 0;
       q1Event.dropoff_longitude = 0;
@@ -146,8 +154,8 @@ class IoProcess implements Runnable {
 
       q2Event.medallion         = "sentinel";
       q2Event.hack_license      = "sentinel";
-      q2Event.pickup_datetime   = "sentinel";
-      q2Event.dropoff_datetime  = "sentinel";
+      q2Event.pickup_datetime   = new java.sql.Timestamp(0);
+      q2Event.dropoff_datetime  = new java.sql.Timestamp(0);
       q2Event.pickup_longitude  = 0;
       q2Event.pickup_latitude   = 0;
       q2Event.dropoff_longitude = 0;
@@ -160,7 +168,6 @@ class IoProcess implements Runnable {
     catch(Exception e){
 
     }
-    System.out.println("done");
     //TODO create and share kernel queues
   }
 }
@@ -183,9 +190,7 @@ class Q1Process implements Runnable {
       BufferedWriter out = new BufferedWriter(new FileWriter("../test/q1_out.csv"));
 
       Q1Elem newEvent = queue.take();
-      while(newEvent.pickup_datetime.equals("sentinel") == false){
-        out.write(newEvent.pickup_datetime);
-        out.newLine();
+      while(newEvent.pickup_longitude != 0){
         newEvent = queue.take();
       }
       out.close();
@@ -203,24 +208,59 @@ class Q1Process implements Runnable {
  *  *output 10 most profitable areas when the list change
  */
 class Q2Process implements Runnable {
+  final int windowCapacity = 1000;
   private BlockingQueue<Q2Elem> queue;
   private TenMaxProfitability profitabilityDataStructure;
+
+  private ArrayList<Q2Elem> slidingWindow;
+  private int end;
+  private int start;
 
   public Q2Process(BlockingQueue<Q2Elem> queueForQ2) {
     this.queue = queueForQ2;
     this.profitabilityDataStructure = new TenMaxProfitability();
+
+    this.slidingWindow = new ArrayList<Q2Elem>(windowCapacity);
+    start = 0;
+    end = 0;
   }
 
   @Override
   public void run() {
-    // TODO
     try{
       BufferedWriter out = new BufferedWriter(new FileWriter("../test/q2_out.csv"));
 
       Q2Elem newEvent = queue.take();
+
       while(newEvent.medallion.equals("sentinel") == false){
-        out.write(newEvent.medallion);
-        out.newLine();
+        //Check if events are leaving the sliding window and process them
+        long current_milliseconds = newEvent.dropoff_datetime.getTime();
+        try{
+          Q2Elem last_event = slidingWindow.get(start);
+          long last_milliseconds = last_event.dropoff_datetime.getTime();
+          while((current_milliseconds - last_milliseconds > 1800000) && (start <= end)){
+            profitabilityDataStructure.remove();
+            start = (start + 1)%windowCapacity;
+            last_event = slidingWindow.get(start);
+            last_milliseconds = last_event.dropoff_datetime.getTime();
+          }
+        }
+        catch(IndexOutOfBoundsException e){
+
+        }
+
+        //Add this event to the sliding window and process it
+        try{
+          slidingWindow.set(end, newEvent);
+          profitabilityDataStructure.insert();
+        }
+        catch (IndexOutOfBoundsException e) {
+          //Happens if size < number of events in the window
+          slidingWindow.add(newEvent);
+        }
+        end = (end + 1)%windowCapacity;
+
+        //Get new event
         newEvent = queue.take();
       }
 
