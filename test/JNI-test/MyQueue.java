@@ -9,7 +9,7 @@ public class MyQueue {
         //System.out.println(receiveMessage());
         //File file = new File("sorted_data.csv");
         try {
-            BufferedReader br = new BufferedReader(new FileReader("sorted_data.csv"));
+            BufferedReader br = new BufferedReader(new FileReader("../sorted_data.csv"));
             String line;
             while ((line = br.readLine()) != null) {
                //System.out.println(line);
