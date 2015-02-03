@@ -198,10 +198,20 @@ class IoProcess implements Runnable {
 class Q1Process implements Runnable {
   private static final String Q1_FILE = "../test/q1_out.csv";
 
+  final int windowCapacity = 1000;
   private BlockingQueue<Q1Elem> queue;
+  private TenMaxFrequency maxFrequenciesDataStructure;
+  private Geo geoObject;
+  private ArrayList<Q1Elem> slidingWindow;
+  int start, end;
 
   public Q1Process(BlockingQueue<Q1Elem> queueForQ1) {
     this.queue = queueForQ1;
+    this.maxFrequenciesDataStructure = new TenMaxFrequency();
+    this.slidingWindow = new ArrayList<Q1Elem>(windowCapacity);
+    this.start = 0;
+    this.end = 0;
+    this.geoObject = new Geo(41.474937f, -74.913585f, 500, 500, 300, 300);
   }
 
   @Override
@@ -209,9 +219,48 @@ class Q1Process implements Runnable {
     try {
       BufferedWriter out = new BufferedWriter(new FileWriter(Q1_FILE));
 
-      Q1Elem newEvent = queue.take();
-      while(newEvent.pickup_longitude != 0) {
-        newEvent = queue.take();
+      Q1Elem new_event = queue.take();
+      while(new_event.pickup_longitude != 0) {
+        // Check if events are leaving the sliding window and process them
+        long current_milliseconds = new_event.dropoff_datetime.getTime();
+        try {
+          Q1Elem last_event = slidingWindow.get(start);
+          long last_milliseconds = last_event.dropoff_datetime.getTime();
+
+          // Remove the elements from the start of the window
+          while((current_milliseconds - last_milliseconds > 1800000) && (start <= end)){
+            Area from = geoObject.translate(last_event.pickup_longitude, last_event.pickup_latitude);
+            Area to = geoObject.translate(last_event.dropoff_longitude, last_event.pickup_latitude);
+
+            Route r = new Route(from, to);
+            Timestamp ts = last_event.dropoff_datetime;
+
+            maxFrequenciesDataStructure.update(r, ts, -1);
+            start = (start + 1)%windowCapacity;
+            last_event = slidingWindow.get(start);
+            last_milliseconds = last_event.dropoff_datetime.getTime();
+          }
+        }
+        catch(IndexOutOfBoundsException e){
+          // No event at start, sliding window is empty, nothing to do here
+        }
+
+        // Insert the current element in the sliding window
+        Area from = geoObject.translate(new_event.pickup_longitude, new_event.pickup_latitude);
+        Area to = geoObject.translate(new_event.dropoff_longitude, new_event.pickup_latitude);
+        Route r = new Route(from, to);
+        Timestamp ts = new_event.dropoff_datetime;
+        maxFrequenciesDataStructure.update(r, ts, 1);
+        try {
+          slidingWindow.set(end, new_event);
+        } catch (IndexOutOfBoundsException e) {
+          // Happens if size < number of events in the window
+          slidingWindow.add(new_event);
+        }
+        end = (end + 1)%windowCapacity;
+
+        //Get the next event to process from the queue
+        new_event = queue.take();
       }
       out.close();
     }
@@ -256,40 +305,40 @@ class Q2Process implements Runnable {
       while(newEvent.medallion.equals("sentinel") == false) {
         // Check if events are leaving the sliding window and process them
         long current_milliseconds = newEvent.dropoff_datetime.getTime();
-        try{
+        //try{
           //Empty taxis window
-          Q2Elem last_event = slidingWindow.get(start30Min);
-          long last_milliseconds = last_event.dropoff_datetime.getTime();
-          while((current_milliseconds - last_milsliseconds > 1800000) && (start30Min <= end)){
-            profitabilityDataStructure.remove();
-            start30Min = (start30Min + 1)%windowCapacity;
-            last_event = slidingWindow.get(start30Min);
-            last_milliseconds = last_event.dropoff_datetime.getTime();
-          }
+        //   Q2Elem last_event = slidingWindow.get(start30Min);
+        //   long last_milliseconds = last_event.dropoff_datetime.getTime();
+        //   while((current_milliseconds - last_milsliseconds > 1800000) && (start30Min <= end)){
+        //     profitabilityDataStructure.remove();
+        //     start30Min = (start30Min + 1)%windowCapacity;
+        //     last_event = slidingWindow.get(start30Min);
+        //     last_milliseconds = last_event.dropoff_datetime.getTime();
+        //   }
 
-          //Profit Window
-          last_event = slidingWindow.get(start15Min);
-          last_milliseconds = last_event.dropoff_datetime.getTime();
-          while((current_milliseconds - last_milsliseconds > 1800000) && (start <= end)){
-            profitabilityDataStructure.remove();
-            start = (start + 1)%windowCapacity;
-            last_event = slidingWindow.get(start);
-            last_milliseconds = last_event.dropoff_datetime.getTime();
-          }
-        }
-        catch(IndexOutOfBoundsException e){
-          //No event at start, sliding window is empty, nothing to do here
-        }
+        //   //Profit Window
+        //   last_event = slidingWindow.get(start15Min);
+        //   last_milliseconds = last_event.dropoff_datetime.getTime();
+        //   while((current_milliseconds - last_milsliseconds > 1800000) && (start <= end)){
+        //     profitabilityDataStructure.remove();
+        //     start = (start + 1)%windowCapacity;
+        //     last_event = slidingWindow.get(start);
+        //     last_milliseconds = last_event.dropoff_datetime.getTime();
+        //   }
+        // }
+        // catch(IndexOutOfBoundsException e){
+        //   //No event at start, sliding window is empty, nothing to do here
+        // }
 
-        // Add this event to the sliding window and process it
-        try {
-          slidingWindow.set(end, newEvent);
-          profitabilityDataStructure.insert();
-        } catch (IndexOutOfBoundsException e) {
-          // Happens if size < number of events in the window
-          slidingWindow.add(newEvent);
-        }
-        end = (end + 1)%windowCapacity;
+        // // Add this event to the sliding window and process it
+        // try {
+        //   slidingWindow.set(end, newEvent);
+        //   profitabilityDataStructure.insert();
+        // } catch (IndexOutOfBoundsException e) {
+        //   // Happens if size < number of events in the window
+        //   slidingWindow.add(newEvent);
+        // }
+        // end = (end + 1)%windowCapacity;
 
         // Get new event
         newEvent = queue.take();
@@ -297,7 +346,7 @@ class Q2Process implements Runnable {
 
       out.close();
     } catch(Exception e) {
-      System.out.println("Error in Q1Process!");
+      System.out.println("Error in Q2Process!");
     }
   }
 }
