@@ -41,7 +41,7 @@ JNIEXPORT jstring JNICALL Java_MyQueue_receiveMessage(JNIEnv *env, jobject calli
     int msg_len = mq_receive(mqd, c, MQ_MESSAGE_MAX_LENGTH, 0);
     if(msg_len<0) perror("Message queue receive failed");
     //c[1]='\0';
-    printf("%s\n" , c);
+    //printf("%s\n" , c);
     /*
     int ret = mq_close(mqd);
     if(ret) perror(" Message queue close (receive) failed");
