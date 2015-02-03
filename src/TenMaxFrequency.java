@@ -25,6 +25,22 @@ class Val implements Comparable<Val>
   }
 
   @Override
+  public boolean equals(Object obj)
+  {
+    if(!(obj instanceof Val))
+      return false;
+
+    if(obj == this)
+      return true;
+
+    Val v = (Val) obj;
+    if(v.frequency == this.frequency && v.ts.equals(this.ts))
+      return true;
+
+    return false;
+  }
+
+  @Override
   public int compareTo(Val v)
   {
     if(this.frequency < v.frequency)
@@ -57,6 +73,22 @@ class KeyVal
     this.route = r;
     this.val = v;
   }
+
+  @Override
+  public boolean equals(Object obj)
+  {
+    if(!(obj instanceof KeyVal))
+      return false;
+
+    if(obj == this)
+      return true;
+
+    KeyVal kv = (KeyVal) obj;
+    if(this.route.equals(kv.route) && this.val.equals(kv.val))
+      return true;
+
+    return false;
+  }
 }
 
 public class TenMaxFrequency
@@ -75,6 +107,11 @@ public class TenMaxFrequency
     {
       max_ten.add(null);
     }
+  }
+
+  public Vector<KeyVal> getMaxTen()
+  {
+    return max_ten;
   }
 
   public boolean update(Route r, Timestamp ts, int diff)
