@@ -2,7 +2,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.StringTokenizer;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Date;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -19,7 +18,14 @@ class Q1Elem {
   public float dropoff_longitude;
   public float dropoff_latitude;
 
-  public Q1Elem(){}
+  public Q1Elem() {
+    this.pickup_datetime   = null;
+    this.dropoff_datetime  = null;
+    this.pickup_longitude  = 0;
+    this.pickup_latitude   = 0;
+    this.dropoff_longitude = 0;
+    this.dropoff_latitude  = 0;
+  }
 
   public Q1Elem(Timestamp pickup_datetime, Timestamp dropoff_datetime,
       float pickup_longitude, float pickup_latitude,
@@ -45,7 +51,18 @@ class Q2Elem {
   public float fare_amount;
   public float tip_amount;
 
-  public Q2Elem(){}
+  public Q2Elem() {
+    this.medallion         = null;
+    this.hack_license      = null;
+    this.pickup_datetime   = null;
+    this.dropoff_datetime  = null;
+    this.pickup_longitude  = 0;
+    this.pickup_latitude   = 0;
+    this.dropoff_longitude = 0;
+    this.dropoff_latitude  = 0;
+    this.fare_amount       = 0;
+    this.tip_amount        = 0;
+  }
 
   public Q2Elem(String medallion, String hack_license,
       Timestamp pickup_datetime, Timestamp dropoff_datetime,
@@ -72,6 +89,8 @@ class Q2Elem {
  *  *create and share kernel queues
  */
 class IoProcess implements Runnable {
+  private static final String TEST_FILE = "../test/test.csv";
+
   private BlockingQueue<Q1Elem> queueForQ1;
   private BlockingQueue<Q2Elem> queueForQ2;
 
@@ -83,67 +102,67 @@ class IoProcess implements Runnable {
 
   @Override
   public void run() {
-    //Read from file
-    try{
-      BufferedReader in = new BufferedReader(new FileReader("../test/test.csv"));
+    // Read from file
+    try {
+      BufferedReader in = new BufferedReader(new FileReader(TEST_FILE));
       SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
       String line;
-      while ((line = in.readLine()) != null){
+      while ((line = in.readLine()) != null) {
         StringTokenizer st = new StringTokenizer(line, ",");
         Q1Elem q1Event = new Q1Elem();
         Q2Elem q2Event = new Q2Elem();
 
-        //medallion
+        // medallion
         q2Event.medallion = st.nextToken();
-        //hack license
+        // hack license
         q2Event.hack_license = st.nextToken();
-        //pickup datetime
+        // pickup datetime
         Date parsedDate = dateFormat.parse(st.nextToken());
         q1Event.pickup_datetime = new java.sql.Timestamp(parsedDate.getTime());
         q2Event.pickup_datetime = new java.sql.Timestamp(parsedDate.getTime());
-        //dropoff datetime
+        // dropoff datetime
         parsedDate = dateFormat.parse(st.nextToken());
         q1Event.dropoff_datetime = new java.sql.Timestamp(parsedDate.getTime());
         q2Event.dropoff_datetime = new java.sql.Timestamp(parsedDate.getTime());
-        //trip time in secs
+        // trip time in secs
         st.nextToken();
-        //trip distance
+        // trip distance
         st.nextToken();
-        //pickup longitude
+        // pickup longitude
         q1Event.pickup_longitude = Float.parseFloat(st.nextToken());
         q2Event.pickup_longitude = q1Event.pickup_longitude;
-        //pickup latitude
+        // pickup latitude
         q1Event.pickup_latitude = Float.parseFloat(st.nextToken());
         q2Event.pickup_latitude = q1Event.pickup_latitude;
-        //dropoff longitude
+        // dropoff longitude
         q1Event.dropoff_longitude = Float.parseFloat(st.nextToken());
         q2Event.dropoff_longitude = q1Event.dropoff_longitude;
-        //dropoff latitude
+        // dropoff latitude
         q1Event.dropoff_longitude = Float.parseFloat(st.nextToken());
         q2Event.dropoff_longitude = q1Event.dropoff_longitude;
-        //payment type
+        // payment type
         st.nextToken();
-        //fare amount
+        // fare amount
         q2Event.fare_amount = Float.parseFloat(st.nextToken());
-        //sur charge
+        // sur charge
         st.nextToken();
-        //mta tax
+        // mta tax
         st.nextToken();
-        //tip amount
+        // tip amount
         q2Event.tip_amount = Float.parseFloat(st.nextToken());
-        //tolls amount
+        // tolls amount
         st.nextToken();
-        //total amount
+        // total amount
         st.nextToken();
 
-        //Put events into queues for Q1 and Q2
+        // Put events into queues for Q1 and Q2
         queueForQ1.put(q1Event);
         queueForQ2.put(q2Event);
       }
 
       Q1Elem q1Event = new Q1Elem();
       Q2Elem q2Event = new Q2Elem();
-      //Add sentinel
+      // Add sentinel
       q1Event.pickup_datetime = new java.sql.Timestamp(0);
       q1Event.dropoff_datetime = new java.sql.Timestamp(0);
       q1Event.pickup_longitude = 0;
@@ -165,10 +184,9 @@ class IoProcess implements Runnable {
       queueForQ2.put(q2Event);
       in.close();
     }
-    catch(Exception e){
-
+    catch(Exception e) {
+      System.out.println("Error in IoProcess!");
     }
-    //TODO create and share kernel queues
   }
 }
 
@@ -178,6 +196,8 @@ class IoProcess implements Runnable {
  *  *output if list of 10 most frequent routes change
  */
 class Q1Process implements Runnable {
+  private static final String Q1_FILE = "../test/q1_out.csv";
+
   private BlockingQueue<Q1Elem> queue;
 
   public Q1Process(BlockingQueue<Q1Elem> queueForQ1) {
@@ -186,17 +206,17 @@ class Q1Process implements Runnable {
 
   @Override
   public void run() {
-    try{
-      BufferedWriter out = new BufferedWriter(new FileWriter("../test/q1_out.csv"));
+    try {
+      BufferedWriter out = new BufferedWriter(new FileWriter(Q1_FILE));
 
       Q1Elem newEvent = queue.take();
-      while(newEvent.pickup_longitude != 0){
+      while(newEvent.pickup_longitude != 0) {
         newEvent = queue.take();
       }
       out.close();
     }
-    catch(Exception e){
-
+    catch(Exception e) {
+      System.out.println("Error in Q1Process!");
     }
   }
 }
@@ -208,6 +228,8 @@ class Q1Process implements Runnable {
  *  *output 10 most profitable areas when the list change
  */
 class Q2Process implements Runnable {
+  private static final String Q2_FILE = "../test/q2_out.csv";
+
   final int windowCapacity = 1000;
   private BlockingQueue<Q2Elem> queue;
   private TenMaxProfitability profitabilityDataStructure;
@@ -219,7 +241,6 @@ class Q2Process implements Runnable {
   public Q2Process(BlockingQueue<Q2Elem> queueForQ2) {
     this.queue = queueForQ2;
     this.profitabilityDataStructure = new TenMaxProfitability();
-
     this.slidingWindow = new ArrayList<Q2Elem>(windowCapacity);
     start = 0;
     end = 0;
@@ -227,49 +248,45 @@ class Q2Process implements Runnable {
 
   @Override
   public void run() {
-    try{
-      BufferedWriter out = new BufferedWriter(new FileWriter("../test/q2_out.csv"));
-
+    try {
+      BufferedWriter out = new BufferedWriter(new FileWriter(Q2_FILE));
       Q2Elem newEvent = queue.take();
 
-      while(newEvent.medallion.equals("sentinel") == false){
-        //Check if events are leaving the sliding window and process them
+      while(newEvent.medallion.equals("sentinel") == false) {
+        // Check if events are leaving the sliding window and process them
         long current_milliseconds = newEvent.dropoff_datetime.getTime();
-        try{
+        try {
           Q2Elem last_event = slidingWindow.get(start);
           long last_milliseconds = last_event.dropoff_datetime.getTime();
-          while((current_milliseconds - last_milliseconds > 1800000) && (start <= end)){
+          while((current_milliseconds - last_milliseconds > 1800000) &&
+                (start <= end)) {
             profitabilityDataStructure.remove();
             start = (start + 1)%windowCapacity;
             last_event = slidingWindow.get(start);
             last_milliseconds = last_event.dropoff_datetime.getTime();
           }
+        } catch(IndexOutOfBoundsException e) {
+          System.out.println("Error in Q2Process!");
         }
-        catch(IndexOutOfBoundsException e){
 
-        }
-
-        //Add this event to the sliding window and process it
-        try{
+        // Add this event to the sliding window and process it
+        try {
           slidingWindow.set(end, newEvent);
           profitabilityDataStructure.insert();
-        }
-        catch (IndexOutOfBoundsException e) {
-          //Happens if size < number of events in the window
+        } catch (IndexOutOfBoundsException e) {
+          // Happens if size < number of events in the window
           slidingWindow.add(newEvent);
         }
         end = (end + 1)%windowCapacity;
 
-        //Get new event
+        // Get new event
         newEvent = queue.take();
       }
 
       out.close();
+    } catch(Exception e) {
+      System.out.println("Error in Q1Process!");
     }
-    catch(Exception e){
-
-    }
-
   }
 }
 

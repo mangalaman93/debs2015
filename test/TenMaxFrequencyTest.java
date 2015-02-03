@@ -65,7 +65,7 @@ public class TenMaxFrequencyTest {
     for(int i=0; i<1000; i++) {
       ts[i] = UniqueTimestamp.getTimestamp();
     }
-    
+
     tmf = new TenMaxFrequency();
   }
 
@@ -82,7 +82,7 @@ public class TenMaxFrequencyTest {
       temp.add(null);
     assertTrue(tmf.getMaxTen().equals(temp));
   }
-  
+
   @Test
   public void tesGetMaxTen2() {
     Vector<KeyVal> temp = new Vector<KeyVal>();
@@ -98,7 +98,7 @@ public class TenMaxFrequencyTest {
 
    assertTrue(tmf.getMaxTen().equals(temp));
   }
-  
+
   @Test
   public void tesGetMaxTen3() {
     Vector<KeyVal> temp = new Vector<KeyVal>();
@@ -111,7 +111,7 @@ public class TenMaxFrequencyTest {
 
    assertTrue(tmf.getMaxTen().equals(temp));
   }
-  
+
   @Test
   public void tesGetMaxTen4() {
     Vector<KeyVal> temp = new Vector<KeyVal>();
