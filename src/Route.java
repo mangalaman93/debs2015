@@ -12,4 +12,20 @@ public class Route {
     this.fromArea = from;
     this.toArea   = to;
   }
+
+  @Override
+  public boolean equals(Object obj)
+  {
+    if(!(obj instanceof Route))
+      return false;
+
+    if(obj == this)
+      return true;
+
+    Route r = (Route) obj;
+    if(r.fromArea.equals(this.fromArea) && r.toArea.equals(this.toArea))
+      return true;
+
+    return false;
+  }
 }

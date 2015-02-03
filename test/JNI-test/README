@@ -1,0 +1,13 @@
+Compilation instructions :
+==========================
+javac MyQueue.java
+javah -jni MyQueue
+gcc -Wall -fPIC -I/usr/lib/jvm/java-7-openjdk-amd64/include -I/usr/lib/jvm/java-7-openjdk-amd64/include/linux -c MyQueue.c -o MyQueue.o -lrt
+gcc -Wall -fPIC -shared -o libCMyQueue.so MyQueue.o -lrt
+java -Djava.library.path=. MyQueue
+
+Timings :
+=========
+Time taken (in seconds): 3.219524284
+Messages read (length 20): 1999998
+Throughput (msg/seconds): 621209.167434874
