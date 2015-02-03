@@ -214,14 +214,15 @@ class Q2Process implements Runnable {
 
   private ArrayList<Q2Elem> slidingWindow;
   private int end;
-  private int start;
+  private int start30Min, start15Min;
 
   public Q2Process(BlockingQueue<Q2Elem> queueForQ2) {
     this.queue = queueForQ2;
     this.profitabilityDataStructure = new TenMaxProfitability();
 
     this.slidingWindow = new ArrayList<Q2Elem>(windowCapacity);
-    start = 0;
+    start30Min = 0;
+    start15Min = 0;
     end = 0;
   }
 
@@ -236,9 +237,20 @@ class Q2Process implements Runnable {
         //Check if events are leaving the sliding window and process them
         long current_milliseconds = newEvent.dropoff_datetime.getTime();
         try{
-          Q2Elem last_event = slidingWindow.get(start);
+          //Empty taxis window
+          Q2Elem last_event = slidingWindow.get(start30Min);
           long last_milliseconds = last_event.dropoff_datetime.getTime();
-          while((current_milliseconds - last_milliseconds > 1800000) && (start <= end)){
+          while((current_milliseconds - last_milsliseconds > 1800000) && (start30Min <= end)){
+            profitabilityDataStructure.remove();
+            start30Min = (start30Min + 1)%windowCapacity;
+            last_event = slidingWindow.get(start30Min);
+            last_milliseconds = last_event.dropoff_datetime.getTime();
+          }
+
+          //Profit Window
+          last_event = slidingWindow.get(start15Min);
+          last_milliseconds = last_event.dropoff_datetime.getTime();
+          while((current_milliseconds - last_milsliseconds > 1800000) && (start <= end)){
             profitabilityDataStructure.remove();
             start = (start + 1)%windowCapacity;
             last_event = slidingWindow.get(start);
@@ -246,7 +258,7 @@ class Q2Process implements Runnable {
           }
         }
         catch(IndexOutOfBoundsException e){
-
+          //No event at start, sliding window is empty, nothing to do here
         }
 
         //Add this event to the sliding window and process it
