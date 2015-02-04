@@ -1,4 +1,5 @@
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.Vector;
@@ -54,7 +55,7 @@ class Val implements Comparable<Val> {
 }
 
 // implements key-val struct
-class KeyVal {
+class KeyVal implements Comparable<KeyVal> {
   public Route route;
   public Val val;
 
@@ -77,17 +78,22 @@ class KeyVal {
 
     return false;
   }
+
+  @Override
+  public int compareTo(KeyVal kv) {
+    return this.val.compareTo(kv.val);
+  }
 }
 
 public class TenMaxFrequency {
   private HashMap<Route, Val> route_freq_map;
   private Vector<KeyVal> max_ten;
-  private PriorityQueue<Val> freq_pq;
+  private PriorityQueue<KeyVal> freq_pq;
 
   public TenMaxFrequency() {
     route_freq_map = new HashMap<Route, Val>();
     max_ten = new Vector<KeyVal>(10);
-    freq_pq = new PriorityQueue<Val>();
+    freq_pq = new PriorityQueue<KeyVal>(100, Collections.reverseOrder());
 
     for(int i=0; i<10; i++) {
       max_ten.add(null);
@@ -102,10 +108,10 @@ public class TenMaxFrequency {
     if(route_freq_map.containsKey(r)) {
       if(route_freq_map.size() <= 10) {
         // deleting existing element
-        Val current_val = null;
+        KeyVal current_val = null;
         for(int i=0; i<route_freq_map.size(); i++) {
           if(max_ten.get(i).route == r) {
-            current_val = max_ten.remove(i).val;
+            current_val = max_ten.remove(i);
             break;
           }
         }
@@ -113,55 +119,45 @@ public class TenMaxFrequency {
         assert max_ten.size() == 9;
 
         // if frequency is 0, delete the element
-        if(current_val.frequency+diff == 0) {
+        if(current_val.val.frequency+diff == 0) {
           max_ten.add(null);
           route_freq_map.remove(r);
           return true;
         } else {
           // inserting new frequency if non zero
-          Val new_val = new Val(current_val.frequency+diff, ts);
+          KeyVal new_val = new KeyVal(r, new Val(current_val.val.frequency+diff, ts));
           int index = 9;
           for(int i=0; i<max_ten.size(); i++) {
-            assert max_ten.get(i).val != new_val;
-            if(new_val.compareTo(max_ten.get(i).val) > 0) {
+            assert max_ten.get(i) != new_val;
+            if(new_val.compareTo(max_ten.get(i)) > 0) {
               index = i;
               break;
             }
           }
-          max_ten.add(index, new KeyVal(r, new_val));
-          route_freq_map.put(r, new_val);
+          max_ten.add(index, new_val);
+          route_freq_map.put(r, new_val.val);
           return true;
         }
       } else {
-        Val tree_max = freq_pq.element();
-        Val vec_min = max_ten.lastElement().val;
-        Val old_val = route_freq_map.get(r);
-        Val new_val = new Val(old_val.frequency+diff, ts);
+        KeyVal tree_max = freq_pq.element();
+        KeyVal vec_min = max_ten.lastElement();
+        KeyVal old_val = new KeyVal(r, route_freq_map.get(r));
+        KeyVal new_val = new KeyVal(r, new Val(old_val.val.frequency+diff, ts));
 
-        if(old_val.frequency+diff == 0) {
+        if(old_val.val.frequency+diff == 0) {
           // frequency is zero
           route_freq_map.remove(r);
           if(old_val.compareTo(vec_min) >= 0) {
             // in vector
             assert max_ten.size() == 10;
             for(int i=0; i<10; i++) {
-              if(old_val.compareTo(max_ten.get(i).val) == 0) {
+              if(old_val.compareTo(max_ten.get(i)) == 0) {
                 max_ten.remove(i);
                 break;
               }
             }
             assert max_ten.size() == 9;
-
-            Val val = freq_pq.remove();
-            int index = 9;
-            for(int i=0; i<9; i++) {
-              if(val.compareTo(max_ten.get(i).val) > 0) {
-                index = i;
-                break;
-              }
-            }
-            max_ten.add(index, new KeyVal(r, val));
-            assert max_ten.size() == 10;
+            max_ten.add(9, freq_pq.remove());
             return true;
           } else {
             freq_pq.remove(old_val);
@@ -177,7 +173,7 @@ public class TenMaxFrequency {
 
             freq_pq.remove(old_val);
             freq_pq.add(new_val);
-            route_freq_map.put(r, new_val);
+            route_freq_map.put(r, new_val.val);
             return false;
           } else if(old_val.compareTo(tree_max) > 0 && new_val.compareTo(tree_max) > 0) {
             assert old_val.compareTo(vec_min) >= 0;
@@ -194,14 +190,14 @@ public class TenMaxFrequency {
             // insert element
             int index = 9;
             for(int i=0; i<9; i++) {
-              if(new_val.compareTo(max_ten.get(i).val) > 0) {
+              if(new_val.compareTo(max_ten.get(i)) > 0) {
                 index = i;
                 break;
               }
             }
 
-            max_ten.add(index, new KeyVal(r, new_val));
-            route_freq_map.put(r, new_val);
+            max_ten.add(index, new_val);
+            route_freq_map.put(r, new_val.val);
             return true;
           } else if(old_val.compareTo(vec_min) < 0) {
             assert old_val.compareTo(tree_max) <= 0;
@@ -216,14 +212,14 @@ public class TenMaxFrequency {
             // new value will be inserted into Vector
             int index = 9;
             for(int i=0; i<9; i++) {
-              if(new_val.compareTo(max_ten.get(i).val) > 0) {
+              if(new_val.compareTo(max_ten.get(i)) > 0) {
                 index = i;
                 break;
               }
             }
 
-            max_ten.add(index, new KeyVal(r, new_val));
-            route_freq_map.put(r, new_val);
+            max_ten.add(index, new_val);
+            route_freq_map.put(r, new_val.val);
             return true;
           } else {
             // old val is in vector
@@ -235,11 +231,11 @@ public class TenMaxFrequency {
               }
             }
             assert max_ten.size() == 9;
-            max_ten.add(new KeyVal(r, freq_pq.remove()));
+            max_ten.add(freq_pq.remove());
 
             // new val will be inserted into PQ
             freq_pq.add(new_val);
-            route_freq_map.put(r, new_val);
+            route_freq_map.put(r, new_val.val);
             return true;
           }
         }
@@ -247,38 +243,38 @@ public class TenMaxFrequency {
     } else {
       assert diff > 0;
 
-      Val new_val = new Val(diff, ts);
+      KeyVal new_val = new KeyVal(r, new Val(diff, ts));
       if(route_freq_map.size() < 10) {
         int index = route_freq_map.size();
         for(int i=0; i<route_freq_map.size(); i++) {
-          if(new_val.compareTo(max_ten.get(i).val) > 0) {
+          if(new_val.compareTo(max_ten.get(i)) > 0) {
             index = i;
             break;
           }
         }
 
         max_ten.remove(9);
-        max_ten.add(index, new KeyVal(r, new_val));
-        route_freq_map.put(r, new_val);
+        max_ten.add(index, new_val);
+        route_freq_map.put(r, new_val.val);
         return true;
       } else {
-        if(max_ten.lastElement().val.compareTo(new_val) > 0) {
+        if(max_ten.lastElement().compareTo(new_val) > 0) {
           freq_pq.add(new_val);
-          route_freq_map.put(r, new_val);
+          route_freq_map.put(r, new_val.val);
           return false;
         } else {
-          freq_pq.add(max_ten.lastElement().val);
+          freq_pq.add(max_ten.lastElement());
           max_ten.remove(9);
           int index = 9;
           for(int i=0; i<9; i++) {
-            if(new_val.compareTo(max_ten.get(i).val) > 0) {
+            if(new_val.compareTo(max_ten.get(i)) > 0) {
               index = i;
               break;
             }
           }
 
-          max_ten.add(index, new KeyVal(r, new_val));
-          route_freq_map.put(r, new_val);
+          max_ten.add(index, new KeyVal(r, new_val.val));
+          route_freq_map.put(r, new_val.val);
           return true;
         }
       }

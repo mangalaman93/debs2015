@@ -96,7 +96,7 @@ public class TenMaxFrequencyTest {
     for(int i=6; i<10; i++)
       temp.add(null);
 
-   assertTrue(tmf.getMaxTen().equals(temp));
+    assertTrue(tmf.getMaxTen().equals(temp));
   }
 
   @Test
@@ -109,11 +109,28 @@ public class TenMaxFrequencyTest {
     for(int i=10; i>0; i--)
       temp.add(new KeyVal(r[i], new Val(1, ts[i])));
 
-   assertTrue(tmf.getMaxTen().equals(temp));
+    assertTrue(tmf.getMaxTen().equals(temp));
   }
 
   @Test
   public void tesGetMaxTen4() {
+    Vector<KeyVal> temp = new Vector<KeyVal>();
+
+    for(int i=0; i<8; i++)
+      tmf.update(r[i], ts[i], 1);
+    tmf.update(r[0], ts[8], 1);
+
+    temp.add(new KeyVal(r[0], new Val(2, ts[8])));
+    for(int i=7; i>0; i--)
+      temp.add(new KeyVal(r[i], new Val(1, ts[i])));
+    temp.add(null);
+    temp.add(null);
+
+    assertTrue(tmf.getMaxTen().equals(temp));
+  }
+
+  @Test
+  public void testGetMaxTen5() {
     Vector<KeyVal> temp = new Vector<KeyVal>();
 
     for(int i=0; i<11; i++)
@@ -124,6 +141,150 @@ public class TenMaxFrequencyTest {
     for(int i=10; i>1; i--)
       temp.add(new KeyVal(r[i], new Val(1, ts[i])));
 
-   assertTrue(tmf.getMaxTen().equals(temp));
+    assertTrue(tmf.getMaxTen().equals(temp));
+  }
+
+  @Test
+  public void tesGetMaxTen6() {
+    Vector<KeyVal> temp = new Vector<KeyVal>();
+
+    for(int i=0; i<8; i++)
+      tmf.update(r[i], ts[i], 1);
+    tmf.update(r[0], ts[8], -1);
+
+    for(int i=7; i>0; i--)
+      temp.add(new KeyVal(r[i], new Val(1, ts[i])));
+    temp.add(null);
+    temp.add(null);
+    temp.add(null);
+
+    assertTrue(tmf.getMaxTen().equals(temp));
+  }
+
+  @Test
+  public void testGetMaxTen7() {
+    Vector<KeyVal> temp = new Vector<KeyVal>();
+
+    for(int i=0; i<11; i++)
+      tmf.update(r[i], ts[i], 1);
+    tmf.update(r[0], ts[11], -1);
+
+    for(int i=10; i>0; i--)
+      temp.add(new KeyVal(r[i], new Val(1, ts[i])));
+
+    assertTrue(tmf.getMaxTen().equals(temp));
+  }
+
+  @Test
+  public void testGetMaxTen8() {
+    Vector<KeyVal> temp = new Vector<KeyVal>();
+
+    for(int i=0; i<11; i++)
+      tmf.update(r[i], ts[i], 1);
+    tmf.update(r[1], ts[11], 1);
+
+    temp.add(new KeyVal(r[1], new Val(2, ts[11])));
+    for(int i=10; i>1; i--)
+      temp.add(new KeyVal(r[i], new Val(1, ts[i])));
+
+    assertTrue(tmf.getMaxTen().equals(temp));
+  }
+
+  @Test
+  public void testGetMaxTen9() {
+    Vector<KeyVal> temp = new Vector<KeyVal>();
+
+    for(int i=0; i<11; i++)
+      tmf.update(r[i], ts[i], 1);
+    tmf.update(r[2], ts[11], 1);
+
+    temp.add(new KeyVal(r[2], new Val(2, ts[11])));
+    for(int i=10; i>2; i--)
+      temp.add(new KeyVal(r[i], new Val(1, ts[i])));
+    temp.add(new KeyVal(r[1], new Val(1, ts[1])));
+
+    assertTrue(tmf.getMaxTen().equals(temp));
+  }
+
+  @Test
+  public void testGetMaxTen10() {
+    Vector<KeyVal> temp = new Vector<KeyVal>();
+
+    for(int i=0; i<14; i++)
+      tmf.update(r[i], ts[i], 1);
+    tmf.update(r[8], ts[14], -1);
+
+    for(int i=13; i>8; i--)
+      temp.add(new KeyVal(r[i], new Val(1, ts[i])));
+    for(int i=7; i>2; i--)
+      temp.add(new KeyVal(r[i], new Val(1, ts[i])));
+
+    assertTrue(tmf.getMaxTen().equals(temp));
+  }
+
+  @Test
+  public void testGetMaxTen11() {
+    Vector<KeyVal> temp = new Vector<KeyVal>();
+
+    for(int i=0; i<6; i++)
+      tmf.update(r[i], ts[i], 1);
+    for(int i=6; i<14; i++)
+      tmf.update(r[i], ts[i], 2);
+    tmf.update(r[8], ts[14], -1);
+
+    for(int i=13; i>8; i--)
+      temp.add(new KeyVal(r[i], new Val(2, ts[i])));
+    temp.add(new KeyVal(r[7], new Val(2, ts[7])));
+    temp.add(new KeyVal(r[6], new Val(2, ts[6])));
+    temp.add(new KeyVal(r[8], new Val(1, ts[14])));
+    temp.add(new KeyVal(r[5], new Val(1, ts[5])));
+    temp.add(new KeyVal(r[4], new Val(1, ts[4])));
+
+    assertTrue(tmf.getMaxTen().equals(temp));
+  }
+
+  @Test
+  public void testGetMaxTen12() {
+    Vector<KeyVal> temp = new Vector<KeyVal>();
+
+    for(int i=0; i<14; i++)
+      tmf.update(r[i], ts[i], 2);
+    tmf.update(r[3], ts[14], -1);
+    tmf.update(r[4], ts[15], -2);
+
+    for(int i=13; i>4; i--)
+      temp.add(new KeyVal(r[i], new Val(2, ts[i])));
+    temp.add(new KeyVal(r[2], new Val(2, ts[2])));
+
+    assertTrue(tmf.getMaxTen().equals(temp));
+  }
+
+  @Test
+  public void testGetMaxTen13() {
+    Vector<KeyVal> temp = new Vector<KeyVal>();
+
+    for(int i=0; i<14; i++)
+      tmf.update(r[i], ts[i], 10);
+    tmf.update(r[6], ts[14], -8);
+
+    for(int i=13; i>6; i--)
+      temp.add(new KeyVal(r[i], new Val(10, ts[i])));
+    for(int i=5; i>2; i--)
+      temp.add(new KeyVal(r[i], new Val(10, ts[i])));
+
+    assertTrue(tmf.getMaxTen().equals(temp));
+  }
+
+  @Test
+  public void testGetMaxTen14() {
+    Vector<KeyVal> temp = new Vector<KeyVal>();
+
+    for(int i=0; i<14; i++)
+      tmf.update(r[i], ts[i], 14-i);
+
+    for(int i=0; i<10; i++)
+      temp.add(new KeyVal(r[i], new Val(14-i, ts[i])));
+
+    assertTrue(tmf.getMaxTen().equals(temp));
   }
 }
