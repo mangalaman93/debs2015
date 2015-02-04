@@ -2,7 +2,7 @@
 https://docs.google.com/document/d/1_Uma7D0O3VxaPXWvpED_aS85cpIiPjAii3LFErKbzZk
 
 # Todo
-* Geo.java
+* Geo.java (Rohan) - CHECK ONCE
 * Mc.java (Rohan) - DONE
 * TenMax.java (Aman)
 * TenMaxFrequency.java
