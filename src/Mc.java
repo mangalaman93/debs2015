@@ -17,7 +17,7 @@ public class Mc {
   int minheap_size;
   int maxheap_size;
 
-  /* 
+  /*
   If even elements, then both heaps are of same size.
   Else, maxheap has the extra element if there are odd number of entries.
   */
@@ -109,18 +109,5 @@ public class Mc {
       ret_val = maxheap.peek().floatValue();
     }
     return ret_val;
-  }
-
-  public static void main(String[] args) {
-    Mc test = new Mc();
-    test.insert(0.4f);
-    test.insert(0.4f);
-    test.insert(3.5f);
-    test.insert(4.6f);
-    test.insert(0.5f);
-    test.insert(0.6f);
-    test.insert(0.4f);
-    test.insert(2.4f);
-    System.out.println(test.getMedian());
   }
 }

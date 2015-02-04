@@ -89,7 +89,7 @@ class Q2Elem {
  *  *create and share kernel queues
  */
 class IoProcess implements Runnable {
-  private static final String TEST_FILE = "../test/test.csv";
+  private static final String TEST_FILE = "test/sorted_data.csv";
 
   private BlockingQueue<Q1Elem> queueForQ1;
   private BlockingQueue<Q2Elem> queueForQ2;
@@ -185,6 +185,7 @@ class IoProcess implements Runnable {
       in.close();
     }
     catch(Exception e) {
+      System.out.println(e.getMessage());
       System.out.println("Error in IoProcess!");
     }
   }
@@ -196,7 +197,7 @@ class IoProcess implements Runnable {
  *  *output if list of 10 most frequent routes change
  */
 class Q1Process implements Runnable {
-  private static final String Q1_FILE = "../test/q1_out.csv";
+  private static final String Q1_FILE = "test/q1_out.csv";
 
   final int windowCapacity = 1000;
   private BlockingQueue<Q1Elem> queue;
@@ -265,6 +266,7 @@ class Q1Process implements Runnable {
       out.close();
     }
     catch(Exception e) {
+      System.out.println(e.getMessage());
       System.out.println("Error in Q1Process!");
     }
   }
@@ -277,7 +279,7 @@ class Q1Process implements Runnable {
  *  *output 10 most profitable areas when the list change
  */
 class Q2Process implements Runnable {
-  private static final String Q2_FILE = "../test/q2_out.csv";
+  private static final String Q2_FILE = "test/q2_out.csv";
 
   final int windowCapacity = 1000;
   private BlockingQueue<Q2Elem> queue;
@@ -346,6 +348,7 @@ class Q2Process implements Runnable {
 
       out.close();
     } catch(Exception e) {
+      System.out.println(e.getMessage());
       System.out.println("Error in Q2Process!");
     }
   }

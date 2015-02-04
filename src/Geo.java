@@ -31,22 +31,22 @@ public class Geo {
   public Area translate(float locX, float locY) {
     int gridX;
     int gridY;
-    float distX = (locX-topLeftX)*110.54;
+    float distX = (float) ((locX-topLeftX)*110.54);
 
     if(distX > cellRangeX) {
       return new Area(-1, -1);
     }
     else {
-      gridX = distX / cellRangeX;
+      gridX = (int) (distX / cellRangeX);
     }
 
-    float distY = (locY-topLeftY)*84.38;
+    float distY = (float) ((locY-topLeftY)*84.38);
 
     if(distY > cellRangeY) {
       return new Area(-1, -1);
     }
     else {
-      gridY = distY / cellRangeY;
+      gridY = (int) (distY / cellRangeY);
     }
 
     return new Area(gridX, gridY);
