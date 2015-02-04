@@ -3,7 +3,7 @@ https://docs.google.com/document/d/1_Uma7D0O3VxaPXWvpED_aS85cpIiPjAii3LFErKbzZk
 
 # Todo
 * Geo.java
-* Mc.java
+* Mc.java (Rohan) - DONE
 * TenMax.java (Aman)
 * TenMaxFrequency.java
 * TenMaxProfitability.java (Aman)
