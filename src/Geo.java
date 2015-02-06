@@ -10,8 +10,8 @@ public class Geo {
   public Geo(float topLeftX, float topLeftY,
       int cellSizeX, int cellSizeY,
       int cellRangeX, int cellRangeY) {
-    this.topLeftX = topLeftX - cellSizeX/2;
-    this.topLeftY = topLeftY - cellSizeY/2;
+    this.topLeftX = topLeftX - cellSizeX/(2*110.54);
+    this.topLeftY = topLeftY - cellSizeY/(2*84.38);
     this.cellSizeX = cellSizeX;
     this.cellSizeY = cellSizeY;
     this.cellRangeX = cellRangeX;
