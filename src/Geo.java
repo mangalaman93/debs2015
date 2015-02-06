@@ -11,7 +11,7 @@ public class Geo {
       int cellSizeX, int cellSizeY,
       int cellRangeX, int cellRangeY) {
     this.topLeftX = topLeftX - cellSizeX/2;
-    this.topLeftY = topLeftY - cellRangeY/2;
+    this.topLeftY = topLeftY - cellSizeY/2;
     this.cellSizeX = cellSizeX;
     this.cellSizeY = cellSizeY;
     this.cellRangeX = cellRangeX;
