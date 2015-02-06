@@ -3,6 +3,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.StringTokenizer;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Vector;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -221,7 +222,9 @@ class Q1Process implements Runnable {
       BufferedWriter out = new BufferedWriter(new FileWriter(Q1_FILE));
 
       Q1Elem new_event = queue.take();
-      while(new_event.pickup_longitude != 0) {
+      Timestamp last_timestamp = new Timestamp(0);
+      Boolean ten_max_changed = false;
+      while(new_event.pickup_longitude != 10000000) {
         // Check if events are leaving the sliding window and process them
         long current_milliseconds = new_event.dropoff_datetime.getTime();
         try {
@@ -230,13 +233,41 @@ class Q1Process implements Runnable {
 
           // Remove the elements from the start of the window
           while((current_milliseconds - last_milliseconds > 1800000) && (start <= end)){
+            if(last_timestamp.equals(last_event.dropoff_datetime) == false){
+              if(ten_max_changed == true){
+                Vector<KeyVal> ten_max = maxFrequenciesDataStructure.getMaxTen();
+                System.out.print(new_event.pickup_datetime.toString());
+                System.out.print(",");
+                System.out.print(new_event.dropoff_datetime.toString());
+                for(int i = 0; i < 10; i++){
+                  if(ten_max.get(i) != null){
+                    System.out.print(ten_max.get(i).route.fromArea.x);
+                    System.out.print(".");
+                    System.out.print(ten_max.get(i).route.fromArea.y);
+                    System.out.print(",");
+                    System.out.print(ten_max.get(i).route.toArea.x);
+                    System.out.print(".");
+                    System.out.print(ten_max.get(i).route.toArea.y);
+                  }
+                  else{
+                    System.out.print("NULL");
+                  }
+                }
+                System.out.print("\n");
+                ten_max_changed = false;
+                last_timestamp = last_event.dropoff_datetime;
+              }
+            }
+
             Area from = geoObject.translate(last_event.pickup_longitude, last_event.pickup_latitude);
             Area to = geoObject.translate(last_event.dropoff_longitude, last_event.pickup_latitude);
 
             Route r = new Route(from, to);
             Timestamp ts = last_event.dropoff_datetime;
 
-            maxFrequenciesDataStructure.update(r, ts, -1);
+            if(maxFrequenciesDataStructure.update(r, ts, -1)){
+              ten_max_changed = true;
+            }
             start = (start + 1)%windowCapacity;
             last_event = slidingWindow.get(start);
             last_milliseconds = last_event.dropoff_datetime.getTime();
@@ -251,7 +282,35 @@ class Q1Process implements Runnable {
         Area to = geoObject.translate(new_event.dropoff_longitude, new_event.pickup_latitude);
         Route r = new Route(from, to);
         Timestamp ts = new_event.dropoff_datetime;
-        maxFrequenciesDataStructure.update(r, ts, 1);
+        ten_max_changed = false;
+
+        if(maxFrequenciesDataStructure.update(r, ts, 1)){
+          ten_max_changed = true;
+        }
+
+        if(ten_max_changed == true){
+          Vector<KeyVal> ten_max = maxFrequenciesDataStructure.getMaxTen();
+          System.out.print(new_event.pickup_datetime.toString());
+          System.out.print(",");
+          System.out.print(new_event.dropoff_datetime.toString());
+          for(int i = 0; i < 10; i++){
+            if(ten_max.get(i) != null){
+              System.out.print(ten_max.get(i).route.fromArea.x);
+              System.out.print(".");
+              System.out.print(ten_max.get(i).route.fromArea.y);
+              System.out.print(",");
+              System.out.print(ten_max.get(i).route.toArea.x);
+              System.out.print(".");
+              System.out.print(ten_max.get(i).route.toArea.y);
+            }
+            else{
+              System.out.print("NULL");
+            }
+          }
+          System.out.print("\n");
+          ten_max_changed = false;
+        }
+
         try {
           slidingWindow.set(end, new_event);
         } catch (IndexOutOfBoundsException e) {
@@ -259,7 +318,6 @@ class Q1Process implements Runnable {
           slidingWindow.add(new_event);
         }
         end = (end + 1)%windowCapacity;
-
         //Get the next event to process from the queue
         new_event = queue.take();
       }
