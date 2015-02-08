@@ -1,37 +1,25 @@
 import java.sql.Timestamp;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.PriorityQueue;
-import java.util.Vector;
-
-/* INVARIANTS
- *  *Length of vector is 10
- *  *Vector is always sorted with null inserted if required
- *  *map doesn't contain any element with frequency 0
- *  *Element is always present exactly at two places:
- *    -in map
- *    -in either vector or PQ (not both)
- */
 
 // implements pair class to store frequency and timestamp
-class Val implements Comparable<Val> {
+class Freq implements Comparable<Freq> {
   public int frequency;
   public Timestamp ts;
 
-  public Val(int f, Timestamp ts) {
+  public Freq(int f, Timestamp ts) {
     this.frequency = f;
     this.ts = ts;
   }
 
   @Override
   public boolean equals(Object obj) {
-    if(!(obj instanceof Val))
+    if(!(obj instanceof Freq))
       return false;
 
     if(obj == this)
       return true;
 
-    Val v = (Val) obj;
+    Freq v = (Freq) obj;
     if(v.frequency == this.frequency && v.ts.equals(this.ts))
       return true;
 
@@ -39,7 +27,7 @@ class Val implements Comparable<Val> {
   }
 
   @Override
-  public int compareTo(Val v) {
+  public int compareTo(Freq v) {
     if(this.frequency < v.frequency) {
       return -1;
     } else if(this.frequency > v.frequency) {
@@ -54,230 +42,18 @@ class Val implements Comparable<Val> {
   }
 }
 
-// implements key-val struct
-class KeyVal implements Comparable<KeyVal> {
-  public Route route;
-  public Val val;
-
-  public KeyVal(Route r, Val v) {
-    this.route = r;
-    this.val = v;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if(!(obj instanceof KeyVal))
-      return false;
-
-    if(obj == this)
-      return true;
-
-    KeyVal kv = (KeyVal) obj;
-    if(this.route.equals(kv.route) && this.val.equals(kv.val))
-      return true;
-
-    return false;
-  }
-
-  @Override
-  public int compareTo(KeyVal kv) {
-    return this.val.compareTo(kv.val);
-  }
-}
-
-public class TenMaxFrequency {
-  private HashMap<Route, Val> route_freq_map;
-  private Vector<KeyVal> max_ten;
-  private PriorityQueue<KeyVal> freq_pq;
-
+public class TenMaxFrequency extends TenMax<Route, Freq> {
   public TenMaxFrequency() {
-    route_freq_map = new HashMap<Route, Val>();
-    max_ten = new Vector<KeyVal>(10);
-    freq_pq = new PriorityQueue<KeyVal>(100, Collections.reverseOrder());
-
-    for(int i=0; i<10; i++) {
-      max_ten.add(null);
-    }
+    key_val_map = new HashMap<Route, Freq>();
   }
 
-  public Vector<KeyVal> getMaxTen() {
-    return max_ten;
+  @Override
+  public Freq addTwoVals(Freq v1, Freq v2) {
+    return new Freq(v1.frequency+v2.frequency, v2.ts);
   }
 
-  public boolean update(Route r, Timestamp ts, int diff) {
-    if(route_freq_map.containsKey(r)) {
-      if(route_freq_map.size() <= 10) {
-        // deleting existing element
-        KeyVal current_val = null;
-        for(int i=0; i<route_freq_map.size(); i++) {
-          if(max_ten.get(i).route == r) {
-            current_val = max_ten.remove(i);
-            break;
-          }
-        }
-        assert current_val != null;
-        assert max_ten.size() == 9;
-
-        // if frequency is 0, delete the element
-        if(current_val.val.frequency+diff == 0) {
-          max_ten.add(null);
-          route_freq_map.remove(r);
-          return true;
-        } else {
-          // inserting new frequency if non zero
-          KeyVal new_val = new KeyVal(r, new Val(current_val.val.frequency+diff, ts));
-          int index = 9;
-          for(int i=0; i<max_ten.size(); i++) {
-            assert max_ten.get(i) != new_val;
-            if(new_val.compareTo(max_ten.get(i)) > 0) {
-              index = i;
-              break;
-            }
-          }
-          max_ten.add(index, new_val);
-          route_freq_map.put(r, new_val.val);
-          return true;
-        }
-      } else {
-        KeyVal tree_max = freq_pq.element();
-        KeyVal vec_min = max_ten.lastElement();
-        KeyVal old_val = new KeyVal(r, route_freq_map.get(r));
-        KeyVal new_val = new KeyVal(r, new Val(old_val.val.frequency+diff, ts));
-
-        if(old_val.val.frequency+diff == 0) {
-          // frequency is zero
-          route_freq_map.remove(r);
-          if(old_val.compareTo(vec_min) >= 0) {
-            // in vector
-            assert max_ten.size() == 10;
-            for(int i=0; i<10; i++) {
-              if(old_val.compareTo(max_ten.get(i)) == 0) {
-                max_ten.remove(i);
-                break;
-              }
-            }
-            assert max_ten.size() == 9;
-            max_ten.add(9, freq_pq.remove());
-            return true;
-          } else {
-            freq_pq.remove(old_val);
-            return false;
-          }
-        } else {
-          /* FINALLY
-           *  see if new value goes into a different data
-           *  structure than it was originally in
-           */
-          if(old_val.compareTo(vec_min) < 0 && new_val.compareTo(vec_min) < 0) {
-            assert old_val.compareTo(tree_max) <= 0;
-
-            freq_pq.remove(old_val);
-            freq_pq.add(new_val);
-            route_freq_map.put(r, new_val.val);
-            return false;
-          } else if(old_val.compareTo(tree_max) > 0 && new_val.compareTo(tree_max) > 0) {
-            assert old_val.compareTo(vec_min) >= 0;
-
-            // deleting existing element
-            for(int i=0; i<10; i++) {
-              if(max_ten.get(i).route == r) {
-                max_ten.remove(i);
-                break;
-              }
-            }
-            assert max_ten.size() == 9;
-
-            // insert element
-            int index = 9;
-            for(int i=0; i<9; i++) {
-              if(new_val.compareTo(max_ten.get(i)) > 0) {
-                index = i;
-                break;
-              }
-            }
-
-            max_ten.add(index, new_val);
-            route_freq_map.put(r, new_val.val);
-            return true;
-          } else if(old_val.compareTo(vec_min) < 0) {
-            assert old_val.compareTo(tree_max) <= 0;
-
-            // old val is in PQ
-            freq_pq.remove(old_val);
-
-            // inserting vec_min in freq_pq
-            freq_pq.add(vec_min);
-            max_ten.remove(9);
-
-            // new value will be inserted into Vector
-            int index = 9;
-            for(int i=0; i<9; i++) {
-              if(new_val.compareTo(max_ten.get(i)) > 0) {
-                index = i;
-                break;
-              }
-            }
-
-            max_ten.add(index, new_val);
-            route_freq_map.put(r, new_val.val);
-            return true;
-          } else {
-            // old val is in vector
-            // deleting existing element
-            for(int i=0; i<10; i++) {
-              if(max_ten.get(i).route == r) {
-                max_ten.remove(i);
-                break;
-              }
-            }
-            assert max_ten.size() == 9;
-            max_ten.add(freq_pq.remove());
-
-            // new val will be inserted into PQ
-            freq_pq.add(new_val);
-            route_freq_map.put(r, new_val.val);
-            return true;
-          }
-        }
-      }
-    } else {
-      assert diff > 0;
-
-      KeyVal new_val = new KeyVal(r, new Val(diff, ts));
-      if(route_freq_map.size() < 10) {
-        int index = route_freq_map.size();
-        for(int i=0; i<route_freq_map.size(); i++) {
-          if(new_val.compareTo(max_ten.get(i)) > 0) {
-            index = i;
-            break;
-          }
-        }
-
-        max_ten.remove(9);
-        max_ten.add(index, new_val);
-        route_freq_map.put(r, new_val.val);
-        return true;
-      } else {
-        if(max_ten.lastElement().compareTo(new_val) > 0) {
-          freq_pq.add(new_val);
-          route_freq_map.put(r, new_val.val);
-          return false;
-        } else {
-          freq_pq.add(max_ten.lastElement());
-          max_ten.remove(9);
-          int index = 9;
-          for(int i=0; i<9; i++) {
-            if(new_val.compareTo(max_ten.get(i)) > 0) {
-              index = i;
-              break;
-            }
-          }
-
-          max_ten.add(index, new KeyVal(r, new_val.val));
-          route_freq_map.put(r, new_val.val);
-          return true;
-        }
-      }
-    }
+  @Override
+  public boolean isZeroVal(Freq v) {
+    return (v.frequency == 0);
   }
 }
