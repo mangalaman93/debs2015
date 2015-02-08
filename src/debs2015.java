@@ -232,7 +232,7 @@ class Q1Process implements Runnable {
           long last_milliseconds = last_event.dropoff_datetime.getTime();
 
           // Remove the elements from the start of the window
-          while((current_milliseconds - last_milliseconds > 1800000) && (start <= end)){
+          while((current_milliseconds - last_milliseconds > 1800000) && (start != end)){
             if(last_timestamp.equals(last_event.dropoff_datetime) == false){
               if(ten_max_changed == true){
                 Vector<KeyVal> ten_max = maxFrequenciesDataStructure.getMaxTen();
@@ -345,63 +345,168 @@ class Q2Process implements Runnable {
 
   private ArrayList<Q2Elem> slidingWindow;
   private int end;
-  private int start30Min, start15Min;
+  private int start_30, start_15;
 
   public Q2Process(BlockingQueue<Q2Elem> queueForQ2) {
     this.queue = queueForQ2;
     this.profitabilityDataStructure = new TenMaxProfitability();
     this.slidingWindow = new ArrayList<Q2Elem>(windowCapacity);
-    start30Min = 0;
-    start15Min = 0;
+    start_30 = 0;
+    start_15 = 0;
     end = 0;
+  }
+
+  public void printTopTen(Q2Elem new_event){
+    Vector<KeyVal> ten_max = profitabilityDataStructure.getMaxTen();
+    System.out.print(new_event.pickup_datetime.toString());
+    System.out.print(",");
+    System.out.print(new_event.dropoff_datetime.toString());
+    for(int i = 0; i < 10; i++){
+      if(ten_max.get(i) != null){
+        System.out.print(ten_max.get(i).route.fromArea.x);
+        System.out.print(".");
+        System.out.print(ten_max.get(i).route.fromArea.y);
+        System.out.print(",");
+        System.out.print(ten_max.get(i).route.toArea.x);
+        System.out.print(".");
+        System.out.print(ten_max.get(i).route.toArea.y);
+      }
+      else{
+        System.out.print("NULL");
+      }
+    }
+    System.out.print("\n");
+  }
+
+  public void add(Q2Elem new_event){
+    if(profitabilityDataStructure.update(new_event, new_event.dropoff_datetime, "add")){
+      printTopTen(new_event);
+    }
+    try {
+      slidingWindow.set(end, new_event);
+    } catch (IndexOutOfBoundsException e) {
+      // Happens if size < number of events in the window
+      slidingWindow.add(new_event);
+    }
+    end = (end + 1)%windowCapacity;
+  }
+
+  public void removeFromEmptyTaxis(Q2Elem new_event, long timestamp){
+    Boolean ten_max_changed = false;
+    Q2Elem empty_taxis_event = slidingWindow.get(start_30);
+    while(empty_taxis_event.dropoff_datetime.getTime() == timestamp){
+      if(profitabilityDataStructure.update(empty_taxis_event, empty_taxis_event.dropoff_datetime, "remove_empty")){
+        ten_max_changed = true;
+      }
+      start_30 = (start_30 + 1)%windowCapacity;
+      if(start_30 != end){
+        empty_taxis_event = slidingWindow.get(start_30);
+      }
+      else{
+        break;
+      }
+    }
+    if(ten_max_changed){
+      printTopTen(new_event);
+    }
+  }
+
+  public void removeFromProfit(Q2Elem new_event, long timestamp){
+    Boolean ten_max_changed = false;
+    Q2Elem profit_event = slidingWindow.get(start_15);
+    while(profit_event.dropoff_datetime.getTime() == timestamp){
+      if(profitabilityDataStructure.update(profit_event, profit_event.dropoff_datetime, "remove_profit")){
+        ten_max_changed = true;
+      }
+      start_15 = (start_15 + 1)%windowCapacity;
+      if(start_15 != end){
+        profit_event = slidingWindow.get(start_15);
+      }
+      else{
+        break;
+      }
+    }
+    if(ten_max_changed){
+      printTopTen(new_event);
+    }
+  }
+
+  public void removeFromBoth(Q2Elem new_event, long timestamp){
+    Boolean ten_max_changed = false;
+    Q2Elem empty_taxis_event = slidingWindow.get(start_30);
+    while(empty_taxis_event.dropoff_datetime.getTime() == timestamp){
+      if(profitabilityDataStructure.update(empty_taxis_event, empty_taxis_event.dropoff_datetime, "remove_empty")){
+        ten_max_changed = true;
+      }
+      start_30 = (start_30 + 1)%windowCapacity;
+      if(start_30 != end){
+        empty_taxis_event = slidingWindow.get(start_30);
+      }
+      else{
+        break;
+      }
+    }
+    Q2Elem profit_event = slidingWindow.get(start_15);
+    while(profit_event.dropoff_datetime.getTime() == timestamp){
+      if(profitabilityDataStructure.update(profit_event, profit_event.dropoff_datetime, "remove_profit")){
+        ten_max_changed = true;
+      }
+      start_15 = (start_15 + 1)%windowCapacity;
+      if(start_15 != end){
+        profit_event = slidingWindow.get(start_15);
+      }
+      else{
+        break;
+      }
+    }
+    if(ten_max_changed){
+      printTopTen(new_event);
+    }
   }
 
   @Override
   public void run() {
     try {
       BufferedWriter out = new BufferedWriter(new FileWriter(Q2_FILE));
-      Q2Elem newEvent = queue.take();
+      Q2Elem new_event = queue.take();
 
-      while(newEvent.medallion.equals("sentinel") == false) {
+      while(new_event.medallion.equals("sentinel") == false) {
         // Check if events are leaving the sliding window and process them
-        long current_milliseconds = newEvent.dropoff_datetime.getTime();
-        //try{
-          //Empty taxis window
-        //   Q2Elem last_event = slidingWindow.get(start30Min);
-        //   long last_milliseconds = last_event.dropoff_datetime.getTime();
-        //   while((current_milliseconds - last_milsliseconds > 1800000) && (start30Min <= end)){
-        //     profitabilityDataStructure.remove();
-        //     start30Min = (start30Min + 1)%windowCapacity;
-        //     last_event = slidingWindow.get(start30Min);
-        //     last_milliseconds = last_event.dropoff_datetime.getTime();
-        //   }
+        long current_milliseconds = new_event.dropoff_datetime.getTime();
+        if(start_30 != end){ //This means sliding window for 30 minutes is not empty
+          Q2Elem empty_taxis_event = slidingWindow.get(start_30);
+          long empty_taxis_milliseconds = empty_taxis_event.dropoff_datetime.getTime() + 30*60*100;
+          long profit_milliseconds = current_milliseconds;
+          if(start_15 != end){  //This means sliding window for 15 minutes is not empty
+            Q2Elem profit_event = slidingWindow.get(start_15);
+            profit_milliseconds = profit_event.dropoff_datetime.getTime() + 15*60*100;
+          }
 
-        //   //Profit Window
-        //   last_event = slidingWindow.get(start15Min);
-        //   last_milliseconds = last_event.dropoff_datetime.getTime();
-        //   while((current_milliseconds - last_milsliseconds > 1800000) && (start <= end)){
-        //     profitabilityDataStructure.remove();
-        //     start = (start + 1)%windowCapacity;
-        //     last_event = slidingWindow.get(start);
-        //     last_milliseconds = last_event.dropoff_datetime.getTime();
-        //   }
-        // }
-        // catch(IndexOutOfBoundsException e){
-        //   //No event at start, sliding window is empty, nothing to do here
-        // }
-
-        // // Add this event to the sliding window and process it
-        // try {
-        //   slidingWindow.set(end, newEvent);
-        //   profitabilityDataStructure.insert();
-        // } catch (IndexOutOfBoundsException e) {
-        //   // Happens if size < number of events in the window
-        //   slidingWindow.add(newEvent);
-        // }
-        // end = (end + 1)%windowCapacity;
-
-        // Get new event
-        newEvent = queue.take();
+          if(empty_taxis_milliseconds < current_milliseconds && empty_taxis_milliseconds < profit_milliseconds){
+            // Remove from empty taxis window
+            removeFromEmptyTaxis(new_event, empty_taxis_milliseconds - 30*60*100);
+          }
+          else if(empty_taxis_milliseconds < current_milliseconds && profit_milliseconds < empty_taxis_milliseconds){
+            // Remove from profit window
+            removeFromProfit(new_event, profit_milliseconds);
+          }
+          else if(empty_taxis_milliseconds < current_milliseconds && profit_milliseconds == empty_taxis_milliseconds){
+            // Remove from both the windows
+            removeFromBoth(new_event, profit_milliseconds);
+          }
+          else if(current_milliseconds <= profit_milliseconds && current_milliseconds <= empty_taxis_milliseconds){
+            // Add new event in the window
+            add(new_event);
+            //Get the next event to process from the queue
+            new_event = queue.take();
+          }
+        }
+        else{
+          // No event in the sliding window, just add the incoming event
+          add(new_event);
+          //Get the next event to process from the queue
+          new_event = queue.take();
+        }
       }
 
       out.close();

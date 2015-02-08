@@ -1,4 +1,6 @@
+import java.sql.Timestamp;
 import java.util.Map;
+import java.util.Vector;
 
 class Profitability {
   // TODO
@@ -31,5 +33,18 @@ public class TenMaxProfitability extends TenMax<Area> {
   public void remove() {
     //TODO
     System.out.println("removed");
+  }
+
+  public Boolean update(Q2Elem event, Timestamp ts, String type){
+    //temporary
+    System.out.println("updated");
+    return false;
+  }
+
+  public Vector<KeyVal> getMaxTen() {
+    //temporary
+    Vector<KeyVal> max_ten;
+    max_ten = new Vector<KeyVal>(10);
+    return max_ten;
   }
 }
