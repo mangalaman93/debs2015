@@ -26,26 +26,23 @@ public class Geo {
   */
 
   public Area translate(float locX, float locY) {
-    int gridX;
-    int gridY;
     float distX = (float) ((locX-topLeftX)*84.38*1000) + 0.5f;
+    int gridX = (int) (distX / cellSizeX) + 1;
     
-    if(distX > cellRangeX) {
+    if(gridX > cellRangeX || gridX < 0) {
       return new Area(-1, -1);
-    }
-    else {
-      gridX = (int) (distX / cellSizeX) + 1;
     }
 
     float distY = (float) ((topLeftY-locY)*110.54*1000) + 0.5f;
+    int gridY = (int) (distY / cellSizeY) + 1;
     
-    if(distY > cellRangeY) {
+    if(gridY > cellRangeY || gridY < 0) {
       return new Area(-1, -1);
     }
-    else {
-      gridY = (int) (distY / cellSizeY) + 1;
-    }
 
+    // System.out.print(gridX);
+    // System.out.print("--");
+    // System.out.println(gridY);
     return new Area(gridX, gridY);
   }
 }
