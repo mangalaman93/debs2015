@@ -235,19 +235,19 @@ class Q1Process implements Runnable {
           while((current_milliseconds - last_milliseconds > 1800000) && (start != end)){
             if(last_timestamp.equals(last_event.dropoff_datetime) == false){
               if(ten_max_changed == true){
-                Vector<KeyVal> ten_max = maxFrequenciesDataStructure.getMaxTen();
+                Vector<KeyVal<Route, Freq>> ten_max = maxFrequenciesDataStructure.getMaxTen();
                 System.out.print(new_event.pickup_datetime.toString());
                 System.out.print(",");
                 System.out.print(new_event.dropoff_datetime.toString());
                 for(int i = 0; i < 10; i++){
                   if(ten_max.get(i) != null){
-                    System.out.print(ten_max.get(i).route.fromArea.x);
+                    System.out.print(ten_max.get(i).key.fromArea.x);
                     System.out.print(".");
-                    System.out.print(ten_max.get(i).route.fromArea.y);
+                    System.out.print(ten_max.get(i).key.fromArea.y);
                     System.out.print(",");
-                    System.out.print(ten_max.get(i).route.toArea.x);
+                    System.out.print(ten_max.get(i).key.toArea.x);
                     System.out.print(".");
-                    System.out.print(ten_max.get(i).route.toArea.y);
+                    System.out.print(ten_max.get(i).key.toArea.y);
                   }
                   else{
                     System.out.print("NULL");
@@ -265,7 +265,7 @@ class Q1Process implements Runnable {
             Route r = new Route(from, to);
             Timestamp ts = last_event.dropoff_datetime;
 
-            if(maxFrequenciesDataStructure.update(r, ts, -1)){
+            if(maxFrequenciesDataStructure.update(r, new Freq(-1,ts))){
               ten_max_changed = true;
             }
             start = (start + 1)%windowCapacity;
@@ -284,24 +284,24 @@ class Q1Process implements Runnable {
         Timestamp ts = new_event.dropoff_datetime;
         ten_max_changed = false;
 
-        if(maxFrequenciesDataStructure.update(r, ts, 1)){
+        if(maxFrequenciesDataStructure.update(r, new Freq(1,ts))){
           ten_max_changed = true;
         }
 
         if(ten_max_changed == true){
-          Vector<KeyVal> ten_max = maxFrequenciesDataStructure.getMaxTen();
+          Vector<KeyVal<Route, Freq>> ten_max = maxFrequenciesDataStructure.getMaxTen();
           System.out.print(new_event.pickup_datetime.toString());
           System.out.print(",");
           System.out.print(new_event.dropoff_datetime.toString());
           for(int i = 0; i < 10; i++){
             if(ten_max.get(i) != null){
-              System.out.print(ten_max.get(i).route.fromArea.x);
+              System.out.print(ten_max.get(i).key.fromArea.x);
               System.out.print(".");
-              System.out.print(ten_max.get(i).route.fromArea.y);
+              System.out.print(ten_max.get(i).key.fromArea.y);
               System.out.print(",");
-              System.out.print(ten_max.get(i).route.toArea.x);
+              System.out.print(ten_max.get(i).key.toArea.x);
               System.out.print(".");
-              System.out.print(ten_max.get(i).route.toArea.y);
+              System.out.print(ten_max.get(i).key.toArea.y);
             }
             else{
               System.out.print("NULL");
@@ -336,6 +336,8 @@ class Q1Process implements Runnable {
  *    and number of empty taxis
  *  *output 10 most profitable areas when the list change
  */
+
+/*
 class Q2Process implements Runnable {
   private static final String Q2_FILE = "test/q2_out.csv";
 
@@ -357,19 +359,19 @@ class Q2Process implements Runnable {
   }
 
   public void printTopTen(Q2Elem new_event){
-    Vector<KeyVal> ten_max = profitabilityDataStructure.getMaxTen();
+    Vector<KeyVal<Area, Profitability>> ten_max = profitabilityDataStructure.getMaxTen();
     System.out.print(new_event.pickup_datetime.toString());
     System.out.print(",");
     System.out.print(new_event.dropoff_datetime.toString());
     for(int i = 0; i < 10; i++){
       if(ten_max.get(i) != null){
-        System.out.print(ten_max.get(i).route.fromArea.x);
+        System.out.print(ten_max.get(i).key.fromArea.x);
         System.out.print(".");
-        System.out.print(ten_max.get(i).route.fromArea.y);
+        System.out.print(ten_max.get(i).key.fromArea.y);
         System.out.print(",");
-        System.out.print(ten_max.get(i).route.toArea.x);
+        System.out.print(ten_max.get(i).key.toArea.x);
         System.out.print(".");
-        System.out.print(ten_max.get(i).route.toArea.y);
+        System.out.print(ten_max.get(i).key.toArea.y);
       }
       else{
         System.out.print("NULL");
@@ -517,6 +519,8 @@ class Q2Process implements Runnable {
   }
 }
 
+*/
+
 public class debs2015 {
   private static BlockingQueue<Q1Elem> queueForQ1;
   private static BlockingQueue<Q2Elem> queueForQ2;
@@ -531,10 +535,10 @@ public class debs2015 {
     // start threads
     Thread threadForIoProcess = new Thread(new IoProcess(queueForQ1, queueForQ2));
     Thread threadForQ1Process = new Thread(new Q1Process(queueForQ1));
-    Thread threadForQ2Process = new Thread(new Q2Process(queueForQ2));
+    // Thread threadForQ2Process = new Thread(new Q2Process(queueForQ2));
 
     threadForIoProcess.start();
     threadForQ1Process.start();
-    threadForQ2Process.start();
+    // threadForQ2Process.start();
   }
 }
