@@ -1,5 +1,6 @@
 import java.sql.Timestamp;
 import java.util.AbstractMap;
+import java.util.HashMap;
 import java.util.Set;
 
 class Profitability implements Comparable<Profitability> {
@@ -92,8 +93,28 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
   // constants and parameters
   private final int AREA_LIMIT = 600;
 
+  // class data
+  private HashMap<String, Area> last_dropoff_location;
+
   public TenMaxProfitability() {
     key_val_map = new ArrayMap(AREA_LIMIT, AREA_LIMIT);
+    last_dropoff_location = new HashMap<String, Area>();
+  }
+
+  public boolean leaveTaxiSlidingWindow(Q2Elem event) {
+    return false;
+  }
+
+  public boolean enterTaxiSlidingWindow(Q2Elem event) {
+    return true;
+  }
+
+  public boolean leaveProfitSlidingWindow(Q2Elem event) {
+    return false;
+  }
+
+  public boolean enterProfitSlidingWindow(Q2Elem event) {
+    return true;
   }
 
   @Override

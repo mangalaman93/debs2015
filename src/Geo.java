@@ -17,7 +17,7 @@ public class Geo {
     this.cellRangeX = cellRangeX;
     this.cellRangeY = cellRangeY;
   }
-  
+
   /*
   The approximate conversions are:
   Latitude: 1 deg = 110.54 km = 110.54*1000 m
@@ -28,21 +28,18 @@ public class Geo {
   public Area translate(float locX, float locY) {
     float distX = (float) ((locX-topLeftX)*84.38*1000) + 0.5f;
     int gridX = (int) (distX / cellSizeX) + 1;
-    
+
     if(gridX > cellRangeX || gridX < 0) {
       return new Area(-1, -1);
     }
 
     float distY = (float) ((topLeftY-locY)*110.54*1000) + 0.5f;
     int gridY = (int) (distY / cellSizeY) + 1;
-    
+
     if(gridY > cellRangeY || gridY < 0) {
       return new Area(-1, -1);
     }
 
-    // System.out.print(gridX);
-    // System.out.print("--");
-    // System.out.println(gridY);
     return new Area(gridX, gridY);
   }
 }

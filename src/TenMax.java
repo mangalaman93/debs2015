@@ -67,6 +67,16 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
     return max_ten;
   }
 
+  public boolean isSameMaxTen(Vector<KeyVal<Key, Val>> old_max_ten) {
+    for(int i=0; i<10; i++) {
+      if(!max_ten.get(i).key.equals(old_max_ten.get(i).key)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   public boolean update(Key key, Val diff) {
     // if the key is present
     if(key_val_map.containsKey(key)) {

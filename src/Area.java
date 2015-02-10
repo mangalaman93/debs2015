@@ -8,8 +8,7 @@ public class Area {
   }
 
   @Override
-  public boolean equals(Object obj)
-  {
+  public boolean equals(Object obj) {
     if(!(obj instanceof Area))
       return false;
 
