@@ -11,7 +11,7 @@ public class GeoTest {
 
 	@Before
 	public void setUp() throws Exception {
-		g1 = new Geo(-74.913585f,41.474937f,500,500,150000,150000);
+		g1 = new Geo(-74.913585f,41.474937f,500,500,300,300);
 	}
 
 	@After
