@@ -1,38 +1,66 @@
+import java.rmi.UnexpectedException;
 import java.sql.Timestamp;
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Set;
 
 class Profitability implements Comparable<Profitability> {
-  public Mc profit;
+  public Mc mprofit;
   public int num_empty_taxis;
-  Timestamp ts;
+  public Timestamp ts;
 
   public Profitability() {
-    profit = new Mc();
+    mprofit = new Mc();
     num_empty_taxis = 0;
     ts = null;
   }
 
   public float getProfitability() {
-    return this.profit.getMedian()/this.num_empty_taxis;
+    return this.mprofit.getMedian()/this.num_empty_taxis;
   }
 
   @Override
   public int compareTo(Profitability ptb) {
-    float p1 = this.getProfitability();
-    float p2 = ptb.getProfitability();
-    if(p1 < p2) {
-      return -1;
-    } else if(p1 > p2) {
+    if(this.num_empty_taxis == 0 && ptb.num_empty_taxis == 0) {
+      if(this.mprofit.getMedian() > ptb.mprofit.getMedian()) {
+        return 1;
+      } else if(this.mprofit.getMedian() < ptb.mprofit.getMedian()) {
+        return -1;
+      } else {
+        return 0;
+      }
+    } else if(this.num_empty_taxis == 0) {
       return 1;
-    } else if(this.ts.compareTo(ptb.ts) < 0) {
+    } else if(ptb.num_empty_taxis == 0) {
       return -1;
-    } else if(this.ts.compareTo(ptb.ts) > 0) {
-      return 1;
     } else {
-      return 0;
+      float p1 = this.getProfitability();
+      float p2 = ptb.getProfitability();
+
+      if(p1 < p2) {
+        return -1;
+      } else if(p1 > p2) {
+        return 1;
+      } else if(this.ts.compareTo(ptb.ts) < 0) {
+        return -1;
+      } else if(this.ts.compareTo(ptb.ts) > 0) {
+        return 1;
+      } else {
+        return 0;
+      }
     }
+  }
+}
+
+class DiffProfitability {
+  public float profit;
+  public int num_empty_taxis;
+  public Timestamp ts;
+
+  public DiffProfitability(float p, int taxis, Timestamp t) {
+    profit = p;
+    num_empty_taxis = taxis;
+    ts = t;
   }
 }
 
@@ -71,6 +99,15 @@ class ArrayMap extends AbstractMap<Area, Profitability> {
     return return_value;
   }
 
+  @Override
+  public Profitability get(Object obj) {
+    if(!(obj instanceof Area))
+      return null;
+
+    Area a = (Area) obj;
+    return data[a.x][a.y];
+  }
+
   public Profitability remove(Area a) {
     Profitability return_value = data[a.x][a.y];
     data[a.x][a.y] = null;
@@ -89,45 +126,49 @@ class ArrayMap extends AbstractMap<Area, Profitability> {
   }
 }
 
-public class TenMaxProfitability extends TenMax<Area, Profitability> {
+public class TenMaxProfitability extends TenMax<Area, Profitability, DiffProfitability> {
   // constants and parameters
   private final int AREA_LIMIT = 600;
 
-  // class data
-  private HashMap<String, Area> last_dropoff_location;
-
   public TenMaxProfitability() {
     key_val_map = new ArrayMap(AREA_LIMIT, AREA_LIMIT);
-    last_dropoff_location = new HashMap<String, Area>();
   }
 
-  public boolean leaveTaxiSlidingWindow(Q2Elem event) {
-    return false;
-  }
-
-  public boolean enterTaxiSlidingWindow(Q2Elem event) {
-    return true;
-  }
-
-  public boolean leaveProfitSlidingWindow(Q2Elem event) {
-    return false;
+  public void leaveProfitSlidingWindow(Area a, float profit, Timestamp ts) {
+    key_val_map.get(a).profit.delete(profit);
+    Profitability diff = new Profitability();
+    diff.num_empty_taxis = 0;
+    diff.profit = null;
+    diff.ts = ts;
+    this.update(a, diff);
   }
 
   public boolean enterProfitSlidingWindow(Q2Elem event) {
     return true;
   }
+  
+  public boolean leaveTaxiSlidingWindow() {
+    return false;
+  }
 
-  @Override
-  public Profitability addTwoVals(Profitability v1, Profitability v2) {
-    Profitability p = new Profitability();
-    p.num_empty_taxis = v1.num_empty_taxis + v2.num_empty_taxis;
-    p.ts = v2.ts;
-    p.profit = v1.profit;
-    return p;
+  public boolean enterTaxiSlidingWindow() {
+    return true;
   }
 
   @Override
   public boolean isZeroVal(Profitability v) {
-    return v.ts==null;
+    return v.mprofit.size()==0;
+  }
+
+  @Override
+  public Profitability addDiffToVal(Profitability v1, DiffProfitability diff) {
+    Profitability p = new Profitability();
+    p.num_empty_taxis = v1.num_empty_taxis + diff.num_empty_taxis;
+    p.ts = diff.ts;
+    if(diff.profit < 0) {
+      
+    }
+
+    return p;
   }
 }
