@@ -92,13 +92,14 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
         }
 
         // if frequency is 0, delete the element
-        if(isZeroVal(addDiffToVal(current.val, diff))) {
+        Val newval = addDiffToVal(current.val, diff);
+        if(isZeroVal(newval)) {
           max_ten.add(null);
           key_val_map.remove(key);
           return true;
         } else {
           // inserting new frequency if non zero
-          KeyVal<Key, Val> newkval = new KeyVal<Key, Val>(key, addDiffToVal(current.val, diff));
+          KeyVal<Key, Val> newkval = new KeyVal<Key, Val>(key, newval);
           int index = max_ten.size();
           for(int i=0; i<max_ten.size(); i++) {
             if(newkval.compareTo(max_ten.get(i)) > 0) {
@@ -117,7 +118,7 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
         KeyVal<Key, Val> newkval = new KeyVal<Key, Val>(key, addDiffToVal(oldkval.val, diff));
 
         // key present, total elements more than 10, frequency is zero
-        if(isZeroVal(addDiffToVal(oldkval.val, diff))) {
+        if(isZeroVal(newkval.val)) {
           key_val_map.remove(key);
 
           // key present, total elements more than 10, frequency is zero, and delete from vector

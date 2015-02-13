@@ -1,66 +1,43 @@
-import java.rmi.UnexpectedException;
 import java.sql.Timestamp;
 import java.util.AbstractMap;
-import java.util.HashMap;
 import java.util.Set;
 
+/*
+ * If number of empty taxies are zero,
+ * profitability is equal to profit
+ */
 class Profitability implements Comparable<Profitability> {
   public Mc mprofit;
+  public float profitability;
   public int num_empty_taxis;
   public Timestamp ts;
 
   public Profitability() {
-    mprofit = new Mc();
+    mprofit = null;
+    profitability = 0;
     num_empty_taxis = 0;
     ts = null;
   }
 
-  public float getProfitability() {
-    return this.mprofit.getMedian()/this.num_empty_taxis;
-  }
-
   @Override
   public int compareTo(Profitability ptb) {
-    if(this.num_empty_taxis == 0 && ptb.num_empty_taxis == 0) {
-      if(this.mprofit.getMedian() > ptb.mprofit.getMedian()) {
-        return 1;
-      } else if(this.mprofit.getMedian() < ptb.mprofit.getMedian()) {
-        return -1;
-      } else {
-        return 0;
-      }
-    } else if(this.num_empty_taxis == 0) {
+    if(ptb == this) {
+      return 0;
+    } if(this.num_empty_taxis == 0 && ptb.num_empty_taxis != 0) {
       return 1;
-    } else if(ptb.num_empty_taxis == 0) {
+    } else if(this.num_empty_taxis != 0 && ptb.num_empty_taxis == 0) {
       return -1;
+    } else if(this.profitability < ptb.profitability) {
+      return -1;
+    } else if(this.profitability > ptb.profitability) {
+      return 1;
+    } else if(this.ts.compareTo(ptb.ts) < 0) {
+      return -1;
+    } else if(this.ts.compareTo(ptb.ts) > 0) {
+      return 1;
     } else {
-      float p1 = this.getProfitability();
-      float p2 = ptb.getProfitability();
-
-      if(p1 < p2) {
-        return -1;
-      } else if(p1 > p2) {
-        return 1;
-      } else if(this.ts.compareTo(ptb.ts) < 0) {
-        return -1;
-      } else if(this.ts.compareTo(ptb.ts) > 0) {
-        return 1;
-      } else {
-        return 0;
-      }
+      return 0;
     }
-  }
-}
-
-class DiffProfitability {
-  public float profit;
-  public int num_empty_taxis;
-  public Timestamp ts;
-
-  public DiffProfitability(float p, int taxis, Timestamp t) {
-    profit = p;
-    num_empty_taxis = taxis;
-    ts = t;
   }
 }
 
@@ -73,12 +50,14 @@ class ArrayMap extends AbstractMap<Area, Profitability> {
   public ArrayMap(int xLimit, int yLimit) {
     this.xSize = xLimit;
     this.ySize = yLimit;
-    data = new Profitability[xSize][ySize];
+    data = new Profitability[this.xSize][this.ySize];
     size = 0;
 
-    for(int i=0; i<xSize; i++)
-      for(int j=0; j<ySize; j++)
+    for(int i=0; i<xSize; i++) {
+      for(int j=0; j<ySize; j++) {
         data[i][j] = null;
+      }
+    }
   }
 
   public boolean containsKey(Area a) {
@@ -126,7 +105,7 @@ class ArrayMap extends AbstractMap<Area, Profitability> {
   }
 }
 
-public class TenMaxProfitability extends TenMax<Area, Profitability, DiffProfitability> {
+public class TenMaxProfitability extends TenMax<Area, Profitability> {
   // constants and parameters
   private final int AREA_LIMIT = 600;
 
@@ -135,18 +114,12 @@ public class TenMaxProfitability extends TenMax<Area, Profitability, DiffProfita
   }
 
   public void leaveProfitSlidingWindow(Area a, float profit, Timestamp ts) {
-    key_val_map.get(a).profit.delete(profit);
-    Profitability diff = new Profitability();
-    diff.num_empty_taxis = 0;
-    diff.profit = null;
-    diff.ts = ts;
-    this.update(a, diff);
   }
 
   public boolean enterProfitSlidingWindow(Q2Elem event) {
     return true;
   }
-  
+
   public boolean leaveTaxiSlidingWindow() {
     return false;
   }
@@ -157,16 +130,21 @@ public class TenMaxProfitability extends TenMax<Area, Profitability, DiffProfita
 
   @Override
   public boolean isZeroVal(Profitability v) {
-    return v.mprofit.size()==0;
+    return v.profitability==0;
   }
 
   @Override
-  public Profitability addDiffToVal(Profitability v1, DiffProfitability diff) {
+  public Profitability addDiffToVal(Profitability v1, Profitability diff) {
     Profitability p = new Profitability();
+    p.mprofit = v1.mprofit;
     p.num_empty_taxis = v1.num_empty_taxis + diff.num_empty_taxis;
     p.ts = diff.ts;
-    if(diff.profit < 0) {
-      
+    if(diff.profitability < 0) {
+      v1.mprofit.delete(-diff.profitability);
+      p.profitability = p.mprofit.getMedian();
+    } else {
+      v1.mprofit.insert(diff.profitability);
+      p.profitability = p.mprofit.getMedian();
     }
 
     return p;
