@@ -42,12 +42,12 @@ class KeyVal<Key, Val extends Comparable<Val>> implements Comparable<KeyVal<Key,
  *    -in map
  *    -in either vector or PQ (not both)
  */
-public abstract class TenMax<Key, Val extends Comparable<Val>, Diff> {
+public abstract class TenMax<Key, Val extends Comparable<Val>> {
   // constant parameters
   private final int INIT_PQ_SIZE = 100;
 
   // abstract functions
-  public abstract Val addDiffToVal(Val v1, Diff diff);
+  public abstract Val addDiffToVal(Val v1, Val diff);
   public abstract boolean isZeroVal(Val v);
 
   protected AbstractMap<Key, Val> key_val_map;
@@ -67,7 +67,7 @@ public abstract class TenMax<Key, Val extends Comparable<Val>, Diff> {
     return max_ten;
   }
 
-  public boolean isSameMaxTen(Vector<KeyVal<Key, Val>> old_max_ten) {
+  public boolean isSameMaxTenKey(Vector<KeyVal<Key, Val>> old_max_ten) {
     for(int i=0; i<10; i++) {
       if(!max_ten.get(i).key.equals(old_max_ten.get(i).key)) {
         return false;
@@ -77,7 +77,7 @@ public abstract class TenMax<Key, Val extends Comparable<Val>, Diff> {
     return true;
   }
 
-  public boolean update(Key key, Diff diff) {
+  public boolean update(Key key, Val diff) {
     // if the key is present
     if(key_val_map.containsKey(key)) {
       // key is present and total elements are less than 10

@@ -42,7 +42,7 @@ class Freq implements Comparable<Freq> {
   }
 }
 
-public class TenMaxFrequency extends TenMax<Route, Freq, Freq> {
+public class TenMaxFrequency extends TenMax<Route, Freq> {
   public TenMaxFrequency() {
     key_val_map = new HashMap<Route, Freq>();
   }
