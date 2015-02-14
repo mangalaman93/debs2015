@@ -213,7 +213,7 @@ class Q1Process implements Runnable {
     this.slidingWindow = new ArrayList<Q1Elem>(windowCapacity);
     this.start = 0;
     this.end = 0;
-    this.geoObject = new Geo(41.474937f, -74.913585f, 500, 500, 300, 300);
+    this.geoObject = new Geo(-74.913585f, 41.474937f, 500, 500, 300, 300);
   }
 
   @Override
