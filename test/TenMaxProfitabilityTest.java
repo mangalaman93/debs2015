@@ -1,9 +1,7 @@
 import static org.junit.Assert.*;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 
 public class TenMaxProfitabilityTest {
   @Before
@@ -16,6 +14,5 @@ public class TenMaxProfitabilityTest {
 
   @Test
   public void testTenMaxProfitability1() {
-    fail("Not yet implemented");
   }
 }

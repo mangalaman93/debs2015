@@ -236,7 +236,7 @@ public class TenMaxFrequencyTest {
       temp.add(new KeyVal<Route, Freq>(r[i], new Freq(2, ts[i])));
     temp.add(new KeyVal<Route, Freq>(r[7], new Freq(2, ts[7])));
     temp.add(new KeyVal<Route, Freq>(r[6], new Freq(2, ts[6])));
-    temp.add(new KeyVal<Route, Freq>(r[8], new Freq(1, ts[14])));
+    temp.add(new KeyVal<Route, Freq>(r[8], new Freq(1, ts[8])));
     temp.add(new KeyVal<Route, Freq>(r[5], new Freq(1, ts[5])));
     temp.add(new KeyVal<Route, Freq>(r[4], new Freq(1, ts[4])));
 

@@ -2,23 +2,32 @@ import java.sql.Timestamp;
 import java.util.AbstractMap;
 import java.util.Set;
 import java.util.HashMap;
-import java.util.Map;
 
 /*
  * If number of empty taxies are zero,
  * profitability is equal to profit
  */
 class Profitability implements Comparable<Profitability> {
-  public Mc mprofit;
   public float profitability;
+  public Mc mprofit;
   public int num_empty_taxis;
   public Timestamp ts;
 
   public Profitability() {
-    mprofit = null;
     profitability = 0;
+    mprofit = null;
     num_empty_taxis = 0;
     ts = null;
+  }
+
+  public void resetProfitability() {
+    if(this.mprofit.size() == 0) {
+      this.profitability = 0;
+    } else if(this.num_empty_taxis == 0) {
+      this.profitability = this.mprofit.getMedian();
+    } else {
+      this.profitability = this.mprofit.getMedian()/this.num_empty_taxis;
+    }
   }
 
   @Override
@@ -107,83 +116,34 @@ class ArrayMap extends AbstractMap<Area, Profitability> {
   }
 }
 
+class TaxiInfo implements Comparable<TaxiInfo> {
+  public Area area;
+  public Timestamp ts;
+
+  public TaxiInfo(Area a, Timestamp ts) {
+    this.area = a;
+    this.ts = ts;
+  }
+
+  @Override
+  public int compareTo(TaxiInfo taxi) {
+    return this.ts.compareTo(taxi.ts);
+  }
+}
+
 public class TenMaxProfitability extends TenMax<Area, Profitability> {
   // constants and parameters
   private final int AREA_LIMIT = 600;
-  private Map<String, taxiInfo> grid_present;
+  private HashMap<String, TaxiInfo> grid_present;
 
   public TenMaxProfitability() {
     key_val_map = new ArrayMap(AREA_LIMIT, AREA_LIMIT);
-    Map grid_present = new HashMap();
-  }
-
-  public void leaveProfitSlidingWindow(Area a, float profit, Timestamp ts) {
-  }
-
-  public boolean enterProfitSlidingWindow(Q2Elem event) {
-    return true;
-  }
-
-  public boolean leaveTaxiSlidingWindow(String medallion, String hack_license, Timestamp ts) {
-	  String searchKey = medallion + hack_license;
-	  
-	  // Check if the event leaving corresponds to the event present in the area - taxiInfo hashmap
-	  if(ts.equals(grid_present.get(searchKey).ts)) {
-		  // If present, then undo the effects of this event
-		  Profitability diff = new Profitability();
-		  diff.num_empty_taxis = -1;
-		  diff.ts = ts;
-		  update(grid_present.get(searchKey).a,diff);
-		  grid_present.remove(searchKey);
-	  }
-	  // If not present, nothing to do
-	  return false;
-  }
-
-  public boolean enterTaxiSlidingWindow(String medallion, String hack_license, Area a, Timestamp ts) {
-	String searchKey = medallion + hack_license;
-	
-	// This taxi was in consideration earlier -> has reached a new place within 30 mins
-	if(grid_present.containsKey(searchKey)) {
-		/*
-		 * Remove this taxi from previous grid -> 
-		 * Change profitability to decrease empty taxi number corresponding to Area grid_present[searchKey].a
-		*/
-		Profitability diff1 = new Profitability();
-		diff1.num_empty_taxis = -1;
-		diff1.ts = ts;
-		update(grid_present.get(searchKey).a,diff1);
-		/*
-		 * Add this taxi to the new destination grid -> 
-		 * Change profitability to increase empty taxi number corresponding to Area a
-		*/
-		Profitability diff2 = new Profitability();
-		diff2.num_empty_taxis = 1;
-		diff2.ts = ts;
-		update(a,diff2);
-		// Update the area - taxiInfo map
-		grid_present.get(searchKey).a = a;
-		grid_present.get(searchKey).ts = ts;		
-	}
-	
-	// This taxi was not in consideration earlier -> has reached a new place > 30 mins
-	else {
-		/*
-		 * Add this taxi to the new destination grid -> 
-		 * Change profitability to increase empty taxi number corresponding to Area a
-		*/
-		grid_present.put(searchKey, new taxiInfo(a,ts));
-		Profitability diff = new Profitability();
-		diff.num_empty_taxis = 1;
-		diff.ts = ts;
-		update(a,diff);
-	}
-    return true;
+    grid_present = new HashMap<String, TaxiInfo>();
   }
 
   @Override
   public boolean isZeroVal(Profitability v) {
-    return v.profitability==0;
+    return v.mprofit.size()==0;
   }
 
   @Override
@@ -191,36 +151,94 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
     Profitability p = new Profitability();
     p.mprofit = v1.mprofit;
     p.num_empty_taxis = v1.num_empty_taxis + diff.num_empty_taxis;
-    p.ts = diff.ts;
-    if(diff.profitability < 0) {
-      v1.mprofit.delete(-diff.profitability);
-      p.profitability = p.mprofit.getMedian();
-    } else {
+
+    if(diff.profitability > 0) {
       v1.mprofit.insert(diff.profitability);
-      p.profitability = p.mprofit.getMedian();
+      p.ts = diff.ts;
+      p.resetProfitability();
+    } else {
+      if(diff.num_empty_taxis > 0) {
+        p.ts = diff.ts;
+      } else {
+        p.ts = v1.ts;
+      }
+
+      if(diff.profitability < 0) {
+        v1.mprofit.delete(-diff.profitability);
+      }
+
+      p.resetProfitability();
     }
 
     return p;
   }
-}
 
-class taxiInfo implements Comparable<taxiInfo> {
-  public Area a;
-  public Timestamp ts;
+  public void leaveTaxiSlidingWindow(String medallion, String hack_license, Timestamp ts) {
+    String searchKey = medallion + hack_license;
 
-  public taxiInfo(Area a, Timestamp ts) {
-    this.a = a;
-    this.ts = ts;
-  }
-
-  @Override
-  public int compareTo(taxiInfo tax) {
-    if(tax == this) {
-      return 0;
-    } if(this.ts == tax.ts) {
-      return 0;
-    } else {
-      return 1;
+    // Check if the event leaving corresponds to the event present in the area - taxiInfo hashmap
+    if(ts.equals(grid_present.get(searchKey).ts)) {
+      // If present, then undo the effects of this event
+      Profitability diff = new Profitability();
+      diff.num_empty_taxis = -1;
+      diff.ts = ts;
+      update(grid_present.get(searchKey).area, diff);
+      grid_present.remove(searchKey);
     }
   }
+
+  public void enterTaxiSlidingWindow(String medallion, String hack_license, Area a, Timestamp ts) {
+    String search_key = medallion + hack_license;
+
+    // This taxi was in consideration earlier -> has reached a new place within 30 mins
+    if(grid_present.containsKey(search_key)) {
+      /*
+       * Remove this taxi from previous grid ->
+       * Change profitability to decrease empty taxi number corresponding to Area grid_present[searchKey].a
+       */
+      Profitability diff1 = new Profitability();
+      diff1.num_empty_taxis = -1;
+      this.update(grid_present.get(search_key).area, diff1);
+
+      /*
+       * Add this taxi to the new destination grid ->
+       * Change profitability to increase empty taxi number corresponding to Area a
+       */
+      Profitability diff2 = new Profitability();
+      diff2.num_empty_taxis = 1;
+      diff2.ts = ts;
+      this.update(a, diff2);
+
+      // Update the area - TaxiInfo map
+      grid_present.get(search_key).area = a;
+      grid_present.get(search_key).ts = ts;
+    }
+
+    // This taxi was not in consideration earlier -> has reached a new place > 30 mins
+    else {
+      /*
+       * Add this taxi to the new destination grid ->
+       * Change profitability to increase empty taxi number corresponding to Area a
+       */
+      grid_present.put(search_key, new TaxiInfo(a, ts));
+      Profitability diff = new Profitability();
+      diff.num_empty_taxis = 1;
+      diff.ts = ts;
+      this.update(a, diff);
+    }
+  }
+
+  public void leaveProfitSlidingWindow(Area a, float profit) {
+    Profitability ptb = new Profitability();
+    ptb.profitability = profit;
+    this.update(a, ptb);
+  }
+
+  public void enterProfitSlidingWindow(Area a, float profit, Timestamp ts) {
+    Profitability ptb = new Profitability();
+    ptb.profitability = profit;
+    ptb.ts = ts;
+    this.update(a, ptb);
+  }
 }
+
