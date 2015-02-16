@@ -20,6 +20,13 @@ class Profitability implements Comparable<Profitability> {
     ts = null;
   }
 
+  public Profitability(float p, int n, Timestamp t) {
+    profitability = p;
+    mprofit = null;
+    num_empty_taxis = n;
+    ts = t;
+  }
+
   public void resetProfitability() {
     if(this.mprofit.size() == 0) {
       this.profitability = 0;
@@ -50,6 +57,24 @@ class Profitability implements Comparable<Profitability> {
       return 0;
     }
   }
+
+  @Override
+  public boolean equals(Object obj) {
+    if(!(obj instanceof Profitability))
+      return false;
+
+    if(obj == this)
+      return true;
+
+    Profitability p = (Profitability) obj;
+    if(p.profitability==this.profitability &&
+        p.num_empty_taxis==this.num_empty_taxis &&
+        p.ts==this.ts) {
+      return true;
+    }
+
+    return false;
+  }
 }
 
 class ArrayMap extends AbstractMap<Area, Profitability> {
@@ -71,7 +96,9 @@ class ArrayMap extends AbstractMap<Area, Profitability> {
     }
   }
 
-  public boolean containsKey(Area a) {
+  @Override
+  public boolean containsKey(Object obj) {
+    Area a = (Area) obj;
     return (data[a.x][a.y] != null);
   }
 
@@ -149,25 +176,33 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
   @Override
   public Profitability addDiffToVal(Profitability v1, Profitability diff) {
     Profitability p = new Profitability();
-    p.mprofit = v1.mprofit;
-    p.num_empty_taxis = v1.num_empty_taxis + diff.num_empty_taxis;
 
-    if(diff.profitability > 0) {
-      v1.mprofit.insert(diff.profitability);
+    if(v1 == null) {
+      p.mprofit = new Mc();
+      p.num_empty_taxis = diff.num_empty_taxis;
+      p.profitability = diff.profitability;
       p.ts = diff.ts;
-      p.resetProfitability();
     } else {
-      if(diff.num_empty_taxis > 0) {
+      p.mprofit = v1.mprofit;
+      p.num_empty_taxis = v1.num_empty_taxis + diff.num_empty_taxis;
+
+      if(diff.profitability > 0) {
+        v1.mprofit.insert(diff.profitability);
         p.ts = diff.ts;
+        p.resetProfitability();
       } else {
-        p.ts = v1.ts;
-      }
+        if(diff.num_empty_taxis > 0) {
+          p.ts = diff.ts;
+        } else {
+          p.ts = v1.ts;
+        }
 
-      if(diff.profitability < 0) {
-        v1.mprofit.delete(-diff.profitability);
-      }
+        if(diff.profitability < 0) {
+          v1.mprofit.delete(-diff.profitability);
+        }
 
-      p.resetProfitability();
+        p.resetProfitability();
+      }
     }
 
     return p;
