@@ -1,8 +1,8 @@
 import java.util.Comparator;
+import java.util.EmptyStackException;
 import java.util.PriorityQueue;
 
-class maxComparator implements Comparator<Double>
-{
+class maxComparator implements Comparator<Double> {
   public int compare(Double x, Double y) {
       return -1*Double.compare(x,y);
   }
@@ -30,7 +30,6 @@ public class Mc {
   }
 
   public void insert(float val) {
-
     /* Empty PQ case */
     if(maxheap_size == 0) {
       maxheap_size = 1;
@@ -60,11 +59,9 @@ public class Mc {
       }
       minheap_size++;
     }
-
   }
 
   public void delete(float val) {
-
     /* Empty PQ case */
     if(maxheap_size == 0);
 
@@ -97,6 +94,7 @@ public class Mc {
     /* Empty PQ case */
     if(maxheap_size == 0) {
       System.out.println("Heap is empty\n");
+      throw new EmptyStackException();
     }
 
     /* Even number case */
@@ -109,5 +107,9 @@ public class Mc {
       ret_val = maxheap.peek().floatValue();
     }
     return ret_val;
+  }
+
+  public int size() {
+    return maxheap_size+minheap_size;
   }
 }

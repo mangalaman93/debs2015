@@ -47,7 +47,7 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
   private final int INIT_PQ_SIZE = 100;
 
   // abstract functions
-  public abstract Val addTwoVals(Val v1, Val v2);
+  public abstract Val addDiffToVal(Val v1, Val diff);
   public abstract boolean isZeroVal(Val v);
 
   protected AbstractMap<Key, Val> key_val_map;
@@ -67,7 +67,7 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
     return max_ten;
   }
 
-  public boolean isSameMaxTen(Vector<KeyVal<Key, Val>> old_max_ten) {
+  public boolean isSameMaxTenKey(Vector<KeyVal<Key, Val>> old_max_ten) {
     for(int i=0; i<10; i++) {
       if(!max_ten.get(i).key.equals(old_max_ten.get(i).key)) {
         return false;
@@ -92,13 +92,14 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
         }
 
         // if frequency is 0, delete the element
-        if(isZeroVal(addTwoVals(current.val, diff))) {
+        Val newval = addDiffToVal(current.val, diff);
+        if(isZeroVal(newval)) {
           max_ten.add(null);
           key_val_map.remove(key);
           return true;
         } else {
           // inserting new frequency if non zero
-          KeyVal<Key, Val> newkval = new KeyVal<Key, Val>(key, addTwoVals(current.val, diff));
+          KeyVal<Key, Val> newkval = new KeyVal<Key, Val>(key, newval);
           int index = max_ten.size();
           for(int i=0; i<max_ten.size(); i++) {
             if(newkval.compareTo(max_ten.get(i)) > 0) {
@@ -114,10 +115,10 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
         KeyVal<Key, Val> tree_max = val_pq.element();
         KeyVal<Key, Val> vec_min = max_ten.lastElement();
         KeyVal<Key, Val> oldkval = new KeyVal<Key, Val>(key, key_val_map.get(key));
-        KeyVal<Key, Val> newkval = new KeyVal<Key, Val>(key, addTwoVals(oldkval.val, diff));
+        KeyVal<Key, Val> newkval = new KeyVal<Key, Val>(key, addDiffToVal(oldkval.val, diff));
 
         // key present, total elements more than 10, frequency is zero
-        if(isZeroVal(addTwoVals(oldkval.val, diff))) {
+        if(isZeroVal(newkval.val)) {
           key_val_map.remove(key);
 
           // key present, total elements more than 10, frequency is zero, and delete from vector
@@ -216,38 +217,40 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
         }
       }
     } else { // key is not present
+      Val newval = addDiffToVal(null, diff);
+
       // key is not present, number of total elements is less than 10
       if(key_val_map.size() < 10) {
         int index = key_val_map.size();
         for(int i=0; i<key_val_map.size(); i++) {
-          if(diff.compareTo(max_ten.get(i).val) > 0) {
+          if(newval.compareTo(max_ten.get(i).val) > 0) {
             index = i;
             break;
           }
         }
 
         max_ten.remove(9);
-        max_ten.add(index, new KeyVal<Key, Val>(key, diff));
-        key_val_map.put(key, diff);
+        max_ten.add(index, new KeyVal<Key, Val>(key, newval));
+        key_val_map.put(key, newval);
         return true;
       } else { // key is not present, number of total elements is greater than 10
-        if(max_ten.lastElement().val.compareTo(diff) > 0) {
-          val_pq.add(new KeyVal<Key, Val>(key, diff));
-          key_val_map.put(key, diff);
+        if(max_ten.lastElement().val.compareTo(newval) > 0) {
+          val_pq.add(new KeyVal<Key, Val>(key, newval));
+          key_val_map.put(key, newval);
           return false;
         } else {
           val_pq.add(max_ten.lastElement());
           max_ten.remove(9);
           int index = 9;
           for(int i=0; i<9; i++) {
-            if(diff.compareTo(max_ten.get(i).val) > 0) {
+            if(newval.compareTo(max_ten.get(i).val) > 0) {
               index = i;
               break;
             }
           }
 
-          max_ten.add(index, new KeyVal<Key, Val>(key, diff));
-          key_val_map.put(key, diff);
+          max_ten.add(index, new KeyVal<Key, Val>(key, newval));
+          key_val_map.put(key, newval);
           return true;
         }
       }

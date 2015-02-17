@@ -48,8 +48,19 @@ public class TenMaxFrequency extends TenMax<Route, Freq> {
   }
 
   @Override
-  public Freq addTwoVals(Freq v1, Freq v2) {
-    return new Freq(v1.frequency+v2.frequency, v2.ts);
+  public Freq addDiffToVal(Freq v1, Freq v2) {
+    if(v1 != null) {
+      Timestamp newts;
+      if(v2.frequency < 0) {
+        newts = v1.ts;
+      } else {
+        newts = v2.ts;
+      }
+
+      return new Freq(v1.frequency+v2.frequency, newts);
+    } else {
+      return v2;
+    }
   }
 
   @Override
