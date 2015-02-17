@@ -125,7 +125,9 @@ class ArrayMap extends AbstractMap<Area, Profitability> {
     return data[a.x][a.y];
   }
 
-  public Profitability remove(Area a) {
+  @Override
+  public Profitability remove(Object obj) {
+    Area a = (Area) obj;
     Profitability return_value = data[a.x][a.y];
     data[a.x][a.y] = null;
     this.size--;
@@ -179,6 +181,7 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
 
     if(v1 == null) {
       p.mprofit = new Mc();
+      p.mprofit.insert(diff.profitability);
       p.num_empty_taxis = diff.num_empty_taxis;
       p.profitability = diff.profitability;
       p.ts = diff.ts;
@@ -208,7 +211,7 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
     return p;
   }
 
-  public void leaveTaxiSlidingWindow(String medallion, String hack_license, Timestamp ts) {
+  public boolean leaveTaxiSlidingWindow(String medallion, String hack_license, Timestamp ts) {
     String searchKey = medallion + hack_license;
 
     // Check if the event leaving corresponds to the event present in the area - taxiInfo hashmap
@@ -217,12 +220,14 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
       Profitability diff = new Profitability();
       diff.num_empty_taxis = -1;
       diff.ts = ts;
-      update(grid_present.get(searchKey).area, diff);
       grid_present.remove(searchKey);
+      return this.update(grid_present.get(searchKey).area, diff);
     }
+
+    return false;
   }
 
-  public void enterTaxiSlidingWindow(String medallion, String hack_license, Area a, Timestamp ts) {
+  public boolean enterTaxiSlidingWindow(String medallion, String hack_license, Area a, Timestamp ts) {
     String search_key = medallion + hack_license;
 
     // This taxi was in consideration earlier -> has reached a new place within 30 mins
@@ -242,11 +247,12 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
       Profitability diff2 = new Profitability();
       diff2.num_empty_taxis = 1;
       diff2.ts = ts;
-      this.update(a, diff2);
 
       // Update the area - TaxiInfo map
       grid_present.get(search_key).area = a;
       grid_present.get(search_key).ts = ts;
+
+      return this.update(a, diff2);
     }
 
     // This taxi was not in consideration earlier -> has reached a new place > 30 mins
@@ -259,21 +265,20 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
       Profitability diff = new Profitability();
       diff.num_empty_taxis = 1;
       diff.ts = ts;
-      this.update(a, diff);
+      return this.update(a, diff);
     }
   }
 
-  public void leaveProfitSlidingWindow(Area a, float profit) {
+  public boolean leaveProfitSlidingWindow(Area a, float profit) {
     Profitability ptb = new Profitability();
     ptb.profitability = profit;
-    this.update(a, ptb);
+    return this.update(a, ptb);
   }
 
-  public void enterProfitSlidingWindow(Area a, float profit, Timestamp ts) {
+  public boolean enterProfitSlidingWindow(Area a, float profit, Timestamp ts) {
     Profitability ptb = new Profitability();
     ptb.profitability = profit;
     ptb.ts = ts;
-    this.update(a, ptb);
+    return this.update(a, ptb);
   }
 }
-
