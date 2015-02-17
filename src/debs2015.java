@@ -139,8 +139,8 @@ class IoProcess implements Runnable {
         q1Event.dropoff_longitude = Float.parseFloat(st.nextToken());
         q2Event.dropoff_longitude = q1Event.dropoff_longitude;
         // dropoff latitude
-        q1Event.dropoff_longitude = Float.parseFloat(st.nextToken());
-        q2Event.dropoff_longitude = q1Event.dropoff_longitude;
+        q1Event.dropoff_latitude = Float.parseFloat(st.nextToken());
+        q2Event.dropoff_latitude = q1Event.dropoff_latitude;
         // payment type
         st.nextToken();
         // fare amount
@@ -213,7 +213,7 @@ class Q1Process implements Runnable {
     this.slidingWindow = new ArrayList<Q1Elem>(windowCapacity);
     this.start = 0;
     this.end = 0;
-    this.geoObject = new Geo(41.474937f, -74.913585f, 500, 500, 300, 300);
+    this.geoObject = new Geo(-74.913585f, 41.474937f, 500, 500, 300, 300);
   }
 
   @Override
@@ -227,6 +227,7 @@ class Q1Process implements Runnable {
       while(new_event.pickup_longitude != 10000000) {
         // Check if events are leaving the sliding window and process them
         long current_milliseconds = new_event.dropoff_datetime.getTime();
+        Vector<KeyVal<Route, Freq>> old_ten_max = maxFrequenciesDataStructure.getMaxTen();
         try {
           Q1Elem last_event = slidingWindow.get(start);
           long last_milliseconds = last_event.dropoff_datetime.getTime();
@@ -236,24 +237,28 @@ class Q1Process implements Runnable {
             if(last_timestamp.equals(last_event.dropoff_datetime) == false){
               if(ten_max_changed == true){
                 Vector<KeyVal<Route, Freq>> ten_max = maxFrequenciesDataStructure.getMaxTen();
-                System.out.print(new_event.pickup_datetime.toString());
-                System.out.print(",");
-                System.out.print(new_event.dropoff_datetime.toString());
-                for(int i = 0; i < 10; i++){
-                  if(ten_max.get(i) != null){
-                    System.out.print(ten_max.get(i).key.fromArea.x);
-                    System.out.print(".");
-                    System.out.print(ten_max.get(i).key.fromArea.y);
-                    System.out.print(",");
-                    System.out.print(ten_max.get(i).key.toArea.x);
-                    System.out.print(".");
-                    System.out.print(ten_max.get(i).key.toArea.y);
+                if(!maxFrequenciesDataStructure.isSameMaxTen(old_ten_max)){
+                  System.out.print(new_event.pickup_datetime.toString());
+                  System.out.print(",");
+                  System.out.print(new_event.dropoff_datetime.toString());
+                  System.out.print(",");
+                  for(int i = 0; i < 10; i++){
+                    if(ten_max.get(i) != null){
+                      System.out.print(ten_max.get(i).key.fromArea.x);
+                      System.out.print(".");
+                      System.out.print(ten_max.get(i).key.fromArea.y);
+                      System.out.print(",");
+                      System.out.print(ten_max.get(i).key.toArea.x);
+                      System.out.print(".");
+                      System.out.print(ten_max.get(i).key.toArea.y);
+                    }
+                    else{
+                      System.out.print("NULL");
+                    }
                   }
-                  else{
-                    System.out.print("NULL");
-                  }
+                  old_ten_max = ten_max;
+                  System.out.print("\n");
                 }
-                System.out.print("\n");
                 ten_max_changed = false;
                 last_timestamp = last_event.dropoff_datetime;
               }
@@ -277,6 +282,34 @@ class Q1Process implements Runnable {
           // No event at start, sliding window is empty, nothing to do here
         }
 
+        // Print for the last event(s) that left the window
+        if(ten_max_changed == true){
+          Vector<KeyVal<Route, Freq>> ten_max = maxFrequenciesDataStructure.getMaxTen();
+          if(!maxFrequenciesDataStructure.isSameMaxTen(old_ten_max)){
+            System.out.print(new_event.pickup_datetime.toString());
+            System.out.print(",");
+            System.out.print(new_event.dropoff_datetime.toString());
+            System.out.print(",");
+            for(int i = 0; i < 10; i++){
+              if(ten_max.get(i) != null){
+                System.out.print(ten_max.get(i).key.fromArea.x);
+                System.out.print(".");
+                System.out.print(ten_max.get(i).key.fromArea.y);
+                System.out.print(",");
+                System.out.print(ten_max.get(i).key.toArea.x);
+                System.out.print(".");
+                System.out.print(ten_max.get(i).key.toArea.y);
+              }
+              else{
+                System.out.print("NULL");
+              }
+            }
+            old_ten_max = ten_max;
+            System.out.print("\n");
+          }
+          ten_max_changed = false;
+        }
+
         // Insert the current element in the sliding window
         Area from = geoObject.translate(new_event.pickup_longitude, new_event.pickup_latitude);
         Area to = geoObject.translate(new_event.dropoff_longitude, new_event.pickup_latitude);
@@ -290,24 +323,30 @@ class Q1Process implements Runnable {
 
         if(ten_max_changed == true){
           Vector<KeyVal<Route, Freq>> ten_max = maxFrequenciesDataStructure.getMaxTen();
-          System.out.print(new_event.pickup_datetime.toString());
-          System.out.print(",");
-          System.out.print(new_event.dropoff_datetime.toString());
-          for(int i = 0; i < 10; i++){
-            if(ten_max.get(i) != null){
-              System.out.print(ten_max.get(i).key.fromArea.x);
-              System.out.print(".");
-              System.out.print(ten_max.get(i).key.fromArea.y);
-              System.out.print(",");
-              System.out.print(ten_max.get(i).key.toArea.x);
-              System.out.print(".");
-              System.out.print(ten_max.get(i).key.toArea.y);
+          if(!maxFrequenciesDataStructure.isSameMaxTen(old_ten_max)){
+            System.out.print(new_event.pickup_datetime.toString());
+            System.out.print(",");
+            System.out.print(new_event.dropoff_datetime.toString());
+            System.out.print(",");
+            for(int i = 0; i < 10; i++){
+              if(ten_max.get(i) != null){
+                System.out.print(ten_max.get(i).key.fromArea.x);
+                System.out.print(".");
+                System.out.print(ten_max.get(i).key.fromArea.y);
+                System.out.print(",");
+                System.out.print(ten_max.get(i).key.toArea.x);
+                System.out.print(".");
+                System.out.print(ten_max.get(i).key.toArea.y);
+                System.out.print(",");
+              }
+              else{
+                System.out.print("NULL");
+                System.out.print(",");
+              }
             }
-            else{
-              System.out.print("NULL");
-            }
+            System.out.print("\n");
           }
-          System.out.print("\n");
+          old_ten_max = ten_max;
           ten_max_changed = false;
         }
 
