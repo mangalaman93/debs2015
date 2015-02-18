@@ -237,7 +237,7 @@ class Q1Process implements Runnable {
             if(last_timestamp.equals(last_event.dropoff_datetime) == false){
               if(ten_max_changed == true){
                 Vector<KeyVal<Route, Freq>> ten_max = maxFrequenciesDataStructure.getMaxTen();
-                if(!maxFrequenciesDataStructure.isSameMaxTen(old_ten_max)){
+                if(!maxFrequenciesDataStructure.isSameMaxTenKey(old_ten_max)){
                   System.out.print(new_event.pickup_datetime.toString());
                   System.out.print(",");
                   System.out.print(new_event.dropoff_datetime.toString());
@@ -285,7 +285,7 @@ class Q1Process implements Runnable {
         // Print for the last event(s) that left the window
         if(ten_max_changed == true){
           Vector<KeyVal<Route, Freq>> ten_max = maxFrequenciesDataStructure.getMaxTen();
-          if(!maxFrequenciesDataStructure.isSameMaxTen(old_ten_max)){
+          if(!maxFrequenciesDataStructure.isSameMaxTenKey(old_ten_max)){
             System.out.print(new_event.pickup_datetime.toString());
             System.out.print(",");
             System.out.print(new_event.dropoff_datetime.toString());
@@ -323,7 +323,7 @@ class Q1Process implements Runnable {
 
         if(ten_max_changed == true){
           Vector<KeyVal<Route, Freq>> ten_max = maxFrequenciesDataStructure.getMaxTen();
-          if(!maxFrequenciesDataStructure.isSameMaxTen(old_ten_max)){
+          if(!maxFrequenciesDataStructure.isSameMaxTenKey(old_ten_max)){
             System.out.print(new_event.pickup_datetime.toString());
             System.out.print(",");
             System.out.print(new_event.dropoff_datetime.toString());
