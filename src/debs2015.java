@@ -428,22 +428,26 @@ class Q2Process implements Runnable {
     Vector<KeyVal<Area, Profitability>> old_ten_max = profitabilityDataStructure.getMaxTen();
 
     Area dropoff_area = geoObject.translate(new_event.dropoff_longitude, new_event.dropoff_latitude);
-    boolean profit_changed = profitabilityDataStructure.enterProfitSlidingWindow(dropoff_area, new_event.fare_amount + new_event.tip_amount, new_event.dropoff_datetime);
-    boolean empty_taxis_changed = profitabilityDataStructure.enterTaxiSlidingWindow(new_event.medallion, new_event.hack_license, dropoff_area, new_event.dropoff_datetime);
+    boolean profit_changed = false;
+    boolean empty_taxis_changed = false;
+    if(dropoff_area != null){
+      profit_changed = profitabilityDataStructure.enterProfitSlidingWindow(dropoff_area, new_event.fare_amount + new_event.tip_amount, new_event.dropoff_datetime);
+      empty_taxis_changed = profitabilityDataStructure.enterTaxiSlidingWindow(new_event.medallion, new_event.hack_license, dropoff_area, new_event.dropoff_datetime);
 
-    if(profit_changed || empty_taxis_changed){
-      if(!profitabilityDataStructure.isSameMaxTenKey(old_ten_max)){
-        printTopTen(new_event);
+      if(profit_changed || empty_taxis_changed){
+        if(!profitabilityDataStructure.isSameMaxTenKey(old_ten_max)){
+          printTopTen(new_event);
+        }
       }
-    }
 
-    try {
-      slidingWindow.set(end, new_event);
-    } catch (IndexOutOfBoundsException e) {
-      // Happens if size < number of events in the window
-      slidingWindow.add(new_event);
+      try {
+        slidingWindow.set(end, new_event);
+      } catch (IndexOutOfBoundsException e) {
+        // Happens if size < number of events in the window
+        slidingWindow.add(new_event);
+      }
+      end = (end + 1)%windowCapacity;
     }
-    end = (end + 1)%windowCapacity;
   }
 
   public void removeFromEmptyTaxis(Q2Elem new_event, long timestamp){
