@@ -227,7 +227,7 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
     return false;
   }
 
-  public boolean enterTaxiSlidingWindow(String medallion, String hack_license, Area a, Timestamp ts) {
+  public void enterTaxiSlidingWindow(String medallion, String hack_license, Area a, Timestamp ts) {
     String search_key = medallion + hack_license;
 
     // This taxi was in consideration earlier -> has reached a new place within 30 mins
@@ -252,7 +252,7 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
       grid_present.get(search_key).area = a;
       grid_present.get(search_key).ts = ts;
 
-      return this.update(a, diff2);
+      this.update(a, diff2);
     }
 
     // This taxi was not in consideration earlier -> has reached a new place > 30 mins
@@ -265,20 +265,20 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
       Profitability diff = new Profitability();
       diff.num_empty_taxis = 1;
       diff.ts = ts;
-      return this.update(a, diff);
+      this.update(a, diff);
     }
   }
 
-  public boolean leaveProfitSlidingWindow(Area a, float profit) {
+  public void leaveProfitSlidingWindow(Area a, float profit) {
     Profitability ptb = new Profitability();
     ptb.profitability = -profit;
-    return this.update(a, ptb);
+    this.update(a, ptb);
   }
 
-  public boolean enterProfitSlidingWindow(Area a, float profit, Timestamp ts) {
+  public void enterProfitSlidingWindow(Area a, float profit, Timestamp ts) {
     Profitability ptb = new Profitability();
     ptb.profitability = profit;
     ptb.ts = ts;
-    return this.update(a, ptb);
+    this.update(a, ptb);
   }
 }
