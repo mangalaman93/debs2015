@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.Vector;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.OutputStream;
@@ -92,104 +94,102 @@ class Q2Elem {
  *  *create and share kernel queues
  */
 class IoProcess implements Runnable {
-  private static final String TEST_FILE = "test/sorted_data.csv";
+  private BlockingQueue<Q1Elem> queue_q1;
+  private BlockingQueue<Q2Elem> queue_q2;
+  private String file;
 
-  private BlockingQueue<Q1Elem> queueForQ1;
-  private BlockingQueue<Q2Elem> queueForQ2;
-
-  public IoProcess(BlockingQueue<Q1Elem> queueForQ1,
-      BlockingQueue<Q2Elem> queueForQ2) {
-    this.queueForQ1 = queueForQ1;
-    this.queueForQ2 = queueForQ2;
+  public IoProcess(BlockingQueue<Q1Elem> queue1,
+      BlockingQueue<Q2Elem> queue2, String inputfile) {
+    this.queue_q1 = queue1;
+    this.queue_q2 = queue2;
+    this.file = inputfile;
   }
 
   @Override
   public void run() {
-    // Read from file
     try {
-      BufferedReader in = new BufferedReader(new FileReader(TEST_FILE));
-      SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+      BufferedReader input_file = new BufferedReader(new FileReader(file));
+      SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
       String line;
-      while ((line = in.readLine()) != null) {
+      while((line = input_file.readLine()) != null) {
         StringTokenizer st = new StringTokenizer(line, ",");
-        Q1Elem q1Event = new Q1Elem();
-        Q2Elem q2Event = new Q2Elem();
+        Q1Elem q1event = new Q1Elem();
+        Q2Elem q2event = new Q2Elem();
 
         // medallion
-        q2Event.medallion = st.nextToken();
+        q2event.medallion = st.nextToken();
         // hack license
-        q2Event.hack_license = st.nextToken();
+        q2event.hack_license = st.nextToken();
         // pickup datetime
-        Date parsedDate = dateFormat.parse(st.nextToken());
-        q1Event.pickup_datetime = new java.sql.Timestamp(parsedDate.getTime());
-        q2Event.pickup_datetime = new java.sql.Timestamp(parsedDate.getTime());
+        Date pdate = datefmt.parse(st.nextToken());
+        q1event.pickup_datetime = new java.sql.Timestamp(pdate.getTime());
+        q2event.pickup_datetime = new java.sql.Timestamp(pdate.getTime());
         // dropoff datetime
-        parsedDate = dateFormat.parse(st.nextToken());
-        q1Event.dropoff_datetime = new java.sql.Timestamp(parsedDate.getTime());
-        q2Event.dropoff_datetime = new java.sql.Timestamp(parsedDate.getTime());
+        pdate = datefmt.parse(st.nextToken());
+        q1event.dropoff_datetime = new java.sql.Timestamp(pdate.getTime());
+        q2event.dropoff_datetime = new java.sql.Timestamp(pdate.getTime());
         // trip time in secs
         st.nextToken();
         // trip distance
         st.nextToken();
         // pickup longitude
-        q1Event.pickup_longitude = Float.parseFloat(st.nextToken());
-        q2Event.pickup_longitude = q1Event.pickup_longitude;
+        q1event.pickup_longitude = Float.parseFloat(st.nextToken());
+        q2event.pickup_longitude = q1event.pickup_longitude;
         // pickup latitude
-        q1Event.pickup_latitude = Float.parseFloat(st.nextToken());
-        q2Event.pickup_latitude = q1Event.pickup_latitude;
+        q1event.pickup_latitude = Float.parseFloat(st.nextToken());
+        q2event.pickup_latitude = q1event.pickup_latitude;
         // dropoff longitude
-        q1Event.dropoff_longitude = Float.parseFloat(st.nextToken());
-        q2Event.dropoff_longitude = q1Event.dropoff_longitude;
+        q1event.dropoff_longitude = Float.parseFloat(st.nextToken());
+        q2event.dropoff_longitude = q1event.dropoff_longitude;
         // dropoff latitude
-        q1Event.dropoff_latitude = Float.parseFloat(st.nextToken());
-        q2Event.dropoff_latitude = q1Event.dropoff_latitude;
+        q1event.dropoff_latitude = Float.parseFloat(st.nextToken());
+        q2event.dropoff_latitude = q1event.dropoff_latitude;
         // payment type
         st.nextToken();
         // fare amount
-        q2Event.fare_amount = Float.parseFloat(st.nextToken());
-        // sur charge
+        q2event.fare_amount = Float.parseFloat(st.nextToken());
+        // surcharge
         st.nextToken();
         // mta tax
         st.nextToken();
         // tip amount
-        q2Event.tip_amount = Float.parseFloat(st.nextToken());
+        q2event.tip_amount = Float.parseFloat(st.nextToken());
         // tolls amount
         st.nextToken();
         // total amount
         st.nextToken();
 
         // Put events into queues for Q1 and Q2
-        queueForQ1.put(q1Event);
-        queueForQ2.put(q2Event);
+        queue_q1.put(q1event);
+        queue_q2.put(q2event);
       }
 
-      Q1Elem q1Event = new Q1Elem();
-      Q2Elem q2Event = new Q2Elem();
       // Add sentinel
-      q1Event.pickup_datetime = new java.sql.Timestamp(0);
-      q1Event.dropoff_datetime = new java.sql.Timestamp(0);
-      q1Event.pickup_longitude = 0;
-      q1Event.pickup_latitude = 0;
-      q1Event.dropoff_longitude = 0;
-      q1Event.dropoff_latitude = 0;
-      queueForQ1.put(q1Event);
+      Q1Elem q1event = new Q1Elem();
+      Q2Elem q2event = new Q2Elem();
+      q1event.pickup_datetime   = new java.sql.Timestamp(0);
+      q1event.dropoff_datetime  = new java.sql.Timestamp(0);
+      q1event.pickup_longitude  = 10000000;
+      q1event.pickup_latitude   = 0;
+      q1event.dropoff_longitude = 0;
+      q1event.dropoff_latitude  = 0;
+      queue_q1.put(q1event);
 
-      q2Event.medallion         = "sentinel";
-      q2Event.hack_license      = "sentinel";
-      q2Event.pickup_datetime   = new java.sql.Timestamp(0);
-      q2Event.dropoff_datetime  = new java.sql.Timestamp(0);
-      q2Event.pickup_longitude  = 0;
-      q2Event.pickup_latitude   = 0;
-      q2Event.dropoff_longitude = 0;
-      q2Event.dropoff_latitude  = 0;
-      q2Event.fare_amount       = 0;
-      q2Event.tip_amount        = 0;
-      queueForQ2.put(q2Event);
-      in.close();
-    }
-    catch(Exception e) {
-      System.out.println(e.getMessage());
+      q2event.medallion         = "sentinel";
+      q2event.hack_license      = "sentinel";
+      q2event.pickup_datetime   = new java.sql.Timestamp(0);
+      q2event.dropoff_datetime  = new java.sql.Timestamp(0);
+      q2event.pickup_longitude  = 10000000;
+      q2event.pickup_latitude   = 0;
+      q2event.dropoff_longitude = 0;
+      q2event.dropoff_latitude  = 0;
+      q2event.fare_amount       = 0;
+      q2event.tip_amount        = 0;
+      queue_q2.put(q2event);
+      input_file.close();
+    } catch(Exception e) {
       System.out.println("Error in IoProcess!");
+      System.out.println(e.getMessage());
     }
   }
 }
@@ -200,31 +200,28 @@ class IoProcess implements Runnable {
  *  *output if list of 10 most frequent routes change
  */
 class Q1Process implements Runnable {
-  private static final String Q1_FILE = "test/q1_out.csv";
+  private final int WINDOW_CAPACITY = 1000;
 
-  final int windowCapacity = 1000;
   private BlockingQueue<Q1Elem> queue;
-  private TenMaxFrequency maxFrequenciesDataStructure;
-  private Geo geoObject;
-  private ArrayList<Q1Elem> slidingWindow;
+  private TenMaxFrequency maxfs;
+  private Geo geo;
+  private ArrayList<Q1Elem> sliding_window;
   int start, end;
-  private PrintStream printStream;
+  private PrintStream print_stream;
 
-  public Q1Process(BlockingQueue<Q1Elem> queueForQ1, OutputStream printStream) {
-    this.queue = queueForQ1;
-    this.maxFrequenciesDataStructure = new TenMaxFrequency();
-    this.slidingWindow = new ArrayList<Q1Elem>(windowCapacity);
-    this.printStream = new PrintStream(printStream);
+  public Q1Process(BlockingQueue<Q1Elem> queue, OutputStream print_stream) {
+    this.queue = queue;
+    this.maxfs = new TenMaxFrequency();
+    this.geo = new Geo(-74.913585f, 41.474937f, 500, 500, 300, 300);
+    this.sliding_window = new ArrayList<Q1Elem>(WINDOW_CAPACITY);
     this.start = 0;
     this.end = 0;
-    this.geoObject = new Geo(-74.913585f, 41.474937f, 500, 500, 300, 300);
+    this.print_stream = new PrintStream(print_stream);
   }
 
   @Override
   public void run() {
     try {
-      BufferedWriter out = new BufferedWriter(new FileWriter(Q1_FILE));
-
       Q1Elem new_event = queue.take();
       Timestamp last_timestamp = new Timestamp(0);
       Boolean ten_max_changed = false;
@@ -232,144 +229,144 @@ class Q1Process implements Runnable {
         // Check if events are leaving the sliding window and process them
         long current_milliseconds = new_event.dropoff_datetime.getTime();
         try {
-          Q1Elem last_event = slidingWindow.get(start);
+          Q1Elem last_event = sliding_window.get(start);
           long last_milliseconds = last_event.dropoff_datetime.getTime();
 
           // Remove the elements from the start of the window
-          while((current_milliseconds - last_milliseconds > 1800000) && (start != end)){
-            Vector<Route> old_ten_max = maxFrequenciesDataStructure.getMaxTenCopy();
-            if(last_timestamp.equals(last_event.dropoff_datetime) == false){
-              if(ten_max_changed == true){
-                Vector<KeyVal<Route, Freq>> ten_max = maxFrequenciesDataStructure.getMaxTen();
-                if(!maxFrequenciesDataStructure.isSameMaxTenKey(old_ten_max)){
-                  printStream.print(new_event.pickup_datetime.toString());
-                  printStream.print(",");
-                  printStream.print(new_event.dropoff_datetime.toString());
-                  printStream.print(",");
-                  for(int i = 0; i < 10; i++){
-                    if(ten_max.get(i) != null){
-                      printStream.print(ten_max.get(i).key.fromArea.x);
-                      printStream.print(".");
-                      printStream.print(ten_max.get(i).key.fromArea.y);
-                      printStream.print(",");
-                      printStream.print(ten_max.get(i).key.toArea.x);
-                      printStream.print(".");
-                      printStream.print(ten_max.get(i).key.toArea.y);
-                    }
-                    else{
-                      printStream.print("NULL");
+          while((current_milliseconds - last_milliseconds >= 1800000) &&
+              (start != end)) {
+            Vector<Route> old_ten_max = maxfs.getMaxTenCopy();
+            if(!last_timestamp.equals(last_event.dropoff_datetime)) {
+              if(ten_max_changed == true) {
+                Vector<KeyVal<Route, Freq>> ten_max = maxfs.getMaxTen();
+                if(!maxfs.isSameMaxTenKey(old_ten_max)) {
+                  print_stream.print(new_event.pickup_datetime.toString());
+                  print_stream.print(",");
+                  print_stream.print(new_event.dropoff_datetime.toString());
+                  print_stream.print(",");
+                  for(int i = 0; i < 10; i++) {
+                    if(ten_max.get(i) != null) {
+                      print_stream.print(ten_max.get(i).key.fromArea.x);
+                      print_stream.print(".");
+                      print_stream.print(ten_max.get(i).key.fromArea.y);
+                      print_stream.print(",");
+                      print_stream.print(ten_max.get(i).key.toArea.x);
+                      print_stream.print(".");
+                      print_stream.print(ten_max.get(i).key.toArea.y);
+                    } else{
+                      print_stream.print("NULL");
                     }
                   }
-                  printStream.print("\n");
+                  print_stream.print("\n");
                 }
                 ten_max_changed = false;
                 last_timestamp = last_event.dropoff_datetime;
               }
             }
 
-            Area from = geoObject.translate(last_event.pickup_longitude, last_event.pickup_latitude);
-            Area to = geoObject.translate(last_event.dropoff_longitude, last_event.pickup_latitude);
+            Area from = geo.translate(last_event.pickup_longitude,
+                last_event.pickup_latitude);
+            Area to = geo.translate(last_event.dropoff_longitude,
+                last_event.pickup_latitude);
 
             Route r = new Route(from, to);
             Timestamp ts = last_event.dropoff_datetime;
 
-            old_ten_max = maxFrequenciesDataStructure.getMaxTenCopy();
-            if(maxFrequenciesDataStructure.update(r, new Freq(-1,ts))){
+            old_ten_max = maxfs.getMaxTenCopy();
+            if(maxfs.update(r, new Freq(-1, ts))) {
               ten_max_changed = true;
             }
-            start = (start + 1)%windowCapacity;
-            last_event = slidingWindow.get(start);
+            start = (start + 1)%WINDOW_CAPACITY;
+            last_event = sliding_window.get(start);
             last_milliseconds = last_event.dropoff_datetime.getTime();
           }
-        }
-        catch(IndexOutOfBoundsException e){
+        } catch(Exception e) {
           // No event at start, sliding window is empty, nothing to do here
         }
 
         // Print for the last event(s) that left the window
-        Vector<Route> old_ten_max = maxFrequenciesDataStructure.getMaxTenCopy();
-        if(ten_max_changed == true){
-          Vector<KeyVal<Route, Freq>> ten_max = maxFrequenciesDataStructure.getMaxTen();
-          if(!maxFrequenciesDataStructure.isSameMaxTenKey(old_ten_max)){
-            printStream.print(new_event.pickup_datetime.toString());
-            printStream.print(",");
-            printStream.print(new_event.dropoff_datetime.toString());
-            printStream.print(",");
-            for(int i = 0; i < 10; i++){
-              if(ten_max.get(i) != null){
-                printStream.print(ten_max.get(i).key.fromArea.x);
-                printStream.print(".");
-                printStream.print(ten_max.get(i).key.fromArea.y);
-                printStream.print(",");
-                printStream.print(ten_max.get(i).key.toArea.x);
-                printStream.print(".");
-                printStream.print(ten_max.get(i).key.toArea.y);
-              }
-              else{
-                printStream.print("NULL");
+        Vector<Route> old_ten_max = maxfs.getMaxTenCopy();
+        if(ten_max_changed == true) {
+          Vector<KeyVal<Route, Freq>> ten_max = maxfs.getMaxTen();
+          if(!maxfs.isSameMaxTenKey(old_ten_max)) {
+            print_stream.print(new_event.pickup_datetime.toString());
+            print_stream.print(",");
+            print_stream.print(new_event.dropoff_datetime.toString());
+            print_stream.print(",");
+            for(int i = 0; i < 10; i++) {
+              if(ten_max.get(i) != null) {
+                print_stream.print(ten_max.get(i).key.fromArea.x);
+                print_stream.print(".");
+                print_stream.print(ten_max.get(i).key.fromArea.y);
+                print_stream.print(",");
+                print_stream.print(ten_max.get(i).key.toArea.x);
+                print_stream.print(".");
+                print_stream.print(ten_max.get(i).key.toArea.y);
+              } else{
+                print_stream.print("NULL");
               }
             }
-            printStream.print("\n");
+            print_stream.print("\n");
           }
           ten_max_changed = false;
         }
 
         // Insert the current element in the sliding window
-        Area from = geoObject.translate(new_event.pickup_longitude, new_event.pickup_latitude);
-        Area to = geoObject.translate(new_event.dropoff_longitude, new_event.pickup_latitude);
-        if(from != null && to != null){
+        Area from = geo.translate(new_event.pickup_longitude,
+            new_event.pickup_latitude);
+        Area to = geo.translate(new_event.dropoff_longitude,
+            new_event.pickup_latitude);
+        if(from != null && to != null) {
           Route r = new Route(from, to);
           Timestamp ts = new_event.dropoff_datetime;
           ten_max_changed = false;
-          old_ten_max = maxFrequenciesDataStructure.getMaxTenCopy();
-          if(maxFrequenciesDataStructure.update(r, new Freq(1,ts))){
+          old_ten_max = maxfs.getMaxTenCopy();
+          if(maxfs.update(r, new Freq(1,ts))) {
             ten_max_changed = true;
           }
 
-          if(ten_max_changed == true){
-            Vector<KeyVal<Route, Freq>> ten_max = maxFrequenciesDataStructure.getMaxTen();
-            if(!maxFrequenciesDataStructure.isSameMaxTenKey(old_ten_max)){
-              printStream.print(new_event.pickup_datetime.toString());
-              printStream.print(",");
-              printStream.print(new_event.dropoff_datetime.toString());
-              printStream.print(",");
-              for(int i = 0; i < 10; i++){
-                if(ten_max.get(i) != null){
-                  printStream.print(ten_max.get(i).key.fromArea.x);
-                  printStream.print(".");
-                  printStream.print(ten_max.get(i).key.fromArea.y);
-                  printStream.print(",");
-                  printStream.print(ten_max.get(i).key.toArea.x);
-                  printStream.print(".");
-                  printStream.print(ten_max.get(i).key.toArea.y);
-                  printStream.print(",");
+          if(ten_max_changed == true) {
+            Vector<KeyVal<Route, Freq>> ten_max = maxfs.getMaxTen();
+            if(!maxfs.isSameMaxTenKey(old_ten_max)) {
+              print_stream.print(new_event.pickup_datetime.toString());
+              print_stream.print(",");
+              print_stream.print(new_event.dropoff_datetime.toString());
+              print_stream.print(",");
+              for(int i = 0; i < 10; i++) {
+                if(ten_max.get(i) != null) {
+                  print_stream.print(ten_max.get(i).key.fromArea.x);
+                  print_stream.print(".");
+                  print_stream.print(ten_max.get(i).key.fromArea.y);
+                  print_stream.print(",");
+                  print_stream.print(ten_max.get(i).key.toArea.x);
+                  print_stream.print(".");
+                  print_stream.print(ten_max.get(i).key.toArea.y);
+                  print_stream.print(",");
                 }
                 else{
-                  printStream.print("NULL");
-                  printStream.print(",");
+                  print_stream.print("NULL");
+                  print_stream.print(",");
                 }
               }
-              printStream.print("\n");
+              print_stream.print("\n");
             }
             ten_max_changed = false;
           }
 
           try {
-            slidingWindow.set(end, new_event);
+            sliding_window.set(end, new_event);
           } catch (IndexOutOfBoundsException e) {
             // Happens if size < number of events in the window
-            slidingWindow.add(new_event);
+            sliding_window.add(new_event);
           }
-          end = (end + 1)%windowCapacity;
+          end = (end + 1)%WINDOW_CAPACITY;
         }
         //Get the next event to process from the queue
         new_event = queue.take();
       }
-      out.close();
-    }
-    catch(Exception e) {
-      printStream.println(e.getMessage());
-      printStream.println("Error in Q1Process!");
+    } catch(Exception e) {
+      print_stream.println("Error in Q1Process!");
+      print_stream.println(e.getMessage());
     }
   }
 }
@@ -382,147 +379,153 @@ class Q1Process implements Runnable {
  */
 
 class Q2Process implements Runnable {
-  private static final String Q2_FILE = "test/q2_out.csv";
+  private final int WINDOW_CAPACITY = 1000;
 
-  final int windowCapacity = 1000;
   private BlockingQueue<Q2Elem> queue;
-  private TenMaxProfitability profitabilityDataStructure;
-  private Geo geoObject;
-  private ArrayList<Q2Elem> slidingWindow;
+  private TenMaxProfitability maxpft;
+  private Geo geo;
+  private ArrayList<Q2Elem> sliding_window;
   private int end;
-  private int start_30, start_15;
-  private PrintStream printStream;
+  private int start30, start15;
+  private PrintStream print_stream;
 
-  public Q2Process(BlockingQueue<Q2Elem> queueForQ2, OutputStream printStream) {
-    this.queue = queueForQ2;
-    this.profitabilityDataStructure = new TenMaxProfitability();
-    this.slidingWindow = new ArrayList<Q2Elem>(windowCapacity);
-    this.printStream = new PrintStream(printStream);
-    start_30 = 0;
-    start_15 = 0;
+  public Q2Process(BlockingQueue<Q2Elem> queue2, OutputStream print_stream) {
+    this.queue = queue2;
+    this.maxpft = new TenMaxProfitability();
+    this.geo = new Geo(-74.913585f, 41.474937f, 250, 250, 600, 600);
+    this.sliding_window = new ArrayList<Q2Elem>(WINDOW_CAPACITY);
+    start30 = 0;
+    start15 = 0;
     end = 0;
-    this.geoObject = new Geo(-74.913585f, 41.474937f, 250, 250, 600, 600);
+    this.print_stream = new PrintStream(print_stream);
   }
 
-  public void printTopTen(Q2Elem new_event){
-    Vector<KeyVal<Area, Profitability>> ten_max = profitabilityDataStructure.getMaxTen();
-    printStream.print(new_event.pickup_datetime.toString());
-    printStream.print(",");
-    printStream.print(new_event.dropoff_datetime.toString());
-    printStream.print(",");
-    for(int i = 0; i < 10; i++){
-      if(ten_max.get(i) != null){
-        printStream.print(ten_max.get(i).key.x);
-        printStream.print(".");
-        printStream.print(ten_max.get(i).key.y);
-        printStream.print(",");
-        printStream.print(ten_max.get(i).val.num_empty_taxis);
-        printStream.print(",");
-        printStream.print(ten_max.get(i).val.mprofit.getMedian());
-        printStream.print(",");
-        printStream.print(ten_max.get(i).val.profitability);
-        printStream.print(",");
-      }
-      else{
-        printStream.print("NULL");
-        printStream.print(",");
+  public void printTopTen(Q2Elem new_event) {
+    Vector<KeyVal<Area, Profitability>> ten_max = maxpft.getMaxTen();
+    print_stream.print(new_event.pickup_datetime.toString());
+    print_stream.print(",");
+    print_stream.print(new_event.dropoff_datetime.toString());
+    print_stream.print(",");
+    for(int i = 0; i < 10; i++) {
+      if(ten_max.get(i) != null) {
+        print_stream.print(ten_max.get(i).key.x);
+        print_stream.print(".");
+        print_stream.print(ten_max.get(i).key.y);
+        print_stream.print(",");
+        print_stream.print(ten_max.get(i).val.num_empty_taxis);
+        print_stream.print(",");
+        print_stream.print(ten_max.get(i).val.mprofit.getMedian());
+        print_stream.print(",");
+        print_stream.print(ten_max.get(i).val.profitability);
+        print_stream.print(",");
+      } else{
+        print_stream.print("NULL");
+        print_stream.print(",");
       }
     }
-    printStream.print("\n");
+    print_stream.print("\n");
   }
 
-  public void add(Q2Elem new_event){
+  public void add(Q2Elem new_event) {
     //Get initial ten max values
-    Vector<Area> old_ten_max = profitabilityDataStructure.getMaxTenCopy();
+    Vector<Area> old_ten_max = maxpft.getMaxTenCopy();
 
-    Area dropoff_area = geoObject.translate(new_event.dropoff_longitude, new_event.dropoff_latitude);
-    if(dropoff_area != null){
-      profitabilityDataStructure.enterProfitSlidingWindow(dropoff_area, new_event.fare_amount + new_event.tip_amount, new_event.dropoff_datetime);
-      profitabilityDataStructure.enterTaxiSlidingWindow(new_event.medallion, new_event.hack_license, dropoff_area, new_event.dropoff_datetime);
+    Area dropoff_area = geo.translate(new_event.dropoff_longitude,
+        new_event.dropoff_latitude);
+    if(dropoff_area != null) {
+      maxpft.enterProfitSlidingWindow(dropoff_area,
+          new_event.fare_amount+new_event.tip_amount,
+          new_event.dropoff_datetime);
+      maxpft.enterTaxiSlidingWindow(new_event.medallion,
+          new_event.hack_license, dropoff_area, new_event.dropoff_datetime);
 
-      if(!profitabilityDataStructure.isSameMaxTenKey(old_ten_max)){
+      if(!maxpft.isSameMaxTenKey(old_ten_max)) {
         printTopTen(new_event);
       }
 
       try {
-        slidingWindow.set(end, new_event);
+        sliding_window.set(end, new_event);
       } catch (IndexOutOfBoundsException e) {
         // Happens if size < number of events in the window
-        slidingWindow.add(new_event);
+        sliding_window.add(new_event);
       }
-      end = (end + 1)%windowCapacity;
+      end = (end + 1)%WINDOW_CAPACITY;
     }
   }
 
-  public void removeFromEmptyTaxis(Q2Elem new_event, long timestamp){
-    Q2Elem empty_taxis_event = slidingWindow.get(start_30);
-    Vector<Area>  old_ten_max = profitabilityDataStructure.getMaxTenCopy();
-    while(empty_taxis_event.dropoff_datetime.getTime() == timestamp){
-      profitabilityDataStructure.leaveTaxiSlidingWindow(empty_taxis_event.medallion, empty_taxis_event.hack_license, empty_taxis_event.dropoff_datetime);
+  public void removeFromEmptyTaxis(Q2Elem new_event, long timestamp) {
+    Q2Elem empty_taxis_event = sliding_window.get(start30);
+    Vector<Area>  old_ten_max = maxpft.getMaxTenCopy();
+    while(empty_taxis_event.dropoff_datetime.getTime() == timestamp) {
+      maxpft.leaveTaxiSlidingWindow(empty_taxis_event.medallion,
+          empty_taxis_event.hack_license, empty_taxis_event.dropoff_datetime);
 
-      start_30 = (start_30 + 1)%windowCapacity;
-      if(start_30 != end){
-        empty_taxis_event = slidingWindow.get(start_30);
-      }
-      else{
+      start30 = (start30 + 1)%WINDOW_CAPACITY;
+      if(start30 != end) {
+        empty_taxis_event = sliding_window.get(start30);
+      } else{
         break;
       }
     }
-    if(!profitabilityDataStructure.isSameMaxTenKey(old_ten_max)){
+    if(!maxpft.isSameMaxTenKey(old_ten_max)) {
       printTopTen(new_event);
     }
   }
 
-  public void removeFromProfit(Q2Elem new_event, long timestamp){
-    Q2Elem profit_event = slidingWindow.get(start_15);
-    Vector<Area> old_ten_max = profitabilityDataStructure.getMaxTenCopy();
-    while(profit_event.dropoff_datetime.getTime() == timestamp){
-      Area dropoff_area = geoObject.translate(profit_event.dropoff_longitude, profit_event.dropoff_latitude);
-      profitabilityDataStructure.leaveProfitSlidingWindow(dropoff_area, profit_event.fare_amount + profit_event.tip_amount);
+  public void removeFromProfit(Q2Elem new_event, long timestamp) {
+    Q2Elem profit_event = sliding_window.get(start15);
+    Vector<Area> old_ten_max = maxpft.getMaxTenCopy();
 
-      start_15 = (start_15 + 1)%windowCapacity;
-      if(start_15 != end){
-        profit_event = slidingWindow.get(start_15);
-      }
-      else{
+    while(profit_event.dropoff_datetime.getTime() == timestamp) {
+      Area dropoff_area = geo.translate(profit_event.dropoff_longitude,
+          profit_event.dropoff_latitude);
+      maxpft.leaveProfitSlidingWindow(dropoff_area,
+          profit_event.fare_amount+profit_event.tip_amount);
+
+      start15 = (start15 + 1)%WINDOW_CAPACITY;
+      if(start15 != end) {
+        profit_event = sliding_window.get(start15);
+      } else{
         break;
       }
     }
-    if(!profitabilityDataStructure.isSameMaxTenKey(old_ten_max)){
+
+    if(!maxpft.isSameMaxTenKey(old_ten_max)) {
       printTopTen(new_event);
     }
   }
 
-  public void removeFromBoth(Q2Elem new_event, long timestamp){
-    Q2Elem empty_taxis_event = slidingWindow.get(start_30);
-    Vector<Area> old_ten_max = profitabilityDataStructure.getMaxTenCopy();
-    while(empty_taxis_event.dropoff_datetime.getTime() == timestamp){
-      profitabilityDataStructure.leaveTaxiSlidingWindow(empty_taxis_event.medallion, empty_taxis_event.hack_license, empty_taxis_event.dropoff_datetime);
+  public void removeFromBoth(Q2Elem new_event, long timestamp) {
+    Q2Elem empty_taxis_event = sliding_window.get(start30);
+    Vector<Area> old_ten_max = maxpft.getMaxTenCopy();
+    while(empty_taxis_event.dropoff_datetime.getTime() == timestamp) {
+      maxpft.leaveTaxiSlidingWindow(empty_taxis_event.medallion,
+          empty_taxis_event.hack_license, empty_taxis_event.dropoff_datetime);
 
-      start_30 = (start_30 + 1)%windowCapacity;
-      if(start_30 != end){
-        empty_taxis_event = slidingWindow.get(start_30);
-      }
-      else{
+      start30 = (start30 + 1)%WINDOW_CAPACITY;
+      if(start30 != end) {
+        empty_taxis_event = sliding_window.get(start30);
+      } else{
         break;
       }
     }
 
-    Q2Elem profit_event = slidingWindow.get(start_15);
-    while(profit_event.dropoff_datetime.getTime() == timestamp){
-      Area dropoff_area = geoObject.translate(profit_event.dropoff_longitude, profit_event.dropoff_latitude);
-      profitabilityDataStructure.leaveProfitSlidingWindow(dropoff_area, profit_event.fare_amount + profit_event.tip_amount);
+    Q2Elem profit_event = sliding_window.get(start15);
+    while(profit_event.dropoff_datetime.getTime() == timestamp) {
+      Area dropoff_area = geo.translate(profit_event.dropoff_longitude,
+          profit_event.dropoff_latitude);
+      maxpft.leaveProfitSlidingWindow(dropoff_area,
+          profit_event.fare_amount+profit_event.tip_amount);
 
-      start_15 = (start_15 + 1)%windowCapacity;
-      if(start_15 != end){
-        profit_event = slidingWindow.get(start_15);
-      }
-      else{
+      start15 = (start15 + 1)%WINDOW_CAPACITY;
+      if(start15 != end) {
+        profit_event = sliding_window.get(start15);
+      } else{
         break;
       }
     }
 
-    if(!profitabilityDataStructure.isSameMaxTenKey(old_ten_max)){
+    if(!maxpft.isSameMaxTenKey(old_ten_max)) {
       printTopTen(new_event);
     }
   }
@@ -530,71 +533,81 @@ class Q2Process implements Runnable {
   @Override
   public void run() {
     try {
-      BufferedWriter out = new BufferedWriter(new FileWriter(Q2_FILE));
       Q2Elem new_event = queue.take();
 
-      while(new_event.medallion.equals("sentinel") == false) {
+      while(new_event.pickup_longitude != 10000000) {
         // Check if events are leaving the sliding window and process them
         long current_milliseconds = new_event.dropoff_datetime.getTime();
-        if(start_30 != end){ //This means sliding window for 30 minutes is not empty
-          Q2Elem empty_taxis_event = slidingWindow.get(start_30);
-          long empty_taxis_milliseconds = empty_taxis_event.dropoff_datetime.getTime() + 30*60*100;
+
+        // This means sliding window for 30 minutes is not empty
+        if(start30 != end) {
+          Q2Elem empty_taxis_event = sliding_window.get(start30);
+          long empty_taxis_ms = empty_taxis_event.dropoff_datetime.getTime()
+              + 30*60*100;
           long profit_milliseconds = current_milliseconds;
-          if(start_15 != end){  //This means sliding window for 15 minutes is not empty
-            Q2Elem profit_event = slidingWindow.get(start_15);
-            profit_milliseconds = profit_event.dropoff_datetime.getTime() + 15*60*100;
+
+          // This means sliding window for 15 minutes is not empty
+          if(start15 != end) {
+            Q2Elem profit_event = sliding_window.get(start15);
+            profit_milliseconds = profit_event.dropoff_datetime.getTime() +
+                15*60*100;
           }
 
-          if(empty_taxis_milliseconds < current_milliseconds && empty_taxis_milliseconds < profit_milliseconds){
+          if(empty_taxis_ms < current_milliseconds &&
+              empty_taxis_ms < profit_milliseconds) {
             // Remove from empty taxis window
-            removeFromEmptyTaxis(new_event, empty_taxis_milliseconds - 30*60*100);
-          }
-          else if(empty_taxis_milliseconds < current_milliseconds && profit_milliseconds < empty_taxis_milliseconds){
+            removeFromEmptyTaxis(new_event, empty_taxis_ms - 30*60*100);
+          } else if(empty_taxis_ms < current_milliseconds &&
+              profit_milliseconds < empty_taxis_ms) {
             // Remove from profit window
             removeFromProfit(new_event, profit_milliseconds - 15*60*100);
-          }
-          else if(empty_taxis_milliseconds < current_milliseconds && profit_milliseconds == empty_taxis_milliseconds){
+          } else if(empty_taxis_ms < current_milliseconds &&
+              profit_milliseconds == empty_taxis_ms) {
             // Remove from both the windows
             removeFromBoth(new_event, profit_milliseconds - 15*60*100);
-          }
-          else if(current_milliseconds <= profit_milliseconds && current_milliseconds <= empty_taxis_milliseconds){
+          } else if(current_milliseconds <= profit_milliseconds &&
+              current_milliseconds <= empty_taxis_ms) {
             // Add new event in the window
             add(new_event);
             //Get the next event to process from the queue
             new_event = queue.take();
           }
-        }
-        else{
+        } else{
           // No event in the sliding window, just add the incoming event
           add(new_event);
           //Get the next event to process from the queue
           new_event = queue.take();
         }
       }
-
-      out.close();
     } catch(Exception e) {
-      printStream.println(e.getMessage());
-      printStream.println("Error in Q2Process!");
+      print_stream.println("Error in Q2Process!");
+      print_stream.println(e.getMessage());
     }
   }
 }
 
 public class debs2015 {
-  private static BlockingQueue<Q1Elem> queueForQ1;
-  private static BlockingQueue<Q2Elem> queueForQ2;
+  private final static String TEST_FILE = "test/sorted_data.csv";
+  private static final String Q1_FILE = "test/q1_out.csv";
+  private static final String Q2_FILE = "test/q2_out.csv";
+  private static final int QUEUE_CAPACITY = 1000;
 
-  public static void main(String[] args) {
-    final int QueueCapacity = 1000;
+  private static BlockingQueue<Q1Elem> queue_for_Q1;
+  private static BlockingQueue<Q2Elem> queue_for_Q2;
+
+  public static void main(String[] args) throws FileNotFoundException {
+    PrintStream q1out = new PrintStream(new FileOutputStream(Q1_FILE, true));
+    PrintStream q2out = new PrintStream(new FileOutputStream(Q2_FILE, true));
 
     // Initializing queues
-    queueForQ1 = new ArrayBlockingQueue<Q1Elem>(QueueCapacity);
-    queueForQ2 = new ArrayBlockingQueue<Q2Elem>(QueueCapacity);
+    queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(QUEUE_CAPACITY);
+    queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(QUEUE_CAPACITY);
 
     // start threads
-    Thread threadForIoProcess = new Thread(new IoProcess(queueForQ1, queueForQ2));
-    Thread threadForQ1Process = new Thread(new Q1Process(queueForQ1, System.out));
-    Thread threadForQ2Process = new Thread(new Q2Process(queueForQ2, System.out));
+    Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1,
+        queue_for_Q2, TEST_FILE));
+    Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, q1out));
+    Thread threadForQ2Process = new Thread(new Q2Process(queue_for_Q2, q2out));
 
     threadForIoProcess.start();
     threadForQ1Process.start();

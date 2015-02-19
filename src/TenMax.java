@@ -4,7 +4,8 @@ import java.util.PriorityQueue;
 import java.util.Vector;
 
 // implements key-val struct
-class KeyVal<Key, Val extends Comparable<Val>> implements Comparable<KeyVal<Key, Val>> {
+class KeyVal<Key, Val extends Comparable<Val>>
+implements Comparable<KeyVal<Key, Val>> {
   public Key key;
   public Val val;
 
@@ -56,7 +57,8 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
 
   public TenMax() {
     max_ten = new Vector<KeyVal<Key, Val>>(10);
-    val_pq = new PriorityQueue<KeyVal<Key, Val>>(INIT_PQ_SIZE, Collections.reverseOrder());
+    val_pq = new PriorityQueue<KeyVal<Key, Val>>(INIT_PQ_SIZE,
+        Collections.reverseOrder());
 
     for(int i=0; i<10; i++) {
       max_ten.add(null);
@@ -132,14 +134,17 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
       } else { // key is present but number of total elements are more than 10
         KeyVal<Key, Val> tree_max = val_pq.element();
         KeyVal<Key, Val> vec_min = max_ten.lastElement();
-        KeyVal<Key, Val> oldkval = new KeyVal<Key, Val>(key, key_val_map.get(key));
-        KeyVal<Key, Val> newkval = new KeyVal<Key, Val>(key, addDiffToVal(oldkval.val, diff));
+        KeyVal<Key, Val> oldkval = new KeyVal<Key, Val>(key,
+            key_val_map.get(key));
+        KeyVal<Key, Val> newkval = new KeyVal<Key, Val>(key,
+            addDiffToVal(oldkval.val, diff));
 
         // key present, total elements more than 10, frequency is zero
         if(isZeroVal(newkval.val)) {
           key_val_map.remove(key);
 
-          // key present, total elements more than 10, frequency is zero, and delete from vector
+          // key present, total elements more than 10, frequency is zero,
+          // and delete from vector
           if(oldkval.compareTo(vec_min) >= 0) {
             for(int i=0; i<10; i++) {
               if(oldkval.compareTo(max_ten.get(i)) == 0) {
@@ -149,23 +154,29 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
             }
             max_ten.add(9, val_pq.remove());
             return true;
-          } else { // key present, total elements more than 10, frequency is zero, and delete from PQ
+          } else { // key present, total elements more than 10,
+            // frequency is zero, and delete from PQ
             val_pq.remove(oldkval);
             return false;
           }
-        } else { // key present, total elements more than 10, frequency is nonzero
+        } else { // key present, total elements more than 10,
+          // frequency is nonzero
           /* FINALLY
            *  see if new value goes into a different data
            *  structure than it was originally in
            */
-          // key present, total elements more than 10, frequency is nonzero, old and new both in PQ
+          // key present, total elements more than 10, frequency is nonzero,
+          // old and new both in PQ
           if(oldkval.compareTo(vec_min) < 0 && newkval.compareTo(vec_min) < 0) {
             val_pq.remove(oldkval);
             val_pq.add(newkval);
             key_val_map.put(key, newkval.val);
             return false;
-          } else if(oldkval.compareTo(tree_max) > 0 && newkval.compareTo(tree_max) > 0) {
-          // key present, total elements more than 10, frequency is nonzero, old and new both in vector
+          } else if(oldkval.compareTo(tree_max) > 0 &&
+              newkval.compareTo(tree_max) > 0) {
+            // key present, total elements more than 10, frequency is nonzero,
+            //  old and new both in vector
+
             // deleting existing element
             for(int i=0; i<10; i++) {
               if(max_ten.get(i).key.equals(key)) {
@@ -187,7 +198,9 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
             key_val_map.put(key, newkval.val);
             return true;
           } else if(oldkval.compareTo(vec_min) < 0) {
-          // key present, total elements more than 10, frequency is nonzero, old in PQ and new in vector
+            // key present, total elements more than 10, frequency is nonzero,
+            // old in PQ and new in vector
+
             // old val is in PQ
             val_pq.remove(oldkval);
 
@@ -208,7 +221,8 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
             key_val_map.put(key, newkval.val);
             return true;
           } else {
-          // key present, total elements more than 10, frequency is nonzero, old in vector and new in PQ
+            // key present, total elements more than 10, frequency is nonzero,
+            // old in vector and new in PQ
             // old val is in vector
             // deleting existing element
             for(int i=0; i<10; i++) {
@@ -243,7 +257,7 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
         max_ten.add(index, new KeyVal<Key, Val>(key, newval));
         key_val_map.put(key, newval);
         return true;
-      } else { // key is not present, number of total elements is greater than 10
+      } else { // key not present, number of total elements is greater than 10
         if(max_ten.lastElement().val.compareTo(newval) > 0) {
           val_pq.add(new KeyVal<Key, Val>(key, newval));
           key_val_map.put(key, newval);

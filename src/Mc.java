@@ -37,7 +37,8 @@ public class Mc {
     /* Even number case */
     else if(minheap_size == maxheap_size) {
       if(val > minheap.peek().floatValue()) {
-        maxheap.add(minheap.poll()); /* Remove from minheap and then add to maxheap */
+        /* Remove from minheap and then add to maxheap */
+        maxheap.add(minheap.poll());
         minheap.add(new Double(val));
       } else {
         maxheap.add(new Double(val));
@@ -48,7 +49,8 @@ public class Mc {
     /* Odd number case */
     else {
       if(val < maxheap.peek().floatValue()) {
-        minheap.add(maxheap.poll()); /* Remove from maxheap and then add to minheap */
+        /* Remove from maxheap and then add to minheap */
+        minheap.add(maxheap.poll());
         maxheap.add(new Double(val));
       } else {
         minheap.add(new Double(val));
@@ -64,7 +66,8 @@ public class Mc {
     /* Even number case */
     else if(minheap_size == maxheap_size) {
       if(maxheap.remove(new Double(val))) {
-        maxheap.add(minheap.poll()); /* Remove from minheap and then add to maxheap  */
+        /* Remove from minheap and then add to maxheap  */
+        maxheap.add(minheap.poll());
       } else {
         maxheap.remove(new Double(val));
       }
@@ -74,7 +77,8 @@ public class Mc {
     /* Odd number case */
     else {
       if(minheap.remove(new Double(val))) {
-        minheap.add(maxheap.poll()); /* Remove from maxheap and then add to minheap  */
+        /* Remove from maxheap and then add to minheap  */
+        minheap.add(maxheap.poll());
       } else {
         maxheap.remove(new Double(val));
       }

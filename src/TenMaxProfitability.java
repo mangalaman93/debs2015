@@ -211,10 +211,11 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
     return p;
   }
 
-  public boolean leaveTaxiSlidingWindow(String medallion, String hack_license, Timestamp ts) {
+  public boolean leaveTaxiSlidingWindow(String medallion, String hack_license,
+      Timestamp ts) {
     String searchKey = medallion + hack_license;
 
-    // Check if the event leaving corresponds to the event present in the area - taxiInfo hashmap
+    // Check if the event leaving corresponds to the event present in the area
     if(ts.equals(grid_present.get(searchKey).ts)) {
       // If present, then undo the effects of this event
       Profitability diff = new Profitability();
@@ -227,14 +228,17 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
     return false;
   }
 
-  public void enterTaxiSlidingWindow(String medallion, String hack_license, Area a, Timestamp ts) {
+  public void enterTaxiSlidingWindow(String medallion, String hack_license,
+      Area a, Timestamp ts) {
     String search_key = medallion + hack_license;
 
-    // This taxi was in consideration earlier -> has reached a new place within 30 mins
+    // This taxi was in consideration earlier
+    // => has reached a new place within 30 mins
     if(grid_present.containsKey(search_key)) {
       /*
        * Remove this taxi from previous grid ->
-       * Change profitability to decrease empty taxi number corresponding to Area grid_present[searchKey].a
+       * Change profitability to decrease empty taxi number corresponding to
+       * Area grid_present[searchKey].a
        */
       Profitability diff1 = new Profitability();
       diff1.num_empty_taxis = -1;
@@ -242,7 +246,8 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
 
       /*
        * Add this taxi to the new destination grid ->
-       * Change profitability to increase empty taxi number corresponding to Area a
+       * Change profitability to increase empty taxi number
+       * corresponding to Area a
        */
       Profitability diff2 = new Profitability();
       diff2.num_empty_taxis = 1;
@@ -255,11 +260,13 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
       this.update(a, diff2);
     }
 
-    // This taxi was not in consideration earlier -> has reached a new place > 30 mins
+    // This taxi was not in consideration earlier
+    // => has reached a new place > 30 mins
     else {
       /*
        * Add this taxi to the new destination grid ->
-       * Change profitability to increase empty taxi number corresponding to Area a
+       * Change profitability to increase empty taxi number
+       * corresponding to Area a
        */
       grid_present.put(search_key, new TaxiInfo(a, ts));
       Profitability diff = new Profitability();

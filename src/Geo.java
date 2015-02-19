@@ -21,7 +21,7 @@ public class Geo {
    * The approximate conversions are:
    *   Latitude: 1 deg = 110.54 km = 110.54*1000m
    *   Longitude: 1 deg = 111.320*cos(latitude) km = 84.38 km = 84.38*1000 m
-   *   http://stackoverflow.com/questions/1253499/simple-calculations-for-working-with-lat-lon-km-distance
+   *   http://stackoverflow.com/questions/1253499/
    */
   public Area translate(float locX, float locY) {
     float distX = (float) ((locX-topLeftX)*84.38*1000) + 0.5f*cellSizeX;
