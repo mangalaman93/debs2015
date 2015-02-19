@@ -106,7 +106,8 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
           KeyVal<Key, Val> newkval = new KeyVal<Key, Val>(key, newval);
           int index = max_ten.size();
           for(int i=0; i<max_ten.size(); i++) {
-            if(max_ten.get(i) == null || newkval.compareTo(max_ten.get(i)) > 0) {
+            if(max_ten.get(i) == null ||
+                newkval.compareTo(max_ten.get(i)) > 0) {
               index = i;
               break;
             }
@@ -146,16 +147,12 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
            */
           // key present, total elements more than 10, frequency is nonzero, old and new both in PQ
           if(oldkval.compareTo(vec_min) < 0 && newkval.compareTo(vec_min) < 0) {
-            assert oldkval.compareTo(tree_max) <= 0;
-
             val_pq.remove(oldkval);
             val_pq.add(newkval);
             key_val_map.put(key, newkval.val);
             return false;
           } else if(oldkval.compareTo(tree_max) > 0 && newkval.compareTo(tree_max) > 0) {
           // key present, total elements more than 10, frequency is nonzero, old and new both in vector
-            assert oldkval.compareTo(vec_min) >= 0;
-
             // deleting existing element
             for(int i=0; i<10; i++) {
               if(max_ten.get(i).key.equals(key)) {
@@ -163,11 +160,10 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
                 break;
               }
             }
-            assert max_ten.size() == 9;
 
             // insert element
-            int index = 9;
-            for(int i=0; i<9; i++) {
+            int index = max_ten.size();
+            for(int i=0; i<max_ten.size(); i++) {
               if(newkval.compareTo(max_ten.get(i)) > 0) {
                 index = i;
                 break;
@@ -179,8 +175,6 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
             return true;
           } else if(oldkval.compareTo(vec_min) < 0) {
           // key present, total elements more than 10, frequency is nonzero, old in PQ and new in vector
-            assert oldkval.compareTo(tree_max) <= 0;
-
             // old val is in PQ
             val_pq.remove(oldkval);
 
@@ -210,7 +204,6 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
                 break;
               }
             }
-            assert max_ten.size() == 9;
             max_ten.add(val_pq.remove());
 
             // new val will be inserted into PQ
