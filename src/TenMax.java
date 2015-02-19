@@ -67,13 +67,26 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
     return max_ten;
   }
 
-  public boolean isSameMaxTenKey(Vector<KeyVal<Key, Val>> old_max_ten) {
+  public Vector<Key> getMaxTenCopy() {
+    Vector<Key> key_list = new Vector<Key>(10);
+    for(int i=0; i<10; i++) {
+      if(max_ten.get(i) == null) {
+        key_list.add(null);
+      } else {
+        key_list.add(max_ten.get(i).key);
+      }
+    }
+
+    return key_list;
+  }
+
+  public boolean isSameMaxTenKey(Vector<Key> old_max_ten) {
     for(int i=0; i<10; i++) {
       if(max_ten.get(i) == null && old_max_ten.get(i) == null) {
         return true;
       } else if((max_ten.get(i) == null && old_max_ten.get(i) != null) ||
           (old_max_ten.get(i)== null && max_ten.get(i) != null) ||
-          (!max_ten.get(i).key.equals(old_max_ten.get(i).key))) {
+          (!max_ten.get(i).key.equals(old_max_ten.get(i)))) {
         return false;
       }
     }

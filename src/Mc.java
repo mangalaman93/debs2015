@@ -8,8 +8,6 @@ class maxComparator implements Comparator<Double> {
   }
 }
 
-// TODO : Remove is O(n). Will make it O(log(n)) once correctness verified.
-
 public class Mc {
   Comparator<Double> comparator = new maxComparator();
   PriorityQueue<Double> minheap; /* Contains the max 1/2 elements */
@@ -26,7 +24,7 @@ public class Mc {
     minheap_size = 0;
     maxheap_size = 0;
     minheap = new PriorityQueue<Double>();
-    maxheap = new PriorityQueue<Double>(10,comparator);
+    maxheap = new PriorityQueue<Double>(10, comparator);
   }
 
   public void insert(float val) {
@@ -41,8 +39,7 @@ public class Mc {
       if(val > minheap.peek().floatValue()) {
         maxheap.add(minheap.poll()); /* Remove from minheap and then add to maxheap */
         minheap.add(new Double(val));
-      }
-      else {
+      } else {
         maxheap.add(new Double(val));
       }
       maxheap_size++;
@@ -53,8 +50,7 @@ public class Mc {
       if(val < maxheap.peek().floatValue()) {
         minheap.add(maxheap.poll()); /* Remove from maxheap and then add to minheap */
         maxheap.add(new Double(val));
-      }
-      else {
+      } else {
         minheap.add(new Double(val));
       }
       minheap_size++;
@@ -69,8 +65,7 @@ public class Mc {
     else if(minheap_size == maxheap_size) {
       if(maxheap.remove(new Double(val))) {
         maxheap.add(minheap.poll()); /* Remove from minheap and then add to maxheap  */
-      }
-      else {
+      } else {
         maxheap.remove(new Double(val));
       }
       minheap_size--;
@@ -80,8 +75,7 @@ public class Mc {
     else {
       if(minheap.remove(new Double(val))) {
         minheap.add(maxheap.poll()); /* Remove from maxheap and then add to minheap  */
-      }
-      else {
+      } else {
         maxheap.remove(new Double(val));
       }
       maxheap_size--;
@@ -89,24 +83,20 @@ public class Mc {
   }
 
   public float getMedian() {
-    float ret_val = 0.0f;
-
     /* Empty PQ case */
     if(maxheap_size == 0) {
-      System.out.println("Heap is empty\n");
-      throw new EmptyStackException();
+      return 0.0f;
     }
 
     /* Even number case */
     else if(maxheap_size == minheap_size) {
-      ret_val = (maxheap.peek().floatValue() + minheap.peek().floatValue()) / 2;
+      return (maxheap.peek().floatValue() + minheap.peek().floatValue()) / 2;
     }
 
     /* Odd number case */
     else {
-      ret_val = maxheap.peek().floatValue();
+      return maxheap.peek().floatValue();
     }
-    return ret_val;
   }
 
   public int size() {

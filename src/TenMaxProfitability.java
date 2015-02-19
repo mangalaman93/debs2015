@@ -67,9 +67,9 @@ class Profitability implements Comparable<Profitability> {
       return true;
 
     Profitability p = (Profitability) obj;
-    if(p.profitability==this.profitability &&
-        p.num_empty_taxis==this.num_empty_taxis &&
-        p.ts==this.ts) {
+    if(p.profitability == this.profitability &&
+        p.num_empty_taxis == this.num_empty_taxis &&
+        p.ts == this.ts) {
       return true;
     }
 
@@ -81,16 +81,16 @@ class ArrayMap extends AbstractMap<Area, Profitability> {
   private int xSize;
   private int ySize;
   private Profitability[][] data;
-  int size;
+  private int size;
 
   public ArrayMap(int xLimit, int yLimit) {
     this.xSize = xLimit;
     this.ySize = yLimit;
-    data = new Profitability[this.xSize][this.ySize];
-    size = 0;
+    this.data = new Profitability[this.xSize][this.ySize];
+    this.size = 0;
 
-    for(int i=0; i<xSize; i++) {
-      for(int j=0; j<ySize; j++) {
+    for(int i=0; i<this.xSize; i++) {
+      for(int j=0; j<this.ySize; j++) {
         data[i][j] = null;
       }
     }
@@ -172,36 +172,36 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
 
   @Override
   public boolean isZeroVal(Profitability v) {
-    return v.mprofit.size()==0;
+    return v.mprofit.size()==0 && v.num_empty_taxis==0;
   }
 
   @Override
-  public Profitability addDiffToVal(Profitability v1, Profitability diff) {
+  public Profitability addDiffToVal(Profitability v, Profitability diff) {
     Profitability p = new Profitability();
 
-    if(v1 == null) {
+    if(v == null) {
       p.mprofit = new Mc();
       p.mprofit.insert(diff.profitability);
       p.num_empty_taxis = diff.num_empty_taxis;
       p.profitability = diff.profitability;
       p.ts = diff.ts;
     } else {
-      p.mprofit = v1.mprofit;
-      p.num_empty_taxis = v1.num_empty_taxis + diff.num_empty_taxis;
+      p.mprofit = v.mprofit;
+      p.num_empty_taxis = v.num_empty_taxis + diff.num_empty_taxis;
 
       if(diff.profitability > 0) {
-        v1.mprofit.insert(diff.profitability);
+        v.mprofit.insert(diff.profitability);
         p.ts = diff.ts;
         p.resetProfitability();
       } else {
         if(diff.num_empty_taxis > 0) {
           p.ts = diff.ts;
         } else {
-          p.ts = v1.ts;
+          p.ts = v.ts;
         }
 
         if(diff.profitability < 0) {
-          v1.mprofit.delete(-diff.profitability);
+          v.mprofit.delete(-diff.profitability);
         }
 
         p.resetProfitability();
@@ -271,7 +271,7 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
 
   public boolean leaveProfitSlidingWindow(Area a, float profit) {
     Profitability ptb = new Profitability();
-    ptb.profitability = profit;
+    ptb.profitability = -profit;
     return this.update(a, ptb);
   }
 
