@@ -47,7 +47,7 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
   private final int INIT_PQ_SIZE = 100;
 
   // abstract functions
-  public abstract Val addDiffToVal(Val v1, Val diff);
+  public abstract Val addDiffToVal(Val v, Val diff);
   public abstract boolean isZeroVal(Val v);
 
   protected AbstractMap<Key, Val> key_val_map;
@@ -69,10 +69,11 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
 
   public boolean isSameMaxTenKey(Vector<KeyVal<Key, Val>> old_max_ten) {
     for(int i=0; i<10; i++) {
-      if((old_max_ten.get(i)== null && max_ten.get(i) == null) ||
-        (max_ten.get(i)== null && old_max_ten.get(i) != null) ||
-        (old_max_ten.get(i)== null && max_ten.get(i) != null) ||
-        (!max_ten.get(i).key.equals(old_max_ten.get(i).key))) {
+      if(max_ten.get(i) == null && old_max_ten.get(i) == null) {
+        return true;
+      } else if((max_ten.get(i) == null && old_max_ten.get(i) != null) ||
+          (old_max_ten.get(i)== null && max_ten.get(i) != null) ||
+          (!max_ten.get(i).key.equals(old_max_ten.get(i).key))) {
         return false;
       }
     }
@@ -105,7 +106,7 @@ public abstract class TenMax<Key, Val extends Comparable<Val>> {
           KeyVal<Key, Val> newkval = new KeyVal<Key, Val>(key, newval);
           int index = max_ten.size();
           for(int i=0; i<max_ten.size(); i++) {
-            if(newkval.compareTo(max_ten.get(i)) > 0) {
+            if(max_ten.get(i) == null || newkval.compareTo(max_ten.get(i)) > 0) {
               index = i;
               break;
             }
