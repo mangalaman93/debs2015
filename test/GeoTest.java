@@ -37,11 +37,11 @@ public class GeoTest {
 
   @Test
   public void test5() {
-    assertTrue(g1.translate(0.000000f,0.000000f).equals(new Area(-1,-1)));
+    assertTrue(g1.translate(0.000000f,0.000000f) == null);
   }
 
   @Test
   public void test6() {
-    assertTrue(g1.translate(-74.913585f,0.000000f).equals(new Area(-1,-1)));
+    assertTrue(g1.translate(-74.913585f,0.000000f) == null);
   }
 }

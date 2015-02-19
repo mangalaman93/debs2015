@@ -122,7 +122,7 @@ public class TenMaxProfitabilityTest {
     }
 
     for(int i=10; i<20; i++) {
-      tmp.leaveProfitSlidingWindow(a[i-10], -100.45f);
+      tmp.leaveProfitSlidingWindow(a[i-10], 100.45f);
     }
 
     for(int i=0; i<10; i++) {
