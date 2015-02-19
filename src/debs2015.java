@@ -402,6 +402,7 @@ class Q2Process implements Runnable {
     System.out.print(new_event.pickup_datetime.toString());
     System.out.print(",");
     System.out.print(new_event.dropoff_datetime.toString());
+    System.out.print(",");
     for(int i = 0; i < 10; i++){
       if(ten_max.get(i) != null){
         System.out.print(ten_max.get(i).key.x);

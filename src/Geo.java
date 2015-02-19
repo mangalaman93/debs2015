@@ -24,13 +24,13 @@ public class Geo {
    *   http://stackoverflow.com/questions/1253499/simple-calculations-for-working-with-lat-lon-km-distance
    */
   public Area translate(float locX, float locY) {
-    float distX = (float) ((locX-topLeftX)*84.38*1000) + 0.5f;
+    float distX = (float) ((locX-topLeftX)*84.38*1000) + 0.5f*cellSizeX;
     int gridX = (int) (distX / cellSizeX) + 1;
     if(gridX > cellRangeX || gridX < 0) {
       return null;
     }
 
-    float distY = (float) ((topLeftY-locY)*110.54*1000) + 0.5f;
+    float distY = (float) ((topLeftY-locY)*110.54*1000) + 0.5f*cellSizeY;
     int gridY = (int) (distY / cellSizeY) + 1;
     if(gridY > cellRangeY || gridY < 0) {
       return null;
