@@ -221,77 +221,60 @@ class Q1Process implements Runnable {
 
   @Override
   public void run() {
-    try {
-      Q1Elem new_event = queue.take();
-      Timestamp last_timestamp = new Timestamp(0);
-      Boolean ten_max_changed = false;
-      while(new_event.pickup_longitude != 10000000) {
+    try{
+      Q1Elem newevent = queue.take();
+      boolean ten_max_changed = false;
+
+      while(newevent.pickup_longitude != 10000000) {
+        Vector<Route> old_ten_max = maxfs.getMaxTenCopy();
+
         // Check if events are leaving the sliding window and process them
-        long current_milliseconds = new_event.dropoff_datetime.getTime();
-        try {
-          Q1Elem last_event = sliding_window.get(start);
-          long last_milliseconds = last_event.dropoff_datetime.getTime();
+        long currentms = newevent.dropoff_datetime.getTime();
+        if(start != end) {
+          Q1Elem lastevent = sliding_window.get(start);
+          long lastms = lastevent.dropoff_datetime.getTime();
 
           // Remove the elements from the start of the window
-          while((current_milliseconds - last_milliseconds >= 1800000) &&
-              (start != end)) {
-            Vector<Route> old_ten_max = maxfs.getMaxTenCopy();
-            if(!last_timestamp.equals(last_event.dropoff_datetime)) {
-              if(ten_max_changed == true) {
-                Vector<KeyVal<Route, Freq>> ten_max = maxfs.getMaxTen();
-                if(!maxfs.isSameMaxTenKey(old_ten_max)) {
-                  print_stream.print(new_event.pickup_datetime.toString());
-                  print_stream.print(",");
-                  print_stream.print(new_event.dropoff_datetime.toString());
-                  print_stream.print(",");
-                  for(int i = 0; i < 10; i++) {
-                    if(ten_max.get(i) != null) {
-                      print_stream.print(ten_max.get(i).key.fromArea.x);
-                      print_stream.print(".");
-                      print_stream.print(ten_max.get(i).key.fromArea.y);
-                      print_stream.print(",");
-                      print_stream.print(ten_max.get(i).key.toArea.x);
-                      print_stream.print(".");
-                      print_stream.print(ten_max.get(i).key.toArea.y);
-                    } else{
-                      print_stream.print("NULL");
-                    }
-                  }
-                  print_stream.print("\n");
-                }
-                ten_max_changed = false;
-                last_timestamp = last_event.dropoff_datetime;
-              }
-            }
-
-            Area from = geo.translate(last_event.pickup_longitude,
-                last_event.pickup_latitude);
-            Area to = geo.translate(last_event.dropoff_longitude,
-                last_event.pickup_latitude);
+          while((currentms-lastms) >= 1800000 && start!=end) {
+            Area from = geo.translate(lastevent.pickup_longitude,
+                lastevent.pickup_latitude);
+            Area to = geo.translate(lastevent.dropoff_longitude,
+                lastevent.pickup_latitude);
 
             Route r = new Route(from, to);
-            Timestamp ts = last_event.dropoff_datetime;
+            ten_max_changed |= maxfs.update(r, new Freq(-1, lastevent.dropoff_datetime));
 
-            old_ten_max = maxfs.getMaxTenCopy();
-            if(maxfs.update(r, new Freq(-1, ts))) {
-              ten_max_changed = true;
-            }
             start = (start + 1)%WINDOW_CAPACITY;
-            last_event = sliding_window.get(start);
-            last_milliseconds = last_event.dropoff_datetime.getTime();
+            lastevent = sliding_window.get(start);
+            lastms = lastevent.dropoff_datetime.getTime();
           }
-        } catch(Exception e) {
-          // No event at start, sliding window is empty, nothing to do here
         }
 
-        // Print for the last event(s) that left the window
-        Vector<Route> old_ten_max = maxfs.getMaxTenCopy();
+        // Insert the current element in the sliding window
+        Area from = geo.translate(newevent.pickup_longitude,
+            newevent.pickup_latitude);
+        Area to = geo.translate(newevent.dropoff_longitude,
+            newevent.pickup_latitude);
+        if(from != null && to != null) {
+          Route r = new Route(from, to);
+          ten_max_changed |= maxfs.update(r, new Freq(1, newevent.dropoff_datetime));
+
+          try {
+            sliding_window.set(end, newevent);
+          } catch(IndexOutOfBoundsException e) {
+            // Happens if size < number of events in the window
+            sliding_window.add(newevent);
+          }
+          end = (end + 1)%WINDOW_CAPACITY;
+        }
+
         if(ten_max_changed == true) {
           Vector<KeyVal<Route, Freq>> ten_max = maxfs.getMaxTen();
+
           if(!maxfs.isSameMaxTenKey(old_ten_max)) {
-            print_stream.print(new_event.pickup_datetime.toString());
+            print_stream.print(newevent.pickup_datetime.toString());
             print_stream.print(",");
-            print_stream.print(new_event.dropoff_datetime.toString());
+            print_stream.print(newevent.dropoff_datetime.toString());
             print_stream.print(",");
             for(int i = 0; i < 10; i++) {
               if(ten_max.get(i) != null) {
@@ -302,71 +285,24 @@ class Q1Process implements Runnable {
                 print_stream.print(ten_max.get(i).key.toArea.x);
                 print_stream.print(".");
                 print_stream.print(ten_max.get(i).key.toArea.y);
+                print_stream.print(",");
               } else{
                 print_stream.print("NULL");
+                print_stream.print(",");
               }
             }
             print_stream.print("\n");
           }
-          ten_max_changed = false;
         }
 
-        // Insert the current element in the sliding window
-        Area from = geo.translate(new_event.pickup_longitude,
-            new_event.pickup_latitude);
-        Area to = geo.translate(new_event.dropoff_longitude,
-            new_event.pickup_latitude);
-        if(from != null && to != null) {
-          Route r = new Route(from, to);
-          Timestamp ts = new_event.dropoff_datetime;
-          ten_max_changed = false;
-          old_ten_max = maxfs.getMaxTenCopy();
-          if(maxfs.update(r, new Freq(1,ts))) {
-            ten_max_changed = true;
-          }
-
-          if(ten_max_changed == true) {
-            Vector<KeyVal<Route, Freq>> ten_max = maxfs.getMaxTen();
-            if(!maxfs.isSameMaxTenKey(old_ten_max)) {
-              print_stream.print(new_event.pickup_datetime.toString());
-              print_stream.print(",");
-              print_stream.print(new_event.dropoff_datetime.toString());
-              print_stream.print(",");
-              for(int i = 0; i < 10; i++) {
-                if(ten_max.get(i) != null) {
-                  print_stream.print(ten_max.get(i).key.fromArea.x);
-                  print_stream.print(".");
-                  print_stream.print(ten_max.get(i).key.fromArea.y);
-                  print_stream.print(",");
-                  print_stream.print(ten_max.get(i).key.toArea.x);
-                  print_stream.print(".");
-                  print_stream.print(ten_max.get(i).key.toArea.y);
-                  print_stream.print(",");
-                }
-                else{
-                  print_stream.print("NULL");
-                  print_stream.print(",");
-                }
-              }
-              print_stream.print("\n");
-            }
-            ten_max_changed = false;
-          }
-
-          try {
-            sliding_window.set(end, new_event);
-          } catch (IndexOutOfBoundsException e) {
-            // Happens if size < number of events in the window
-            sliding_window.add(new_event);
-          }
-          end = (end + 1)%WINDOW_CAPACITY;
-        }
-        //Get the next event to process from the queue
-        new_event = queue.take();
+        // Get the next event to process from the queue
+        newevent = queue.take();
+        ten_max_changed = false;
       }
-    } catch(Exception e) {
+    } catch(InterruptedException e) {
       print_stream.println("Error in Q1Process!");
       print_stream.println(e.getMessage());
+      e.printStackTrace(print_stream);
     }
   }
 }
@@ -394,8 +330,8 @@ class Q2Process implements Runnable {
     this.maxpft = new TenMaxProfitability();
     this.geo = new Geo(-74.913585f, 41.474937f, 250, 250, 600, 600);
     this.sliding_window = new ArrayList<Q2Elem>(WINDOW_CAPACITY);
-    start30 = 0;
-    start15 = 0;
+    start30 = -1;
+    start15 = -1;
     end = 0;
     this.print_stream = new PrintStream(print_stream);
   }
@@ -427,9 +363,6 @@ class Q2Process implements Runnable {
   }
 
   public void add(Q2Elem new_event) {
-    //Get initial ten max values
-    Vector<Area> old_ten_max = maxpft.getMaxTenCopy();
-
     Area dropoff_area = geo.translate(new_event.dropoff_longitude,
         new_event.dropoff_latitude);
     if(dropoff_area != null) {
@@ -438,10 +371,6 @@ class Q2Process implements Runnable {
           new_event.dropoff_datetime);
       maxpft.enterTaxiSlidingWindow(new_event.medallion,
           new_event.hack_license, dropoff_area, new_event.dropoff_datetime);
-
-      if(!maxpft.isSameMaxTenKey(old_ten_max)) {
-        printTopTen(new_event);
-      }
 
       try {
         sliding_window.set(end, new_event);
@@ -455,7 +384,7 @@ class Q2Process implements Runnable {
 
   public void removeFromEmptyTaxis(Q2Elem new_event, long timestamp) {
     Q2Elem empty_taxis_event = sliding_window.get(start30);
-    Vector<Area>  old_ten_max = maxpft.getMaxTenCopy();
+
     while(empty_taxis_event.dropoff_datetime.getTime() == timestamp) {
       maxpft.leaveTaxiSlidingWindow(empty_taxis_event.medallion,
           empty_taxis_event.hack_license, empty_taxis_event.dropoff_datetime);
@@ -466,9 +395,6 @@ class Q2Process implements Runnable {
       } else{
         break;
       }
-    }
-    if(!maxpft.isSameMaxTenKey(old_ten_max)) {
-      printTopTen(new_event);
     }
   }
 
@@ -533,55 +459,50 @@ class Q2Process implements Runnable {
   @Override
   public void run() {
     try {
-      Q2Elem new_event = queue.take();
+      Q2Elem newevent = queue.take();
 
-      while(new_event.pickup_longitude != 10000000) {
-        // Check if events are leaving the sliding window and process them
-        long current_milliseconds = new_event.dropoff_datetime.getTime();
-
-        // This means sliding window for 30 minutes is not empty
-        if(start30 != end) {
-          Q2Elem empty_taxis_event = sliding_window.get(start30);
-          long empty_taxis_ms = empty_taxis_event.dropoff_datetime.getTime()
-              + 30*60*100;
-          long profit_milliseconds = current_milliseconds;
-
-          // This means sliding window for 15 minutes is not empty
-          if(start15 != end) {
-            Q2Elem profit_event = sliding_window.get(start15);
-            profit_milliseconds = profit_event.dropoff_datetime.getTime() +
-                15*60*100;
-          }
-
-          if(empty_taxis_ms < current_milliseconds &&
-              empty_taxis_ms < profit_milliseconds) {
-            // Remove from empty taxis window
-            removeFromEmptyTaxis(new_event, empty_taxis_ms - 30*60*100);
-          } else if(empty_taxis_ms < current_milliseconds &&
-              profit_milliseconds < empty_taxis_ms) {
-            // Remove from profit window
-            removeFromProfit(new_event, profit_milliseconds - 15*60*100);
-          } else if(empty_taxis_ms < current_milliseconds &&
-              profit_milliseconds == empty_taxis_ms) {
-            // Remove from both the windows
-            removeFromBoth(new_event, profit_milliseconds - 15*60*100);
-          } else if(current_milliseconds <= profit_milliseconds &&
-              current_milliseconds <= empty_taxis_ms) {
-            // Add new event in the window
-            add(new_event);
-            //Get the next event to process from the queue
-            new_event = queue.take();
-          }
-        } else{
-          // No event in the sliding window, just add the incoming event
-          add(new_event);
-          //Get the next event to process from the queue
-          new_event = queue.take();
-        }
+      while(newevent.pickup_longitude != 10000000) {
+        //        // Check if events are leaving the sliding window and process them
+        //        long currentms = newevent.dropoff_datetime.getTime();
+        //
+        //        // This means sliding window for 30 minutes is not empty
+        //        if(start30 > end) {
+        //          Q2Elem etevent = sliding_window.get(start30);
+        //          long etms = etevent.dropoff_datetime.getTime() + 30*60*100;
+        //
+        //          long profitms = currentms;
+        //          // This means sliding window for 15 minutes is not empty
+        //          if(start15 > end) {
+        //            Q2Elem pevent = sliding_window.get(start15);
+        //            profitms = pevent.dropoff_datetime.getTime() + 15*60*100;
+        //          }
+        //
+        //          if(etms < currentms && etms < profitms) {
+        //            // Remove from empty taxis window
+        //            removeFromEmptyTaxis(newevent, etms-30*60*100);
+        //          } else if(etms < currentms && profitms < etms) {
+        //            // Remove from profit window
+        //            removeFromProfit(newevent, profitms - 15*60*100);
+        //          } else if(etms < currentms && profitms == etms) {
+        //            // Remove from both the windows
+        //            removeFromBoth(newevent, profitms - 15*60*100);
+        //          } else if(currentms <= profitms && currentms <= etms) {
+        //            // Add new event in the window
+        //            add(newevent);
+        //            //Get the next event to process from the queue
+        //            newevent = queue.take();
+        //          }
+        //        } else{
+        //          // No event in the sliding window, just add the incoming event
+        //          add(newevent);
+        //          //Get te next event to process from the queue
+        newevent = queue.take();
+        //        }
       }
     } catch(Exception e) {
       print_stream.println("Error in Q2Process!");
       print_stream.println(e.getMessage());
+      e.printStackTrace(print_stream);
     }
   }
 }
@@ -600,8 +521,8 @@ public class debs2015 {
     PrintStream q2out = new PrintStream(new FileOutputStream(Q2_FILE, true));
 
     // Initializing queues
-    queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(QUEUE_CAPACITY);
-    queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(QUEUE_CAPACITY);
+    queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(QUEUE_CAPACITY, false);
+    queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(QUEUE_CAPACITY, false);
 
     // start threads
     Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1,
