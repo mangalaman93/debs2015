@@ -5,11 +5,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Vector;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
@@ -235,7 +233,7 @@ class Q1Process implements Runnable {
           long lastms = lastevent.dropoff_datetime.getTime();
 
           // Remove the elements from the start of the window
-          while((currentms-lastms) >= 1800000 && start!=end) {
+          while((currentms-lastms) >= 1800000) {
             Area from = geo.translate(lastevent.pickup_longitude,
                 lastevent.pickup_latitude);
             Area to = geo.translate(lastevent.dropoff_longitude,
@@ -245,8 +243,12 @@ class Q1Process implements Runnable {
             ten_max_changed |= maxfs.update(r, new Freq(-1, lastevent.dropoff_datetime));
 
             start = (start + 1)%WINDOW_CAPACITY;
-            lastevent = sliding_window.get(start);
-            lastms = lastevent.dropoff_datetime.getTime();
+            if(start != end) {
+              lastevent = sliding_window.get(start);
+              lastms = lastevent.dropoff_datetime.getTime();
+            } else {
+              break;
+            }
           }
         }
 
@@ -330,130 +332,10 @@ class Q2Process implements Runnable {
     this.maxpft = new TenMaxProfitability();
     this.geo = new Geo(-74.913585f, 41.474937f, 250, 250, 600, 600);
     this.sliding_window = new ArrayList<Q2Elem>(WINDOW_CAPACITY);
-    start30 = -1;
-    start15 = -1;
+    start30 = 0;
+    start15 = 0;
     end = 0;
     this.print_stream = new PrintStream(print_stream);
-  }
-
-  public void printTopTen(Q2Elem new_event) {
-    Vector<KeyVal<Area, Profitability>> ten_max = maxpft.getMaxTen();
-    print_stream.print(new_event.pickup_datetime.toString());
-    print_stream.print(",");
-    print_stream.print(new_event.dropoff_datetime.toString());
-    print_stream.print(",");
-    for(int i = 0; i < 10; i++) {
-      if(ten_max.get(i) != null) {
-        print_stream.print(ten_max.get(i).key.x);
-        print_stream.print(".");
-        print_stream.print(ten_max.get(i).key.y);
-        print_stream.print(",");
-        print_stream.print(ten_max.get(i).val.num_empty_taxis);
-        print_stream.print(",");
-        print_stream.print(ten_max.get(i).val.mprofit.getMedian());
-        print_stream.print(",");
-        print_stream.print(ten_max.get(i).val.profitability);
-        print_stream.print(",");
-      } else{
-        print_stream.print("NULL");
-        print_stream.print(",");
-      }
-    }
-    print_stream.print("\n");
-  }
-
-  public void add(Q2Elem new_event) {
-    Area dropoff_area = geo.translate(new_event.dropoff_longitude,
-        new_event.dropoff_latitude);
-    if(dropoff_area != null) {
-      maxpft.enterProfitSlidingWindow(dropoff_area,
-          new_event.fare_amount+new_event.tip_amount,
-          new_event.dropoff_datetime);
-      maxpft.enterTaxiSlidingWindow(new_event.medallion,
-          new_event.hack_license, dropoff_area, new_event.dropoff_datetime);
-
-      try {
-        sliding_window.set(end, new_event);
-      } catch (IndexOutOfBoundsException e) {
-        // Happens if size < number of events in the window
-        sliding_window.add(new_event);
-      }
-      end = (end + 1)%WINDOW_CAPACITY;
-    }
-  }
-
-  public void removeFromEmptyTaxis(Q2Elem new_event, long timestamp) {
-    Q2Elem empty_taxis_event = sliding_window.get(start30);
-
-    while(empty_taxis_event.dropoff_datetime.getTime() == timestamp) {
-      maxpft.leaveTaxiSlidingWindow(empty_taxis_event.medallion,
-          empty_taxis_event.hack_license, empty_taxis_event.dropoff_datetime);
-
-      start30 = (start30 + 1)%WINDOW_CAPACITY;
-      if(start30 != end) {
-        empty_taxis_event = sliding_window.get(start30);
-      } else{
-        break;
-      }
-    }
-  }
-
-  public void removeFromProfit(Q2Elem new_event, long timestamp) {
-    Q2Elem profit_event = sliding_window.get(start15);
-    Vector<Area> old_ten_max = maxpft.getMaxTenCopy();
-
-    while(profit_event.dropoff_datetime.getTime() == timestamp) {
-      Area dropoff_area = geo.translate(profit_event.dropoff_longitude,
-          profit_event.dropoff_latitude);
-      maxpft.leaveProfitSlidingWindow(dropoff_area,
-          profit_event.fare_amount+profit_event.tip_amount);
-
-      start15 = (start15 + 1)%WINDOW_CAPACITY;
-      if(start15 != end) {
-        profit_event = sliding_window.get(start15);
-      } else{
-        break;
-      }
-    }
-
-    if(!maxpft.isSameMaxTenKey(old_ten_max)) {
-      printTopTen(new_event);
-    }
-  }
-
-  public void removeFromBoth(Q2Elem new_event, long timestamp) {
-    Q2Elem empty_taxis_event = sliding_window.get(start30);
-    Vector<Area> old_ten_max = maxpft.getMaxTenCopy();
-    while(empty_taxis_event.dropoff_datetime.getTime() == timestamp) {
-      maxpft.leaveTaxiSlidingWindow(empty_taxis_event.medallion,
-          empty_taxis_event.hack_license, empty_taxis_event.dropoff_datetime);
-
-      start30 = (start30 + 1)%WINDOW_CAPACITY;
-      if(start30 != end) {
-        empty_taxis_event = sliding_window.get(start30);
-      } else{
-        break;
-      }
-    }
-
-    Q2Elem profit_event = sliding_window.get(start15);
-    while(profit_event.dropoff_datetime.getTime() == timestamp) {
-      Area dropoff_area = geo.translate(profit_event.dropoff_longitude,
-          profit_event.dropoff_latitude);
-      maxpft.leaveProfitSlidingWindow(dropoff_area,
-          profit_event.fare_amount+profit_event.tip_amount);
-
-      start15 = (start15 + 1)%WINDOW_CAPACITY;
-      if(start15 != end) {
-        profit_event = sliding_window.get(start15);
-      } else{
-        break;
-      }
-    }
-
-    if(!maxpft.isSameMaxTenKey(old_ten_max)) {
-      printTopTen(new_event);
-    }
   }
 
   @Override
@@ -462,42 +344,96 @@ class Q2Process implements Runnable {
       Q2Elem newevent = queue.take();
 
       while(newevent.pickup_longitude != 10000000) {
-        //        // Check if events are leaving the sliding window and process them
-        //        long currentms = newevent.dropoff_datetime.getTime();
-        //
-        //        // This means sliding window for 30 minutes is not empty
-        //        if(start30 > end) {
-        //          Q2Elem etevent = sliding_window.get(start30);
-        //          long etms = etevent.dropoff_datetime.getTime() + 30*60*100;
-        //
-        //          long profitms = currentms;
-        //          // This means sliding window for 15 minutes is not empty
-        //          if(start15 > end) {
-        //            Q2Elem pevent = sliding_window.get(start15);
-        //            profitms = pevent.dropoff_datetime.getTime() + 15*60*100;
-        //          }
-        //
-        //          if(etms < currentms && etms < profitms) {
-        //            // Remove from empty taxis window
-        //            removeFromEmptyTaxis(newevent, etms-30*60*100);
-        //          } else if(etms < currentms && profitms < etms) {
-        //            // Remove from profit window
-        //            removeFromProfit(newevent, profitms - 15*60*100);
-        //          } else if(etms < currentms && profitms == etms) {
-        //            // Remove from both the windows
-        //            removeFromBoth(newevent, profitms - 15*60*100);
-        //          } else if(currentms <= profitms && currentms <= etms) {
-        //            // Add new event in the window
-        //            add(newevent);
-        //            //Get the next event to process from the queue
-        //            newevent = queue.take();
-        //          }
-        //        } else{
-        //          // No event in the sliding window, just add the incoming event
-        //          add(newevent);
-        //          //Get te next event to process from the queue
+        Vector<Area> old_ten_max = maxpft.getMaxTenCopy();
+
+        // Check if events are leaving the sliding window and process them
+        long currentms = newevent.dropoff_datetime.getTime();
+        if(start30 != end) {
+          Q2Elem event = sliding_window.get(start30);
+          long lastms = event.dropoff_datetime.getTime();
+
+          while((currentms-lastms) >= 30*60*1000) {
+            maxpft.leaveTaxiSlidingWindow(event.medallion,
+                event.hack_license, event.dropoff_datetime);
+
+            start30 = (start30 + 1)%WINDOW_CAPACITY;
+            if(start30 != end) {
+              event = sliding_window.get(start30);
+              lastms = event.dropoff_datetime.getTime();
+            } else {
+              break;
+            }
+          }
+
+          // This means sliding window for 15 minutes is not empty
+          if(start15 > end) {
+            event = sliding_window.get(start15);
+            lastms = event.dropoff_datetime.getTime();
+
+            while((currentms-lastms) >= 15*60*1000) {
+              Area dropoff_area = geo.translate(event.dropoff_longitude,
+                  event.dropoff_latitude);
+              maxpft.leaveProfitSlidingWindow(dropoff_area,
+                  event.fare_amount+event.tip_amount);
+
+              start15 = (start15 + 1)%WINDOW_CAPACITY;
+              if(start15 != end) {
+                event = sliding_window.get(start15);
+                lastms = event.dropoff_datetime.getTime();
+              } else {
+                break;
+              }
+            }
+          }
+        }
+
+        // add the incoming event
+        Area dropoff_area = geo.translate(newevent.dropoff_longitude,
+            newevent.dropoff_latitude);
+        if(dropoff_area != null) {
+          maxpft.enterProfitSlidingWindow(dropoff_area,
+              newevent.fare_amount+newevent.tip_amount,
+              newevent.dropoff_datetime);
+          maxpft.enterTaxiSlidingWindow(newevent.medallion,
+              newevent.hack_license, dropoff_area, newevent.dropoff_datetime);
+
+          try {
+            sliding_window.set(end, newevent);
+          } catch (IndexOutOfBoundsException e) {
+            // Happens if size < number of events in the window
+            sliding_window.add(newevent);
+          }
+          end = (end + 1)%WINDOW_CAPACITY;
+        }
+
+        if(!maxpft.isSameMaxTenKey(old_ten_max)) {
+          Vector<KeyVal<Area, Profitability>> ten_max = maxpft.getMaxTen();
+          print_stream.print(newevent.pickup_datetime.toString());
+          print_stream.print(",");
+          print_stream.print(newevent.dropoff_datetime.toString());
+          print_stream.print(",");
+          for(int i = 0; i < 10; i++) {
+            if(ten_max.get(i) != null) {
+              print_stream.print(ten_max.get(i).key.x);
+              print_stream.print(".");
+              print_stream.print(ten_max.get(i).key.y);
+              print_stream.print(",");
+              print_stream.print(ten_max.get(i).val.num_empty_taxis);
+              print_stream.print(",");
+              print_stream.print(ten_max.get(i).val.mprofit.getMedian());
+              print_stream.print(",");
+              print_stream.print(ten_max.get(i).val.profitability);
+              print_stream.print(",");
+            } else{
+              print_stream.print("NULL");
+              print_stream.print(",");
+            }
+          }
+          print_stream.print("\n");
+        }
+
+        //Get te next event to process from the queue
         newevent = queue.take();
-        //        }
       }
     } catch(Exception e) {
       print_stream.println("Error in Q2Process!");
