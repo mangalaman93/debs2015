@@ -633,9 +633,9 @@ class Q2Process implements Runnable {
 
 public class debs2015 {
   private static final boolean TWO_IO_PROCESS = true;
-  private static final String TEST_FILE = "test/sorted_data.csv";
-  private static final String Q1_FILE = "test/q1_out.csv";
-  private static final String Q2_FILE = "test/q2_out.csv";
+  private static final String TEST_FILE = "out/sorted_data_full.csv";
+  private static final String Q1_FILE = "out/q1_out.csv";
+  private static final String Q2_FILE = "out/q2_out.csv";
   private static final int QUEUE_CAPACITY = 10000;
 
   private static BlockingQueue<Q1Elem> queue_for_Q1;

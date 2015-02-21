@@ -17,7 +17,6 @@ target/
 ######################
 # Windows
 ######################
-
 # Windows image file caches
 Thumbs.db
 
@@ -27,7 +26,6 @@ Desktop.ini
 ######################
 # OSX
 ######################
-
 .DS_Store
 .svn
 
@@ -41,7 +39,6 @@ Desktop.ini
 ######################
 # Eclipse
 ######################
-
 *.pydevproject
 .project
 .metadata
@@ -71,3 +68,11 @@ local.properties
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+######################
+# Data Files
+######################
+out/sorted_data_full.csv
+out/sorted_data.csv.gz
+out/q1_out.csv
+out/q2_out.csv
