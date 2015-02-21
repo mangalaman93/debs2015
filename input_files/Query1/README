@@ -1,0 +1,47 @@
+1. I have used 6 areas as shown below. These give me 6C2 routes which is > 10, and thus helping us cover all the cases.
+
+Translations
+============
+A1 => -74.913585f 41.474937f => 1 1
+A2 => -73.993973f 40.751266f => 156 161
+A3 => -73.956528f 40.716976f => 163 169
+A4 => -73.981453f 40.778465f => 158 155
+A5 => -73.962440f 40.715008f => 162 169
+A6 => -73.955383f 40.779728f => 163 155
+
+R1 => A1 -> A2
+R2 => A1 -> A3
+R3 => A1 -> A4
+R4 => A1 -> A5
+R5 => A1 -> A6
+R6 => A2 -> A3
+R7 => A2 -> A4
+R8 => A2 -> A5
+R9 => A2 -> A6
+R10 => A3 -> A4
+R11 => A3 -> A5
+
+2. Input data has 13 events. This is the brief description of what happens:
+	- The first 10 events cover 10 different routes (R1-R10)
+	- The next 2 events cover the 11th route, R11
+	- The last event (13th) happens after > 30min of the 12th event. So all the previous 12 events will leave the sliding window
+
+2013-01-01 00:00:00,2013-01-01 00:02:00,120,0.44,A1,A2
+2013-01-01 00:01:00,2013-01-01 00:03:00,120,0.00,A1,A3
+2013-01-01 00:01:00,2013-01-01 00:04:00,180,0.71,A1,A4
+2013-01-01 00:01:00,2013-01-01 00:05:00,240,0.48,A1,A5
+2013-01-01 00:01:00,2013-01-01 00:06:00,300,0.61,A1,A6
+2013-01-01 00:02:00,2013-01-01 00:07:00,300,0.00,A2,A3
+2013-01-01 00:02:00,2013-01-01 00:08:00,360,0.39,A2,A4
+2013-01-01 00:03:00,2013-01-01 00:09:00,360,0.00,A2,A5
+2013-01-01 00:00:00,2013-01-01 00:10:00,600,1.71,A2,A6
+2013-01-01 00:00:00,2013-01-01 00:11:00,660,1.21,A3,A4
+2013-01-01 00:00:00,2013-01-01 00:12:00,720,0.44,A3,A5
+2013-01-01 00:01:00,2013-01-01 00:13:00,720,0.44,A3,A5
+2013-01-01 00:50:00,2013-01-01 00:55:00,600,0.44,A5,A6
+
+3. The output file has 23 lines. This is the brief description of what happens:
+	- The first 10 lines is trivial, corresponding to the first 10 events
+	- Lines 11-12 put corresponds to 11th and 12th events in the input file
+	- Lines 13-22, each of the events remove from the sliding window one by one
+	- Last line (23) corresponds to the 13th event
