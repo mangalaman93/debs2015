@@ -162,7 +162,7 @@ class IoProcess implements Runnable {
           queue_q1.put(q1event);
           queue_q2.put(q2event);
         } catch(Exception e) {
-          System.out.println("Error in parsing. Skipping...");
+          System.out.println("Error in parsing. Skipping..." + line);
           System.out.println(e.getMessage());
           e.printStackTrace();
         }
@@ -229,6 +229,8 @@ class Q1Process implements Runnable {
     try{
       Q1Elem newevent = queue.take();
       boolean ten_max_changed = false;
+      long time_in = System.currentTimeMillis();
+      long time_out;
 
       while(newevent.pickup_longitude != -100) {
         Vector<Route> old_ten_max = maxfs.getMaxTenCopy();
@@ -287,25 +289,28 @@ class Q1Process implements Runnable {
             print_stream.print(",");
             for(int i = 0; i < 10; i++) {
               if(ten_max.get(i) != null) {
-                print_stream.print(ten_max.get(i).key.fromArea.x);
+                print_stream.print(ten_max.get(i).key.fromArea.x + 1);
                 print_stream.print(".");
-                print_stream.print(ten_max.get(i).key.fromArea.y);
+                print_stream.print(ten_max.get(i).key.fromArea.y + 1);
                 print_stream.print(",");
-                print_stream.print(ten_max.get(i).key.toArea.x);
+                print_stream.print(ten_max.get(i).key.toArea.x + 1);
                 print_stream.print(".");
-                print_stream.print(ten_max.get(i).key.toArea.y);
+                print_stream.print(ten_max.get(i).key.toArea.y + 1);
                 print_stream.print(",");
               } else{
                 print_stream.print("NULL");
                 print_stream.print(",");
               }
             }
+            time_out = System.currentTimeMillis();
+            print_stream.print(time_out - time_in);
             print_stream.print("\n");
           }
         }
 
         // Get the next event to process from the queue
         newevent = queue.take();
+        time_in = System.currentTimeMillis();
         ten_max_changed = false;
       }
     } catch(InterruptedException e) {
@@ -349,7 +354,8 @@ class Q2Process implements Runnable {
   public void run() {
     try {
       Q2Elem newevent = queue.take();
-
+      long time_in = System.currentTimeMillis();
+      long time_out;
       while(newevent.pickup_longitude != -100) {
         Vector<Area> old_ten_max = maxpft.getMaxTenCopy();
 
@@ -421,9 +427,9 @@ class Q2Process implements Runnable {
           print_stream.print(",");
           for(int i = 0; i < 10; i++) {
             if(ten_max.get(i) != null) {
-              print_stream.print(ten_max.get(i).key.x);
+              print_stream.print(ten_max.get(i).key.x + 1);
               print_stream.print(".");
-              print_stream.print(ten_max.get(i).key.y);
+              print_stream.print(ten_max.get(i).key.y + 1);
               print_stream.print(",");
               print_stream.print(ten_max.get(i).val.num_empty_taxis);
               print_stream.print(",");
@@ -436,11 +442,14 @@ class Q2Process implements Runnable {
               print_stream.print(",");
             }
           }
+          time_out = System.currentTimeMillis();
+          print_stream.print(time_out - time_in);
           print_stream.print("\n");
         }
 
         //Get the next event to process from the queue
         newevent = queue.take();
+        time_in = System.currentTimeMillis();
       }
     } catch(Exception e) {
       System.out.println("Error in Q2Process!");
