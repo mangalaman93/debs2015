@@ -20,6 +20,7 @@ class Q1Elem {
   public float pickup_latitude;
   public float dropoff_longitude;
   public float dropoff_latitude;
+  public long time_in;
 
   public Q1Elem() {
     this.pickup_datetime   = null;
@@ -53,6 +54,7 @@ class Q2Elem {
   public float dropoff_latitude;
   public float fare_amount;
   public float tip_amount;
+  public long time_in;
 
   public Q2Elem() {
     this.medallion         = null;
@@ -114,7 +116,8 @@ class IoProcess implements Runnable {
           StringTokenizer st = new StringTokenizer(line, ",");
           Q1Elem q1event = new Q1Elem();
           Q2Elem q2event = new Q2Elem();
-
+          q1event.time_in = System.currentTimeMillis();
+          q2event.time_in = System.currentTimeMillis();
           // medallion
           q2event.medallion = st.nextToken();
           // hack license
@@ -229,8 +232,6 @@ class Q1Process implements Runnable {
     try{
       Q1Elem newevent = queue.take();
       boolean ten_max_changed = false;
-      long time_in = System.currentTimeMillis();
-      long time_out;
 
       while(newevent.pickup_longitude != -100) {
         Vector<Route> old_ten_max = maxfs.getMaxTenCopy();
@@ -302,15 +303,14 @@ class Q1Process implements Runnable {
                 print_stream.print(",");
               }
             }
-            time_out = System.currentTimeMillis();
-            print_stream.print(time_out - time_in);
+            long time_out = System.currentTimeMillis();
+            print_stream.print(time_out - newevent.time_in);
             print_stream.print("\n");
           }
         }
 
         // Get the next event to process from the queue
         newevent = queue.take();
-        time_in = System.currentTimeMillis();
         ten_max_changed = false;
       }
     } catch(InterruptedException e) {
@@ -354,8 +354,6 @@ class Q2Process implements Runnable {
   public void run() {
     try {
       Q2Elem newevent = queue.take();
-      long time_in = System.currentTimeMillis();
-      long time_out;
       while(newevent.pickup_longitude != -100) {
         Vector<Area> old_ten_max = maxpft.getMaxTenCopy();
 
@@ -442,14 +440,13 @@ class Q2Process implements Runnable {
               print_stream.print(",");
             }
           }
-          time_out = System.currentTimeMillis();
-          print_stream.print(time_out - time_in);
+          long time_out = System.currentTimeMillis();
+          print_stream.print(time_out - newevent.time_in);
           print_stream.print("\n");
         }
 
         //Get the next event to process from the queue
         newevent = queue.take();
-        time_in = System.currentTimeMillis();
       }
     } catch(Exception e) {
       System.out.println("Error in Q2Process!");
