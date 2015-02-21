@@ -110,56 +110,62 @@ class IoProcess implements Runnable {
       SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
       String line;
       while((line = input_file.readLine()) != null) {
-        StringTokenizer st = new StringTokenizer(line, ",");
-        Q1Elem q1event = new Q1Elem();
-        Q2Elem q2event = new Q2Elem();
+        try {
+          StringTokenizer st = new StringTokenizer(line, ",");
+          Q1Elem q1event = new Q1Elem();
+          Q2Elem q2event = new Q2Elem();
 
-        // medallion
-        q2event.medallion = st.nextToken();
-        // hack license
-        q2event.hack_license = st.nextToken();
-        // pickup datetime
-        Date pdate = datefmt.parse(st.nextToken());
-        q1event.pickup_datetime = new java.sql.Timestamp(pdate.getTime());
-        q2event.pickup_datetime = new java.sql.Timestamp(pdate.getTime());
-        // dropoff datetime
-        pdate = datefmt.parse(st.nextToken());
-        q1event.dropoff_datetime = new java.sql.Timestamp(pdate.getTime());
-        q2event.dropoff_datetime = new java.sql.Timestamp(pdate.getTime());
-        // trip time in secs
-        st.nextToken();
-        // trip distance
-        st.nextToken();
-        // pickup longitude
-        q1event.pickup_longitude = Float.parseFloat(st.nextToken());
-        q2event.pickup_longitude = q1event.pickup_longitude;
-        // pickup latitude
-        q1event.pickup_latitude = Float.parseFloat(st.nextToken());
-        q2event.pickup_latitude = q1event.pickup_latitude;
-        // dropoff longitude
-        q1event.dropoff_longitude = Float.parseFloat(st.nextToken());
-        q2event.dropoff_longitude = q1event.dropoff_longitude;
-        // dropoff latitude
-        q1event.dropoff_latitude = Float.parseFloat(st.nextToken());
-        q2event.dropoff_latitude = q1event.dropoff_latitude;
-        // payment type
-        st.nextToken();
-        // fare amount
-        q2event.fare_amount = Float.parseFloat(st.nextToken());
-        // surcharge
-        st.nextToken();
-        // mta tax
-        st.nextToken();
-        // tip amount
-        q2event.tip_amount = Float.parseFloat(st.nextToken());
-        // tolls amount
-        st.nextToken();
-        // total amount
-        st.nextToken();
+          // medallion
+          q2event.medallion = st.nextToken();
+          // hack license
+          q2event.hack_license = st.nextToken();
+          // pickup datetime
+          Date pdate = datefmt.parse(st.nextToken());
+          q1event.pickup_datetime = new java.sql.Timestamp(pdate.getTime());
+          q2event.pickup_datetime = new java.sql.Timestamp(pdate.getTime());
+          // dropoff datetime
+          pdate = datefmt.parse(st.nextToken());
+          q1event.dropoff_datetime = new java.sql.Timestamp(pdate.getTime());
+          q2event.dropoff_datetime = new java.sql.Timestamp(pdate.getTime());
+          // trip time in secs
+          st.nextToken();
+          // trip distance
+          st.nextToken();
+          // pickup longitude
+          q1event.pickup_longitude = Float.parseFloat(st.nextToken());
+          q2event.pickup_longitude = q1event.pickup_longitude;
+          // pickup latitude
+          q1event.pickup_latitude = Float.parseFloat(st.nextToken());
+          q2event.pickup_latitude = q1event.pickup_latitude;
+          // dropoff longitude
+          q1event.dropoff_longitude = Float.parseFloat(st.nextToken());
+          q2event.dropoff_longitude = q1event.dropoff_longitude;
+          // dropoff latitude
+          q1event.dropoff_latitude = Float.parseFloat(st.nextToken());
+          q2event.dropoff_latitude = q1event.dropoff_latitude;
+          // payment type
+          st.nextToken();
+          // fare amount
+          q2event.fare_amount = Float.parseFloat(st.nextToken());
+          // surcharge
+          st.nextToken();
+          // mta tax
+          st.nextToken();
+          // tip amount
+          q2event.tip_amount = Float.parseFloat(st.nextToken());
+          // tolls amount
+          st.nextToken();
+          // total amount
+          st.nextToken();
 
-        // Put events into queues for Q1 and Q2
-        queue_q1.put(q1event);
-        queue_q2.put(q2event);
+          // Put events into queues for Q1 and Q2
+          queue_q1.put(q1event);
+          queue_q2.put(q2event);
+        } catch(Exception e) {
+          System.out.println("Error in parsing. Skipping...");
+          System.out.println(e.getMessage());
+          e.printStackTrace();
+        }
       }
 
       // Add sentinel
@@ -167,7 +173,7 @@ class IoProcess implements Runnable {
       Q2Elem q2event = new Q2Elem();
       q1event.pickup_datetime   = new java.sql.Timestamp(0);
       q1event.dropoff_datetime  = new java.sql.Timestamp(0);
-      q1event.pickup_longitude  = 10000000;
+      q1event.pickup_longitude  = -100;
       q1event.pickup_latitude   = 0;
       q1event.dropoff_longitude = 0;
       q1event.dropoff_latitude  = 0;
@@ -177,7 +183,7 @@ class IoProcess implements Runnable {
       q2event.hack_license      = "sentinel";
       q2event.pickup_datetime   = new java.sql.Timestamp(0);
       q2event.dropoff_datetime  = new java.sql.Timestamp(0);
-      q2event.pickup_longitude  = 10000000;
+      q2event.pickup_longitude  = -100;
       q2event.pickup_latitude   = 0;
       q2event.dropoff_longitude = 0;
       q2event.dropoff_latitude  = 0;
@@ -188,6 +194,7 @@ class IoProcess implements Runnable {
     } catch(Exception e) {
       System.out.println("Error in IoProcess!");
       System.out.println(e.getMessage());
+      e.printStackTrace();
     }
   }
 }
@@ -223,7 +230,7 @@ class Q1Process implements Runnable {
       Q1Elem newevent = queue.take();
       boolean ten_max_changed = false;
 
-      while(newevent.pickup_longitude != 10000000) {
+      while(newevent.pickup_longitude != -100) {
         Vector<Route> old_ten_max = maxfs.getMaxTenCopy();
 
         // Check if events are leaving the sliding window and process them
@@ -302,9 +309,9 @@ class Q1Process implements Runnable {
         ten_max_changed = false;
       }
     } catch(InterruptedException e) {
-      print_stream.println("Error in Q1Process!");
-      print_stream.println(e.getMessage());
-      e.printStackTrace(print_stream);
+      System.out.println("Error in Q1Process!");
+      System.out.println(e.getMessage());
+      e.printStackTrace();
     }
   }
 }
@@ -343,7 +350,7 @@ class Q2Process implements Runnable {
     try {
       Q2Elem newevent = queue.take();
 
-      while(newevent.pickup_longitude != 10000000) {
+      while(newevent.pickup_longitude != -100) {
         Vector<Area> old_ten_max = maxpft.getMaxTenCopy();
 
         // Check if events are leaving the sliding window and process them
@@ -432,22 +439,22 @@ class Q2Process implements Runnable {
           print_stream.print("\n");
         }
 
-        //Get te next event to process from the queue
+        //Get the next event to process from the queue
         newevent = queue.take();
       }
     } catch(Exception e) {
-      print_stream.println("Error in Q2Process!");
-      print_stream.println(e.getMessage());
-      e.printStackTrace(print_stream);
+      System.out.println("Error in Q2Process!");
+      System.out.println(e.getMessage());
+      e.printStackTrace();
     }
   }
 }
 
 public class debs2015 {
-  private final static String TEST_FILE = "test/sorted_data.csv";
+  private static final String TEST_FILE = "test/sorted_data.csv";
   private static final String Q1_FILE = "test/q1_out.csv";
   private static final String Q2_FILE = "test/q2_out.csv";
-  private static final int QUEUE_CAPACITY = 1000;
+  private static final int QUEUE_CAPACITY = 10000;
 
   private static BlockingQueue<Q1Elem> queue_for_Q1;
   private static BlockingQueue<Q2Elem> queue_for_Q2;

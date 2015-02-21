@@ -1,5 +1,4 @@
 import java.util.Comparator;
-import java.util.EmptyStackException;
 import java.util.PriorityQueue;
 
 class maxComparator implements Comparator<Double> {

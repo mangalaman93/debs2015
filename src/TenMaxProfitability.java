@@ -211,7 +211,7 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
     return p;
   }
 
-  public boolean leaveTaxiSlidingWindow(String medallion, String hack_license,
+  public void leaveTaxiSlidingWindow(String medallion, String hack_license,
       Timestamp ts) {
     String searchKey = medallion + hack_license;
 
@@ -221,11 +221,8 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
       Profitability diff = new Profitability();
       diff.num_empty_taxis = -1;
       diff.ts = ts;
-      grid_present.remove(searchKey);
-      return this.update(grid_present.get(searchKey).area, diff);
+      this.update(grid_present.remove(searchKey).area, diff);
     }
-
-    return false;
   }
 
   public void enterTaxiSlidingWindow(String medallion, String hack_license,
