@@ -202,6 +202,181 @@ class IoProcess implements Runnable {
   }
 }
 
+/* IoProcessor for query 1: Task to perform-
+ *  *read from file
+ *  *convert data from string to appropriate type
+ *  *send the data to Q1 thread (use put)
+ *  *create and share kernel queues
+ */
+class IoProcessQ1 implements Runnable {
+  private BlockingQueue<Q1Elem> queue_q1;
+  private String file;
+
+  public IoProcessQ1(BlockingQueue<Q1Elem> queue1, String inputfile) {
+    this.queue_q1 = queue1;
+    this.file = inputfile;
+  }
+
+  @Override
+  public void run() {
+    try {
+      BufferedReader input_file = new BufferedReader(new FileReader(file));
+      SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+      String line;
+      while((line = input_file.readLine()) != null) {
+        try {
+          StringTokenizer st = new StringTokenizer(line, ",");
+          Q1Elem q1event = new Q1Elem();
+          q1event.time_in = System.currentTimeMillis();
+          // medallion
+          st.nextToken();
+          // hack license
+          st.nextToken();
+          // pickup datetime
+          Date pdate = datefmt.parse(st.nextToken());
+          q1event.pickup_datetime = new java.sql.Timestamp(pdate.getTime());
+          // dropoff datetime
+          pdate = datefmt.parse(st.nextToken());
+          q1event.dropoff_datetime = new java.sql.Timestamp(pdate.getTime());
+          // trip time in secs
+          st.nextToken();
+          // trip distance
+          st.nextToken();
+          // pickup longitude
+          q1event.pickup_longitude = Float.parseFloat(st.nextToken());
+          // pickup latitude
+          q1event.pickup_latitude = Float.parseFloat(st.nextToken());
+          // dropoff longitude
+          q1event.dropoff_longitude = Float.parseFloat(st.nextToken());
+          // dropoff latitude
+          q1event.dropoff_latitude = Float.parseFloat(st.nextToken());
+          // payment type
+          // fare amount
+          // surcharge
+          // mta tax
+          // tip amount
+          // tolls amount
+          // total amount
+
+          // Put events into queues for Q1
+          queue_q1.put(q1event);
+        } catch(Exception e) {
+          System.out.println("Error in parsing for query 1. Skipping..." + line);
+          System.out.println(e.getMessage());
+          e.printStackTrace();
+        }
+      }
+
+      // Add sentinel
+      Q1Elem q1event = new Q1Elem();
+      q1event.pickup_datetime   = new java.sql.Timestamp(0);
+      q1event.dropoff_datetime  = new java.sql.Timestamp(0);
+      q1event.pickup_longitude  = -100;
+      q1event.pickup_latitude   = 0;
+      q1event.dropoff_longitude = 0;
+      q1event.dropoff_latitude  = 0;
+      queue_q1.put(q1event);
+      input_file.close();
+    } catch(Exception e) {
+      System.out.println("Error in IoProcess!");
+      System.out.println(e.getMessage());
+      e.printStackTrace();
+    }
+  }
+}
+
+/* IoProcessor for query 2: Task to perform-
+ *  *read from file
+ *  *convert data from string to appropriate type
+ *  *send the data to Q2 thread (use put)
+ *  *create and share kernel queues
+ */
+class IoProcessQ2 implements Runnable {
+  private BlockingQueue<Q2Elem> queue_q2;
+  private String file;
+
+  public IoProcessQ2(BlockingQueue<Q2Elem> queue2, String inputfile) {
+    this.queue_q2 = queue2;
+    this.file = inputfile;
+  }
+
+  @Override
+  public void run() {
+    try {
+      BufferedReader input_file = new BufferedReader(new FileReader(file));
+      SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+      String line;
+      while((line = input_file.readLine()) != null) {
+        try {
+          StringTokenizer st = new StringTokenizer(line, ",");
+          Q2Elem q2event = new Q2Elem();
+          q2event.time_in = System.currentTimeMillis();
+          // medallion
+          q2event.medallion = st.nextToken();
+          // hack license
+          q2event.hack_license = st.nextToken();
+          // pickup datetime
+          Date pdate = datefmt.parse(st.nextToken());
+          q2event.pickup_datetime = new java.sql.Timestamp(pdate.getTime());
+          // dropoff datetime
+          pdate = datefmt.parse(st.nextToken());
+          q2event.dropoff_datetime = new java.sql.Timestamp(pdate.getTime());
+          // trip time in secs
+          st.nextToken();
+          // trip distance
+          st.nextToken();
+          // pickup longitude
+          q2event.pickup_longitude = Float.parseFloat(st.nextToken());
+          // pickup latitude
+          q2event.pickup_latitude = Float.parseFloat(st.nextToken());
+          // dropoff longitude
+          q2event.dropoff_longitude = Float.parseFloat(st.nextToken());
+          // dropoff latitude
+          q2event.dropoff_latitude = Float.parseFloat(st.nextToken());
+          // payment type
+          st.nextToken();
+          // fare amount
+          q2event.fare_amount = Float.parseFloat(st.nextToken());
+          // surcharge
+          st.nextToken();
+          // mta tax
+          st.nextToken();
+          // tip amount
+          q2event.tip_amount = Float.parseFloat(st.nextToken());
+          // tolls amount
+          // total amount
+
+          // Put events into queues for Q2
+          queue_q2.put(q2event);
+        } catch(Exception e) {
+          System.out.println("Error in parsing for query 2. Skipping..." + line);
+          System.out.println(e.getMessage());
+          e.printStackTrace();
+        }
+      }
+
+      // Add sentinel
+      Q2Elem q2event = new Q2Elem();
+      q2event.medallion         = "sentinel";
+      q2event.hack_license      = "sentinel";
+      q2event.pickup_datetime   = new java.sql.Timestamp(0);
+      q2event.dropoff_datetime  = new java.sql.Timestamp(0);
+      q2event.pickup_longitude  = -100;
+      q2event.pickup_latitude   = 0;
+      q2event.dropoff_longitude = 0;
+      q2event.dropoff_latitude  = 0;
+      q2event.fare_amount       = 0;
+      q2event.tip_amount        = 0;
+      queue_q2.put(q2event);
+      input_file.close();
+    } catch(Exception e) {
+      System.out.println("Error in IoProcess!");
+      System.out.println(e.getMessage());
+      e.printStackTrace();
+    }
+  }
+}
+
 /* Q1: Task to perform
  *  *read the data from queue (use take)
  *  *maintain frequency of routes
@@ -474,12 +649,19 @@ public class debs2015 {
     queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(QUEUE_CAPACITY, false);
 
     // start threads
-    Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1,
-        queue_for_Q2, TEST_FILE));
+    if (args.length > 0) {
+      Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, TEST_FILE));
+      Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, TEST_FILE));
+      threadForIoProcessQ1.start();
+      threadForIoProcessQ2.start();
+    }
+    else{
+      Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1,queue_for_Q2, TEST_FILE));
+      threadForIoProcess.start();
+    }
     Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, q1out));
     Thread threadForQ2Process = new Thread(new Q2Process(queue_for_Q2, q2out));
 
-    threadForIoProcess.start();
     threadForQ1Process.start();
     threadForQ2Process.start();
   }
