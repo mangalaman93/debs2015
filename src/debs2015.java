@@ -632,6 +632,7 @@ class Q2Process implements Runnable {
 }
 
 public class debs2015 {
+  private static final boolean TWO_IO_PROCESS = true;
   private static final String TEST_FILE = "test/sorted_data.csv";
   private static final String Q1_FILE = "test/q1_out.csv";
   private static final String Q2_FILE = "test/q2_out.csv";
@@ -649,13 +650,12 @@ public class debs2015 {
     queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(QUEUE_CAPACITY, false);
 
     // start threads
-    if (args.length > 0) {
+    if(TWO_IO_PROCESS) {
       Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, TEST_FILE));
       Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, TEST_FILE));
       threadForIoProcessQ1.start();
       threadForIoProcessQ2.start();
-    }
-    else{
+    } else{
       Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1,queue_for_Q2, TEST_FILE));
       threadForIoProcess.start();
     }
