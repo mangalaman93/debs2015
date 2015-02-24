@@ -1,5 +1,4 @@
 import static org.junit.Assert.*;
-
 import java.sql.Timestamp;
 import java.util.Vector;
 import org.junit.After;

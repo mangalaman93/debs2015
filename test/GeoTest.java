@@ -17,7 +17,7 @@ public class GeoTest {
 
   @Test
   public void test1() {
-    assertTrue(g1.translate(-74.913585f,41.474937f).equals(new Area(1,1)));
+    assertTrue(g1.translate(-74.913585f,41.474937f).equals(new Area(0,0)));
   }
 
   @Test
@@ -27,12 +27,12 @@ public class GeoTest {
 
   @Test
   public void test3() {
-    assertTrue(g1.translate(-73.956528f,41.474937f).equals(new Area(162,1)));
+    assertTrue(g1.translate(-73.956528f,41.474937f).equals(new Area(162,0)));
   }
 
   @Test
   public void test4() {
-    assertTrue(g1.translate(-74.913585f,40.716976f).equals(new Area(1,168)));
+    assertTrue(g1.translate(-74.913585f,40.716976f).equals(new Area(0,168)));
   }
 
   @Test
