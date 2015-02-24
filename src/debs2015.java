@@ -96,22 +96,21 @@ class Q2Elem {
 class IoProcess implements Runnable {
   private BlockingQueue<Q1Elem> queue_q1;
   private BlockingQueue<Q2Elem> queue_q2;
-  private String file;
+  private BufferedReader inputstream;
 
   public IoProcess(BlockingQueue<Q1Elem> queue1,
-      BlockingQueue<Q2Elem> queue2, String inputfile) {
+      BlockingQueue<Q2Elem> queue2, BufferedReader stream) {
     this.queue_q1 = queue1;
     this.queue_q2 = queue2;
-    this.file = inputfile;
+    this.inputstream = stream;
   }
 
   @Override
   public void run() {
     try {
-      BufferedReader input_file = new BufferedReader(new FileReader(file));
       SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
       String line;
-      while((line = input_file.readLine()) != null) {
+      while((line = inputstream.readLine()) != null) {
         try {
           StringTokenizer st = new StringTokenizer(line, ",");
           Q1Elem q1event = new Q1Elem();
@@ -193,7 +192,7 @@ class IoProcess implements Runnable {
       q2event.fare_amount       = 0;
       q2event.tip_amount        = 0;
       queue_q2.put(q2event);
-      input_file.close();
+      inputstream.close();
     } catch(Exception e) {
       System.out.println("Error in IoProcess!");
       System.out.println(e.getMessage());
@@ -261,7 +260,7 @@ class IoProcessQ1 implements Runnable {
           // Put events into queues for Q1
           queue_q1.put(q1event);
         } catch(Exception e) {
-          System.out.println("Error in parsing for query 1. Skipping..." + line);
+          System.out.println("Error parsing for query 1. Skipping..." + line);
           System.out.println(e.getMessage());
           e.printStackTrace();
         }
@@ -349,7 +348,7 @@ class IoProcessQ2 implements Runnable {
           // Put events into queues for Q2
           queue_q2.put(q2event);
         } catch(Exception e) {
-          System.out.println("Error in parsing for query 2. Skipping..." + line);
+          System.out.println("Error parsing for query 2. Skipping..." + line);
           System.out.println(e.getMessage());
           e.printStackTrace();
         }
@@ -425,7 +424,8 @@ class Q1Process implements Runnable {
                 lastevent.pickup_latitude);
 
             Route r = new Route(from, to);
-            ten_max_changed |= maxfs.update(r, new Freq(-1, lastevent.dropoff_datetime));
+            ten_max_changed |= maxfs.update(r, new Freq(-1,
+                lastevent.dropoff_datetime));
 
             start = (start + 1)%WINDOW_CAPACITY;
             if(start != end) {
@@ -444,7 +444,8 @@ class Q1Process implements Runnable {
             newevent.pickup_latitude);
         if(from != null && to != null) {
           Route r = new Route(from, to);
-          ten_max_changed |= maxfs.update(r, new Freq(1, newevent.dropoff_datetime));
+          ten_max_changed |= maxfs.update(r, new Freq(1,
+              newevent.dropoff_datetime));
 
           try {
             sliding_window.set(end, newevent);
@@ -633,7 +634,6 @@ class Q2Process implements Runnable {
 
 public class debs2015 {
   private static final boolean TWO_IO_PROCESS = true;
-  private static final String TEST_FILE = "out/sorted_data_full.csv";
   private static final String Q1_FILE = "out/q1_out.csv";
   private static final String Q2_FILE = "out/q2_out.csv";
   private static final int QUEUE_CAPACITY = 10000;
@@ -642,8 +642,16 @@ public class debs2015 {
   private static BlockingQueue<Q2Elem> queue_for_Q2;
 
   public static void main(String[] args) throws FileNotFoundException {
-    PrintStream q1out = new PrintStream(new FileOutputStream(Q1_FILE, true));
-    PrintStream q2out = new PrintStream(new FileOutputStream(Q2_FILE, true));
+    String test_file;
+    if(args.length == 0) {
+      test_file = "out/sorted_data.csv";
+    } else {
+      test_file = args[0];
+    }
+
+    BufferedReader instream = new BufferedReader(new FileReader(test_file));
+    PrintStream q1out = new PrintStream(new FileOutputStream(Q1_FILE, false));
+    PrintStream q2out = new PrintStream(new FileOutputStream(Q2_FILE, false));
 
     // Initializing queues
     queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(QUEUE_CAPACITY, false);
@@ -651,12 +659,13 @@ public class debs2015 {
 
     // start threads
     if(TWO_IO_PROCESS) {
-      Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, TEST_FILE));
-      Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, TEST_FILE));
+      Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, test_file));
+      Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, test_file));
       threadForIoProcessQ1.start();
       threadForIoProcessQ2.start();
     } else{
-      Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1,queue_for_Q2, TEST_FILE));
+      Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1,
+          queue_for_Q2, instream));
       threadForIoProcess.start();
     }
     Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, q1out));
