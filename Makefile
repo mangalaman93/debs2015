@@ -23,6 +23,12 @@ all: dir $(OBJ) jar
 dir:
 	mkdir -p $(ODIR)
 
+%.class:
+	$(JC) -cp $(ODIR)/ $(JFLAGS) $*.java
+
+jar:
+	jar cvfe $(JAR_PKG) $(ENTRY_POINT) -C $(ODIR) .
+
 test: all
 ifeq (,$(wildcard $(JUNITJAR)))
     $(error run `apt-get install junit4`!)
@@ -33,11 +39,11 @@ endif
 		`echo $$testfile | cut -f2 -d"/" | cut -f1 -d"."`; cd ../; \
 	done
 
-%.class:
-	$(JC) -cp $(ODIR)/ $(JFLAGS) $*.java
+itest:
+	python script/integration_test.py
 
-jar:
-	jar cvfe $(JAR_PKG) $(ENTRY_POINT) -C $(ODIR) .
+delay:
+	python script/delay.py
 
 clean:
 	rm -rf $(ODIR) *~ *.jar
