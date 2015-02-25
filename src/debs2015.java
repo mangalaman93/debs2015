@@ -421,7 +421,7 @@ class Q1Process implements Runnable {
             Area from = geo.translate(lastevent.pickup_longitude,
                 lastevent.pickup_latitude);
             Area to = geo.translate(lastevent.dropoff_longitude,
-                lastevent.pickup_latitude);
+                lastevent.dropoff_latitude);
 
             Route r = new Route(from, to);
             ten_max_changed |= maxfs.update(r, new Freq(-1,
@@ -441,7 +441,7 @@ class Q1Process implements Runnable {
         Area from = geo.translate(newevent.pickup_longitude,
             newevent.pickup_latitude);
         Area to = geo.translate(newevent.dropoff_longitude,
-            newevent.pickup_latitude);
+            newevent.dropoff_latitude);
         if(from != null && to != null) {
           Route r = new Route(from, to);
           ten_max_changed |= maxfs.update(r, new Freq(1,
