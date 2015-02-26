@@ -21,4 +21,9 @@ public class Area {
 
     return false;
   }
+
+  @Override
+  public int hashCode() {
+  	return (this.x << 16) + this.y;
+  }
 }

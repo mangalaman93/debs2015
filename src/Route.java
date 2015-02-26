@@ -27,4 +27,10 @@ public class Route {
 
     return false;
   }
+
+  @Override
+  public int hashCode() {
+  	return ((((((this.fromArea.x << 8) + this.fromArea.y) << 8) +
+  			this.toArea.x) << 8) + this.toArea.y);
+  }
 }
