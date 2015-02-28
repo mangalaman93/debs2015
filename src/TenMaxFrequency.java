@@ -1,6 +1,7 @@
 import java.util.HashMap;
+import java.util.Vector;
 
-public class TenMaxFrequency extends TenMax<Route, Freq> {
+public class TenMaxFrequency {
   class Freq implements Comparable<Freq> {
     public int frequency;
     public long ts;
@@ -73,7 +74,6 @@ public class TenMaxFrequency extends TenMax<Route, Freq> {
 
   // Note that same object is stored in both* the data structures
   private HashMap<Route, PairQ1> route_freq_map;
-  private HashMapFrequencyHM freq_pq;
 
   // temporary data so that new need not be called
   Vector<Route> old_max_ten_routes;
@@ -81,7 +81,6 @@ public class TenMaxFrequency extends TenMax<Route, Freq> {
   public TenMaxFrequency() {
     route_freq_map = new HashMap<Route, PairQ1>(Constants.HM_INIT_SIZE,
         Constants.HM_LOAD_FACTOR);
-    freq_pq = new HashMapFrequencyHM();
 
 
     // temporary data initialization
@@ -101,6 +100,7 @@ public class TenMaxFrequency extends TenMax<Route, Freq> {
 
   public boolean isSameMaxTenKey() {
     // TODO
+    return false;
   }
 
   // route should not be reused by the callee program

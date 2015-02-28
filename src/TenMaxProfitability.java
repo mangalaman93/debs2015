@@ -180,6 +180,7 @@ public class TenMaxProfitability {
 
   public boolean isSameMaxTenKey() {
     // TODO
+    return false;
   }
 
   public void leaveTaxiSlidingWindow(String medallion, String hack_license,
