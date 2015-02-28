@@ -7,9 +7,9 @@ import sys
 
 # integration test files
 Q1FILES = {"test/Query1/inputData.csv":"test/Query1/outputData.csv"}
-Q2FILES = {"test/Query2/inputData.csv":"test/Query2/outputData.csv",
-           "test/Query2/raw_input_1.csv":"test/Query2/raw_output_1.csv",
-           "test/Query2/raw_input_2.csv":"test/Query2/raw_output_2.csv"}
+Q2FILES = {"test/Query2/inputData_1.csv":"test/Query2/outputData_1.csv",
+            "test/Query2/inputData_2.csv":"test/Query2/outputData_2.csv",
+            "test/Query2/inputData_3.csv":"test/Query2/outputData_3.csv"}
 CMD = "java -jar debs2015.jar"
 
 # execute system command and return output
