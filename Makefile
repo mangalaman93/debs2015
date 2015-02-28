@@ -11,7 +11,8 @@ JAVA = java
 
 .SUFFIXES: .java .class
 _OBJ = Area.class Geo.class Route.class Mc.class TenMax.class \
-TenMaxProfitability.class TenMaxFrequency.class debs2015.class
+TenMaxProfitability.class TenMaxFrequency.class debs2015.class \
+Constants.class
 OBJ = $(patsubst %,$(SDIR)/%,$(_OBJ))
 
 _TOBJ = GeoTest.java McTest.java TenMaxFrequencyTest.java \

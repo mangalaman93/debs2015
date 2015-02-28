@@ -181,7 +181,10 @@ public class TenMaxProfitability extends TenMax<Area, Profitability> {
 
     if(v == null) {
       p.mprofit = new Mc();
-      p.mprofit.insert(diff.profitability);
+      if(diff.profitability > 0){
+        p.mprofit.insert(diff.profitability);
+      }
+
       p.num_empty_taxis = diff.num_empty_taxis;
       p.profitability = diff.profitability;
       p.ts = diff.ts;

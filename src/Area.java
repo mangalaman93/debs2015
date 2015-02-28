@@ -1,10 +1,13 @@
 public class Area {
   public int x;
   public int y;
+  public int hash;
 
   public Area(int x, int y) {
     this.x = x;
     this.y = y;
+    Integer temp = (this.x << 16) + this.y;
+    this.hash = temp.hashCode();
   }
 
   @Override
@@ -24,6 +27,6 @@ public class Area {
 
   @Override
   public int hashCode() {
-  	return (this.x << 16) + this.y;
+  	return hash;
   }
 }

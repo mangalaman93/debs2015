@@ -553,14 +553,14 @@ class Q2Process implements Runnable {
           }
 
           // This means sliding window for 15 minutes is not empty
-          if(start15 > end) {
+          if(start15 != end) {
             event = sliding_window.get(start15);
             lastms = event.dropoff_datetime.getTime();
 
             while((currentms-lastms) >= 15*60*1000) {
-              Area dropoff_area = geo.translate(event.dropoff_longitude,
-                  event.dropoff_latitude);
-              maxpft.leaveProfitSlidingWindow(dropoff_area,
+              Area pickup_area = geo.translate(event.pickup_longitude,
+                  event.pickup_latitude);
+              maxpft.leaveProfitSlidingWindow(pickup_area,
                   event.fare_amount+event.tip_amount);
 
               start15 = (start15 + 1)%WINDOW_CAPACITY;
@@ -577,8 +577,10 @@ class Q2Process implements Runnable {
         // add the incoming event
         Area dropoff_area = geo.translate(newevent.dropoff_longitude,
             newevent.dropoff_latitude);
+        Area pickup_area = geo.translate(newevent.pickup_longitude,
+        		newevent.pickup_latitude);
         if(dropoff_area != null) {
-          maxpft.enterProfitSlidingWindow(dropoff_area,
+          maxpft.enterProfitSlidingWindow(pickup_area,
               newevent.fare_amount+newevent.tip_amount,
               newevent.dropoff_datetime);
           maxpft.enterTaxiSlidingWindow(newevent.medallion,

@@ -1,16 +1,25 @@
 public class Route {
   public Area fromArea;
   public Area toArea;
+  public int hash;
 
   public Route(int beginCellX, int beginCellY,
       int endCellX, int endCellY) {
     this.fromArea = new Area(beginCellX, beginCellY);
     this.toArea   = new Area(endCellX, endCellY);
+    this.computeHash();
   }
 
   public Route(Area from, Area to) {
     this.fromArea = from;
     this.toArea   = to;
+    this.computeHash();
+  }
+
+  private void computeHash() {
+  	// TODO: not sure this is better?
+    Long temp = (((long)fromArea.hash) << 32) + toArea.hash;
+    this.hash = temp.hashCode();
   }
 
   @Override
@@ -30,7 +39,6 @@ public class Route {
 
   @Override
   public int hashCode() {
-  	return ((((((this.fromArea.x << 8) + this.fromArea.y) << 8) +
-  			this.toArea.x) << 8) + this.toArea.y);
+  	return hash;
   }
 }
