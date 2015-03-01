@@ -1,4 +1,13 @@
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 public class TenMaxProfitability {
   /*
@@ -11,6 +20,8 @@ public class TenMaxProfitability {
     public int num_empty_taxis;
     public long ts;
 
+    public Profitability() {}
+    
     public Profitability(float p, int n, long t) {
       profitability = p;
       mprofit = null;
@@ -160,27 +171,108 @@ public class TenMaxProfitability {
       }
     }
   }
+  
+  /*
+   * The comparison operator written the opposite, i.e if actual s1<s2 means s1>s2. Done so that Treeset can print in descending order
+   * Also note that 2 setElems are equal if the area is same
+   */
+  
+  class setElem implements Comparable<setElem> {
+    public Area area;
+    public long ts;
+    public float profitability;
 
+    public setElem(Area a, long ts, float profitability) {
+      this.area = a;
+      this.ts = ts;
+      this.profitability = profitability;
+    }
+
+    @Override
+    public int compareTo(setElem s) {
+	  if(this.area.equals(s.area)) {
+        return 0;
+      } else if(this.profitability < s.profitability) {
+        return 1;
+      } else if(this.profitability > s.profitability) {
+        return -1;
+      } else if(this.ts < s.ts) {
+        return 1;
+      } else {
+    	return -1;
+      }
+    }
+  }
+  
   private final int AREA_LIMIT = 600;
-  private HashMap<String, TaxiInfo> grid_present;
-  private ArrayMap area_pft_map;
+  private final int MAX_PROFITABILITY_SIZE = 1002; // Max profitability value possible
+  private HashMap<String,TaxiInfo> grid_present; // Maps taxi identifier to (taxi area + ts). Used in the empty taxi algo
+  private ArrayMap area_ptb_map; // Maps area to profitability
+  private List<Set<setElem>> sorted_ptb_list; // the array DS
+  private Area[] top10Area; // Stores previous top 10 areas
+  private Profitability[] top10ptb; // Stores previous top 10 profitabilities
 
   public TenMaxProfitability() {
-    area_pft_map = new ArrayMap(AREA_LIMIT, AREA_LIMIT);
+    area_ptb_map = new ArrayMap(AREA_LIMIT, AREA_LIMIT);
     grid_present = new HashMap<String, TaxiInfo>();
+    sorted_ptb_list = new ArrayList<Set<setElem>>(MAX_PROFITABILITY_SIZE);
+    for(int i=0; i<MAX_PROFITABILITY_SIZE; i++) sorted_ptb_list.add(i,new TreeSet<setElem>());
+    top10Area = new Area[10];
+    top10ptb = new Profitability[10];
+    for(int i=0; i<10; i++) {
+    	top10Area[i] = null;
+    	top10ptb[i] = null;
+    }
   }
 
   public void printMaxTen() {
-    // TODO
+    int numPrinted = 0;
+    int currentIndex = MAX_PROFITABILITY_SIZE-1;
+    while(numPrinted<10 && currentIndex>=0) {
+    	Iterator<setElem> i = sorted_ptb_list.get(currentIndex).iterator();
+    	while(i.hasNext() && numPrinted<10) {
+		  setElem s = i.next();
+		  Profitability p = area_ptb_map.get(s.area);
+		  System.out.println(s.area.x + "." + s.area.y + "," + p.num_empty_taxis + "," + 
+				  			p.mprofit.getMedian() + "," + p.profitability);
+		  numPrinted++;
+		}
+    	currentIndex--;
+    }
   }
 
   public void storeMaxTenCopy() {
-    // TODO
+	int numPrinted = 0;
+    int currentIndex = MAX_PROFITABILITY_SIZE-1;
+    while(numPrinted<10 && currentIndex>=0) {
+    	Iterator<setElem> i = sorted_ptb_list.get(currentIndex).iterator();
+    	while(i.hasNext() && numPrinted<10) {
+		  setElem s = i.next();
+		  Profitability p = area_ptb_map.get(s.area);
+		  top10Area[numPrinted] = s.area;
+		  top10ptb[numPrinted] = p;
+		  numPrinted++;
+		}
+    	currentIndex--;
+    }
   }
 
   public boolean isSameMaxTenKey() {
-    // TODO
-    return false;
+	int numPrinted = 0;
+    int currentIndex = MAX_PROFITABILITY_SIZE-1;
+    while(numPrinted<10 && currentIndex>=0) {
+    	Iterator<setElem> i = sorted_ptb_list.get(currentIndex).iterator();
+    	while(i.hasNext() && numPrinted<10) {
+		  setElem s = i.next();
+		  Profitability p = area_ptb_map.get(s.area);
+		  if(!top10Area[numPrinted].equals(s.area) || !top10ptb[numPrinted].equals(p)) {
+			  return false;
+		  }
+		  numPrinted++;
+		}
+    	currentIndex--;
+    }
+    return true;
   }
 
   public void leaveTaxiSlidingWindow(String medallion, String hack_license,
@@ -189,51 +281,129 @@ public class TenMaxProfitability {
 
     // Check if the event leaving corresponds to the event present in the area
     if(ts == grid_present.get(searchKey).ts) {
-      // TODO If present, then undo the effects of this event
+      // If present, then undo the effects of this event
+    	this.updateEmptyTaxi(grid_present.get(searchKey).area,-1,-1);
+    	grid_present.remove(searchKey);
     }
   }
 
   public void enterTaxiSlidingWindow(String medallion, String hack_license,
       Area a, long ts) {
-    String search_key = medallion + hack_license;
+    String searchKey = medallion + hack_license;
 
     // This taxi was in consideration earlier
     // => has reached a new place within 30 mins
-    if(grid_present.containsKey(search_key)) {
+    if(grid_present.containsKey(searchKey)) {
       /*
-       * TODO Remove this taxi from previous grid ->
+       * Remove this taxi from previous grid ->
        * Change profitability to decrease empty taxi number corresponding to
        * Area grid_present[searchKey].a
        */
+      this.updateEmptyTaxi(grid_present.get(searchKey).area,-1,-1);
 
       /*
        * TODO Add this taxi to the new destination grid ->
        * Change profitability to increase empty taxi number
        * corresponding to Area a
        */
+      this.updateEmptyTaxi(a,1,ts);
 
       // Update the area - TaxiInfo map
-      grid_present.get(search_key).area = a;
-      grid_present.get(search_key).ts = ts;
+      grid_present.get(searchKey).area = a;
+      grid_present.get(searchKey).ts = ts;
     }
 
     // This taxi was not in consideration earlier
     // => has reached a new place > 30 mins
     else {
       /*
-       * TODO Add this taxi to the new destination grid ->
+       * Add this taxi to the new destination grid ->
        * Change profitability to increase empty taxi number
        * corresponding to Area a
        */
-      grid_present.put(search_key, new TaxiInfo(a, ts));
+      this.updateEmptyTaxi(a,1,ts);
+      grid_present.put(searchKey, new TaxiInfo(a,ts));
     }
+  }
+  
+  /*
+   * Add diffTaxiNumber to Area a
+   * If ts==1, means the old timestamp has to be preserved. Else, update to timestamp ts
+   */
+  public void updateEmptyTaxi(Area a, int diffTaxiNumber, long ts) {
+	Profitability old_ptb_val = area_ptb_map.get(a);
+	int new_empty_taxi_number = old_ptb_val.num_empty_taxis + diffTaxiNumber;
+	
+	if(new_empty_taxi_number == 0) {
+		// Delete the entry if no taxis present
+		// First update the area-ptb map
+		Profitability new_ptb_val = new Profitability();
+		new_ptb_val.mprofit = old_ptb_val.mprofit;
+		new_ptb_val.num_empty_taxis = 0;
+		new_ptb_val.ts = old_ptb_val.ts;
+		new_ptb_val.resetProfitability();
+		area_ptb_map.put(a,new_ptb_val);
+		// Next change the array DS
+		int index = (int) old_ptb_val.profitability;
+		sorted_ptb_list.get(index).remove(new setElem(a,0,0)); // 2 setElems are equal if area is same
+	}
+	else {
+		// First update the area-ptb map
+		Profitability new_ptb_val = new Profitability();
+		new_ptb_val.mprofit = old_ptb_val.mprofit;
+		new_ptb_val.num_empty_taxis = new_empty_taxi_number;
+		if(ts != -1) {
+			new_ptb_val.ts = ts;
+		} else {
+			new_ptb_val.ts = old_ptb_val.ts;
+		}
+		new_ptb_val.resetProfitability();
+		area_ptb_map.put(a,new_ptb_val);
+		// Next change the array DS
+		int old_index = (int) old_ptb_val.profitability;
+		int new_index = (int) new_ptb_val.profitability;
+		if(old_index != new_index) {
+			sorted_ptb_list.get(old_index).remove(new setElem(a,0,0)); // 2 setElems are equal if area is same
+			sorted_ptb_list.get(new_index).add(new setElem(a,new_ptb_val.ts,new_ptb_val.profitability));
+		}
+	}
   }
 
   public void leaveProfitSlidingWindow(Area a, float profit) {
-    // TODO
+	  // First update the area-ptb map
+	  Profitability old_ptb_val = area_ptb_map.get(a);
+	  Profitability new_ptb_val = new Profitability();
+	  new_ptb_val.mprofit = old_ptb_val.mprofit;
+	  new_ptb_val.mprofit.delete(profit);
+	  new_ptb_val.num_empty_taxis = old_ptb_val.num_empty_taxis;
+	  new_ptb_val.ts = old_ptb_val.ts;
+	  new_ptb_val.resetProfitability();
+	  area_ptb_map.put(a,new_ptb_val);
+	  // Next change the array DS
+	  int old_index = (int) old_ptb_val.profitability;
+	  int new_index = (int) new_ptb_val.profitability;
+	  if(old_index != new_index) {
+		  sorted_ptb_list.get(old_index).remove(new setElem(a,0,0));
+		  sorted_ptb_list.get(new_index).add(new setElem(a,new_ptb_val.ts,new_ptb_val.profitability));
+	  }
   }
 
   public void enterProfitSlidingWindow(Area a, float profit, long ts) {
-    // TODO
+	  // First update the area-ptb map
+	  Profitability old_ptb_val = area_ptb_map.get(a);
+	  Profitability new_ptb_val = new Profitability();
+	  new_ptb_val.mprofit = old_ptb_val.mprofit;
+	  new_ptb_val.mprofit.insert(profit);
+	  new_ptb_val.num_empty_taxis = old_ptb_val.num_empty_taxis;
+	  new_ptb_val.ts = ts;
+	  new_ptb_val.resetProfitability();
+	  area_ptb_map.put(a,new_ptb_val);
+	  // Next change the array DS
+	  int old_index = (int) old_ptb_val.profitability;
+	  int new_index = (int) new_ptb_val.profitability;
+	  if(old_index != new_index) {
+		  sorted_ptb_list.get(old_index).remove(new setElem(a,0,0));
+		  sorted_ptb_list.get(new_index).add(new setElem(a,new_ptb_val.ts,new_ptb_val.profitability));
+	  }
   }
 }
