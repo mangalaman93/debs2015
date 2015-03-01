@@ -21,11 +21,15 @@ public class TenMaxProfitability {
     public int num_empty_taxis;
     public long ts;
 
-    public Profitability() {}
+    public Profitability() {
+    	mprofit = new Mc();
+    	num_empty_taxis = 0;
+    	profitability = 0.0f;
+    }
     
     public Profitability(float p, int n, long t) {
       profitability = p;
-      mprofit = null;
+      mprofit = new Mc();
       num_empty_taxis = n;
       ts = t;
     }
@@ -116,10 +120,9 @@ public class TenMaxProfitability {
       this.ySize = yLimit;
       this.data = new Profitability[this.xSize][this.ySize];
       this.size = 0;
-
       for(int i=0; i<this.xSize; i++) {
         for(int j=0; j<this.ySize; j++) {
-          data[i][j] = null;
+          data[i][j] = new Profitability();
         }
       }
     }
@@ -234,14 +237,14 @@ public class TenMaxProfitability {
     	while(i.hasNext() && numPrinted<10) {
 		  setElem s = i.next();
 		  Profitability p = area_ptb_map.get(s.area);
-		  print_stream.print(s.area.x + "." + s.area.y + "," + p.num_empty_taxis + "," + 
+		  print_stream.print((s.area.x+1) + "." + (s.area.y+1) + "," + p.num_empty_taxis + "," + 
 				  			p.mprofit.getMedian() + "," + p.profitability + ",");
 		  numPrinted++;
 		}
     	currentIndex--;
     }
     while(numPrinted<10) {
-    	print_stream.println("NULL,");
+    	print_stream.print("NULL,");
     	numPrinted++;
     }
   }
@@ -270,12 +273,15 @@ public class TenMaxProfitability {
     	while(i.hasNext() && numPrinted<10) {
 		  setElem s = i.next();
 		  Profitability p = area_ptb_map.get(s.area);
-		  if(!top10Area[numPrinted].equals(s.area) || !top10ptb[numPrinted].equals(p)) {
+		  if(top10Area[numPrinted] == null || !top10Area[numPrinted].equals(s.area) || !top10ptb[numPrinted].equals(p)) {
 			  return false;
 		  }
 		  numPrinted++;
 		}
     	currentIndex--;
+    }
+    if(numPrinted<10 && top10Area[numPrinted] != null) {
+    	return false;
     }
     return true;
   }
@@ -397,6 +403,7 @@ public class TenMaxProfitability {
 	  // First update the area-ptb map
 	  Profitability old_ptb_val = area_ptb_map.get(a);
 	  Profitability new_ptb_val = new Profitability();
+	  if(old_ptb_val == null) System.out.println("Check");
 	  new_ptb_val.mprofit = old_ptb_val.mprofit;
 	  new_ptb_val.mprofit.insert(profit);
 	  new_ptb_val.num_empty_taxis = old_ptb_val.num_empty_taxis;
