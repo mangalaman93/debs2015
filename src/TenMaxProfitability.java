@@ -235,12 +235,13 @@ public class TenMaxProfitability {
     while(numPrinted<10 && currentIndex>=0) {
     	Iterator<setElem> i = sorted_ptb_list.get(currentIndex).iterator();
     	while(i.hasNext() && numPrinted<10) {
-		  setElem s = i.next();
-		  Profitability p = area_ptb_map.get(s.area);
-		  print_stream.print((s.area.x+1) + "." + (s.area.y+1) + "," + p.num_empty_taxis + "," + 
-				  			p.mprofit.getMedian() + "," + p.profitability + ",");
-		  numPrinted++;
-		}
+  		  setElem s = i.next();
+  		  Profitability p = area_ptb_map.get(s.area);
+        if(p.num_empty_taxis == 0) continue;
+  		  print_stream.print((s.area.x+1) + "." + (s.area.y+1) + "," + p.num_empty_taxis + "," + 
+  				  			p.mprofit.getMedian() + "," + p.profitability + ",");
+  		  numPrinted++;
+  		}
     	currentIndex--;
     }
     while(numPrinted<10) {
@@ -255,12 +256,13 @@ public class TenMaxProfitability {
     while(numPrinted<10 && currentIndex>=0) {
     	Iterator<setElem> i = sorted_ptb_list.get(currentIndex).iterator();
     	while(i.hasNext() && numPrinted<10) {
-		  setElem s = i.next();
-		  Profitability p = area_ptb_map.get(s.area);
-		  top10Area[numPrinted] = s.area;
-		  top10ptb[numPrinted] = p;
-		  numPrinted++;
-		}
+  		  setElem s = i.next();
+  		  Profitability p = area_ptb_map.get(s.area);
+        if(p.num_empty_taxis == 0) continue;
+  		  top10Area[numPrinted] = s.area;
+  		  top10ptb[numPrinted] = p;
+  		  numPrinted++;
+  		}
     	currentIndex--;
     }
   }
@@ -273,6 +275,7 @@ public class TenMaxProfitability {
     	while(i.hasNext() && numPrinted<10) {
 		  setElem s = i.next();
 		  Profitability p = area_ptb_map.get(s.area);
+      if(p.num_empty_taxis == 0) continue;
 		  if(top10Area[numPrinted] == null || !top10Area[numPrinted].equals(s.area) || !top10ptb[numPrinted].equals(p)) {
 			  return false;
 		  }
@@ -342,42 +345,22 @@ public class TenMaxProfitability {
    * If ts==1, means the old timestamp has to be preserved. Else, update to timestamp ts
    */
   public void updateEmptyTaxi(Area a, int diffTaxiNumber, long ts) {
-	Profitability old_ptb_val = area_ptb_map.get(a);
-	int new_empty_taxi_number = old_ptb_val.num_empty_taxis + diffTaxiNumber;
-	
-	if(new_empty_taxi_number == 0) {
-		// Delete the entry if no taxis present
-		// First update the area-ptb map
-		Profitability new_ptb_val = new Profitability();
-		new_ptb_val.mprofit = old_ptb_val.mprofit;
-		new_ptb_val.num_empty_taxis = 0;
-		new_ptb_val.ts = old_ptb_val.ts;
-		new_ptb_val.resetProfitability();
-		area_ptb_map.put(a,new_ptb_val);
-		// Next change the array DS
-		int index = (int) old_ptb_val.profitability;
-		sorted_ptb_list.get(index).remove(new setElem(a,0,0)); // 2 setElems are equal if area is same
-	}
-	else {
-		// First update the area-ptb map
-		Profitability new_ptb_val = new Profitability();
-		new_ptb_val.mprofit = old_ptb_val.mprofit;
-		new_ptb_val.num_empty_taxis = new_empty_taxi_number;
-		if(ts != -1) {
-			new_ptb_val.ts = ts;
-		} else {
-			new_ptb_val.ts = old_ptb_val.ts;
-		}
-		new_ptb_val.resetProfitability();
-		area_ptb_map.put(a,new_ptb_val);
-		// Next change the array DS
-		int old_index = (int) old_ptb_val.profitability;
-		int new_index = (int) new_ptb_val.profitability;
-		if(old_index != new_index) {
-			sorted_ptb_list.get(old_index).remove(new setElem(a,0,0)); // 2 setElems are equal if area is same
-			sorted_ptb_list.get(new_index).add(new setElem(a,new_ptb_val.ts,new_ptb_val.profitability));
-		}
-	}
+  	Profitability old_ptb_val = area_ptb_map.get(a);
+  	Profitability new_ptb_val = new Profitability();
+  	new_ptb_val.mprofit = old_ptb_val.mprofit;
+  	new_ptb_val.num_empty_taxis = old_ptb_val.num_empty_taxis + diffTaxiNumber;
+  	if(ts != -1) {
+  		new_ptb_val.ts = ts;
+  	} else {
+  		new_ptb_val.ts = old_ptb_val.ts;
+  	}
+  	new_ptb_val.resetProfitability();
+  	area_ptb_map.put(a,new_ptb_val);
+  	// Next change the array DS
+  	int old_index = (int) old_ptb_val.profitability;
+  	int new_index = (int) new_ptb_val.profitability;
+  	sorted_ptb_list.get(old_index).remove(new setElem(a,0,0)); // 2 setElems are equal if area is same
+  	sorted_ptb_list.get(new_index).add(new setElem(a,new_ptb_val.ts,new_ptb_val.profitability));
   }
 
   public void leaveProfitSlidingWindow(Area a, float profit) {
@@ -393,17 +376,14 @@ public class TenMaxProfitability {
 	  // Next change the array DS
 	  int old_index = (int) old_ptb_val.profitability;
 	  int new_index = (int) new_ptb_val.profitability;
-	  if(old_index != new_index) {
-		  sorted_ptb_list.get(old_index).remove(new setElem(a,0,0));
-		  sorted_ptb_list.get(new_index).add(new setElem(a,new_ptb_val.ts,new_ptb_val.profitability));
-	  }
+	  sorted_ptb_list.get(old_index).remove(new setElem(a,0,0));
+		sorted_ptb_list.get(new_index).add(new setElem(a,new_ptb_val.ts,new_ptb_val.profitability));
   }
 
   public void enterProfitSlidingWindow(Area a, float profit, long ts) {
 	  // First update the area-ptb map
 	  Profitability old_ptb_val = area_ptb_map.get(a);
 	  Profitability new_ptb_val = new Profitability();
-	  if(old_ptb_val == null) System.out.println("Check");
 	  new_ptb_val.mprofit = old_ptb_val.mprofit;
 	  new_ptb_val.mprofit.insert(profit);
 	  new_ptb_val.num_empty_taxis = old_ptb_val.num_empty_taxis;
@@ -413,9 +393,7 @@ public class TenMaxProfitability {
 	  // Next change the array DS
 	  int old_index = (int) old_ptb_val.profitability;
 	  int new_index = (int) new_ptb_val.profitability;
-	  if(old_index != new_index) {
-		  sorted_ptb_list.get(old_index).remove(new setElem(a,0,0));
-		  sorted_ptb_list.get(new_index).add(new setElem(a,new_ptb_val.ts,new_ptb_val.profitability));
-	  }
+	  sorted_ptb_list.get(old_index).remove(new setElem(a,0,0));
+		sorted_ptb_list.get(new_index).add(new setElem(a,new_ptb_val.ts,new_ptb_val.profitability));
   }
 }
