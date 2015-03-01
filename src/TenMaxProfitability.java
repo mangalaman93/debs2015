@@ -1,3 +1,4 @@
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -225,7 +226,7 @@ public class TenMaxProfitability {
     }
   }
 
-  public void printMaxTen() {
+  public void printMaxTen(PrintStream print_stream) {
     int numPrinted = 0;
     int currentIndex = MAX_PROFITABILITY_SIZE-1;
     while(numPrinted<10 && currentIndex>=0) {
@@ -233,11 +234,15 @@ public class TenMaxProfitability {
     	while(i.hasNext() && numPrinted<10) {
 		  setElem s = i.next();
 		  Profitability p = area_ptb_map.get(s.area);
-		  System.out.println(s.area.x + "." + s.area.y + "," + p.num_empty_taxis + "," + 
-				  			p.mprofit.getMedian() + "," + p.profitability);
+		  print_stream.print(s.area.x + "." + s.area.y + "," + p.num_empty_taxis + "," + 
+				  			p.mprofit.getMedian() + "," + p.profitability + ",");
 		  numPrinted++;
 		}
     	currentIndex--;
+    }
+    while(numPrinted<10) {
+    	print_stream.println("NULL,");
+    	numPrinted++;
     }
   }
 
@@ -302,7 +307,7 @@ public class TenMaxProfitability {
       this.updateEmptyTaxi(grid_present.get(searchKey).area,-1,-1);
 
       /*
-       * TODO Add this taxi to the new destination grid ->
+       * Add this taxi to the new destination grid ->
        * Change profitability to increase empty taxi number
        * corresponding to Area a
        */

@@ -510,7 +510,7 @@ class Q2Process implements Runnable {
 		try {
 			Q2Elem newevent = queue.take();
 			while(newevent.pickup_longitude != -100) {
-				Vector<Area> old_ten_max = maxpft.getMaxTenCopy();
+				maxpft.storeMaxTenCopy();
 
 				// Check if events are leaving the sliding window and process them
 				long currentms = newevent.dropoff_datetime.getTime();
@@ -520,7 +520,7 @@ class Q2Process implements Runnable {
 
 					while((currentms-lastms) >= 30*60*1000) {
 						maxpft.leaveTaxiSlidingWindow(event.medallion,
-								event.hack_license, event.dropoff_datetime);
+								event.hack_license, event.dropoff_datetime.getTime());
 
 						start30 = (start30 + 1)%WINDOW_CAPACITY;
 						if(start30 != end) {
@@ -561,9 +561,9 @@ class Q2Process implements Runnable {
 				if(dropoff_area != null) {
 					maxpft.enterProfitSlidingWindow(pickup_area,
 							newevent.fare_amount+newevent.tip_amount,
-							newevent.dropoff_datetime);
+							newevent.dropoff_datetime.getTime());
 					maxpft.enterTaxiSlidingWindow(newevent.medallion,
-							newevent.hack_license, dropoff_area, newevent.dropoff_datetime);
+							newevent.hack_license, dropoff_area, newevent.dropoff_datetime.getTime());
 
 					try {
 						sliding_window.set(end, newevent);
@@ -574,29 +574,12 @@ class Q2Process implements Runnable {
 					end = (end + 1)%WINDOW_CAPACITY;
 				}
 
-				if(!maxpft.isSameMaxTenKey(old_ten_max)) {
-					Vector<KeyVal<Area, Profitability>> ten_max = maxpft.getMaxTen();
+				if(!maxpft.isSameMaxTenKey()) {
 					print_stream.print(newevent.pickup_datetime.toString());
 					print_stream.print(",");
 					print_stream.print(newevent.dropoff_datetime.toString());
 					print_stream.print(",");
-					for(int i = 0; i < 10; i++) {
-						if(ten_max.get(i) != null) {
-							print_stream.print(ten_max.get(i).key.x + 1);
-							print_stream.print(".");
-							print_stream.print(ten_max.get(i).key.y + 1);
-							print_stream.print(",");
-							print_stream.print(ten_max.get(i).val.num_empty_taxis);
-							print_stream.print(",");
-							print_stream.print(ten_max.get(i).val.mprofit.getMedian());
-							print_stream.print(",");
-							print_stream.print(ten_max.get(i).val.profitability);
-							print_stream.print(",");
-						} else{
-							print_stream.print("NULL");
-							print_stream.print(",");
-						}
-					}
+					maxpft.printMaxTen(print_stream);
 					long time_out = System.currentTimeMillis();
 					print_stream.print(time_out - newevent.time_in);
 					print_stream.print("\n");
