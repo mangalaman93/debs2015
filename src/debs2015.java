@@ -408,8 +408,7 @@ class Q1Process implements Runnable {
 			boolean ten_max_changed = false;
 
 			while(newevent.pickup_longitude != -100) {
-				Vector<Route> old_ten_max = maxfs.getMaxTenCopy();
-
+				maxfs.storeMaxTenCopy();
 				// Check if events are leaving the sliding window and process them
 				long currentms = newevent.dropoff_datetime.getTime();
 				if(start != end) {
@@ -424,8 +423,7 @@ class Q1Process implements Runnable {
 								lastevent.dropoff_latitude);
 
 						Route r = new Route(from, to);
-						ten_max_changed |= maxfs.update(r, new Freq(-1,
-								lastevent.dropoff_datetime));
+						ten_max_changed |= maxfs.decreaseFrequency(r, lastevent.dropoff_datetime.getTime());
 
 						start = (start + 1)%WINDOW_CAPACITY;
 						if(start != end) {
@@ -444,9 +442,7 @@ class Q1Process implements Runnable {
 						newevent.dropoff_latitude);
 				if(from != null && to != null) {
 					Route r = new Route(from, to);
-					ten_max_changed |= maxfs.update(r, new Freq(1,
-							newevent.dropoff_datetime));
-
+					ten_max_changed |= maxfs.increaseFrequency(r, newevent.dropoff_datetime.getTime());
 					try {
 						sliding_window.set(end, newevent);
 					} catch(IndexOutOfBoundsException e) {
@@ -455,30 +451,13 @@ class Q1Process implements Runnable {
 					}
 					end = (end + 1)%WINDOW_CAPACITY;
 				}
-
 				if(ten_max_changed == true) {
-					Vector<KeyVal<Route, Freq>> ten_max = maxfs.getMaxTen();
-
-					if(!maxfs.isSameMaxTenKey(old_ten_max)) {
+					if(!maxfs.isSameMaxTenKey()) {
 						print_stream.print(newevent.pickup_datetime.toString());
 						print_stream.print(",");
 						print_stream.print(newevent.dropoff_datetime.toString());
 						print_stream.print(",");
-						for(int i = 0; i < 10; i++) {
-							if(ten_max.get(i) != null) {
-								print_stream.print(ten_max.get(i).key.fromArea.x + 1);
-								print_stream.print(".");
-								print_stream.print(ten_max.get(i).key.fromArea.y + 1);
-								print_stream.print(",");
-								print_stream.print(ten_max.get(i).key.toArea.x + 1);
-								print_stream.print(".");
-								print_stream.print(ten_max.get(i).key.toArea.y + 1);
-								print_stream.print(",");
-							} else{
-								print_stream.print("NULL");
-								print_stream.print(",");
-							}
-						}
+						maxfs.printMaxTen(print_stream);
 						long time_out = System.currentTimeMillis();
 						print_stream.print(time_out - newevent.time_in);
 						print_stream.print("\n");
@@ -646,7 +625,7 @@ public class debs2015 {
 	public static void main(String[] args) throws FileNotFoundException {
 		String test_file;
 		if(args.length == 0) {
-			test_file = "out/sorted_data.csv";
+			test_file = "test/Query1/inputData.csv";
 		} else {
 			test_file = args[0];
 		}
