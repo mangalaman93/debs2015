@@ -3,7 +3,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.StringTokenizer;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Vector;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -382,8 +381,6 @@ class IoProcessQ2 implements Runnable {
  *  *output if list of 10 most frequent routes change
  */
 class Q1Process implements Runnable {
-	private final int WINDOW_CAPACITY = 1000;
-
 	private BlockingQueue<Q1Elem> queue;
 	private TenMaxFrequency maxfs;
 	private Geo geo;
@@ -395,7 +392,7 @@ class Q1Process implements Runnable {
 		this.queue = queue;
 		this.maxfs = new TenMaxFrequency();
 		this.geo = new Geo(-74.913585f, 41.474937f, 500, 500, 300, 300);
-		this.sliding_window = new ArrayList<Q1Elem>(WINDOW_CAPACITY);
+		this.sliding_window = new ArrayList<Q1Elem>(Constants.WINDOW_CAPACITY);
 		this.start = 0;
 		this.end = 0;
 		this.print_stream = new PrintStream(print_stream);
@@ -425,7 +422,7 @@ class Q1Process implements Runnable {
 						Route r = new Route(from, to);
 						ten_max_changed |= maxfs.decreaseFrequency(r, lastevent.dropoff_datetime.getTime());
 
-						start = (start + 1)%WINDOW_CAPACITY;
+						start = (start + 1)%Constants.WINDOW_CAPACITY;
 						if(start != end) {
 							lastevent = sliding_window.get(start);
 							lastms = lastevent.dropoff_datetime.getTime();
@@ -449,7 +446,7 @@ class Q1Process implements Runnable {
 						// Happens if size < number of events in the window
 						sliding_window.add(newevent);
 					}
-					end = (end + 1)%WINDOW_CAPACITY;
+					end = (end + 1)%Constants.WINDOW_CAPACITY;
 				}
 				if(ten_max_changed == true) {
 					if(!maxfs.isSameMaxTenKey()) {
@@ -484,8 +481,6 @@ class Q1Process implements Runnable {
  */
 
 class Q2Process implements Runnable {
-	private final int WINDOW_CAPACITY = 1000;
-
 	private BlockingQueue<Q2Elem> queue;
 	private TenMaxProfitability maxpft;
 	private Geo geo;
@@ -498,7 +493,7 @@ class Q2Process implements Runnable {
 		this.queue = queue2;
 		this.maxpft = new TenMaxProfitability();
 		this.geo = new Geo(-74.913585f, 41.474937f, 250, 250, 600, 600);
-		this.sliding_window = new ArrayList<Q2Elem>(WINDOW_CAPACITY);
+		this.sliding_window = new ArrayList<Q2Elem>(Constants.WINDOW_CAPACITY);
 		start30 = 0;
 		start15 = 0;
 		end = 0;
@@ -522,7 +517,7 @@ class Q2Process implements Runnable {
 						maxpft.leaveTaxiSlidingWindow(event.medallion,
 								event.hack_license, event.dropoff_datetime.getTime());
 
-						start30 = (start30 + 1)%WINDOW_CAPACITY;
+						start30 = (start30 + 1)%Constants.WINDOW_CAPACITY;
 						if(start30 != end) {
 							event = sliding_window.get(start30);
 							lastms = event.dropoff_datetime.getTime();
@@ -542,7 +537,7 @@ class Q2Process implements Runnable {
 							maxpft.leaveProfitSlidingWindow(pickup_area,
 									event.fare_amount+event.tip_amount);
 
-							start15 = (start15 + 1)%WINDOW_CAPACITY;
+							start15 = (start15 + 1)%Constants.WINDOW_CAPACITY;
 							if(start15 != end) {
 								event = sliding_window.get(start15);
 								lastms = event.dropoff_datetime.getTime();
@@ -571,7 +566,7 @@ class Q2Process implements Runnable {
 						// Happens if size < number of events in the window
 						sliding_window.add(newevent);
 					}
-					end = (end + 1)%WINDOW_CAPACITY;
+					end = (end + 1)%Constants.WINDOW_CAPACITY;
 				}
 
 				if(!maxpft.isSameMaxTenKey()) {
@@ -597,32 +592,27 @@ class Q2Process implements Runnable {
 }
 
 public class debs2015 {
-	private static final boolean TWO_IO_PROCESS = true;
-	private static final String Q1_FILE = "out/q1_out.csv";
-	private static final String Q2_FILE = "out/q2_out.csv";
-	private static final int QUEUE_CAPACITY = 10000;
-
 	private static BlockingQueue<Q1Elem> queue_for_Q1;
 	private static BlockingQueue<Q2Elem> queue_for_Q2;
 
 	public static void main(String[] args) throws FileNotFoundException {
 		String test_file;
 		if(args.length == 0) {
-			test_file = "test/Query1/inputData.csv";
+			test_file = "out/sorted_data.csv";
 		} else {
 			test_file = args[0];
 		}
 
 		BufferedReader instream = new BufferedReader(new FileReader(test_file));
-		PrintStream q1out = new PrintStream(new FileOutputStream(Q1_FILE, false));
-		PrintStream q2out = new PrintStream(new FileOutputStream(Q2_FILE, false));
+		PrintStream q1out = new PrintStream(new FileOutputStream(Constants.Q1_FILE, false));
+		PrintStream q2out = new PrintStream(new FileOutputStream(Constants.Q2_FILE, false));
 
 		// Initializing queues
-		queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(QUEUE_CAPACITY, false);
-		queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(QUEUE_CAPACITY, false);
+		queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, false);
+		queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(Constants.QUEUE2_CAPACITY, false);
 
 		// start threads
-		if(TWO_IO_PROCESS) {
+		if(Constants.TWO_IO_PROCESS) {
 			Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, test_file));
 			Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, test_file));
 			threadForIoProcessQ1.start();

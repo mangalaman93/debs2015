@@ -5,14 +5,19 @@ public class Constants {
   public static final float HM_LOAD_FACTOR = 0.75f;
 
   // sliding window length
-	public final int WINDOW_CAPACITY = 1000;
+	public final static int WINDOW_CAPACITY = 1000;
 
 	// capacity of queue between IO process and Q* processes
   public static final int QUEUE1_CAPACITY = 10000;
   public static final int QUEUE2_CAPACITY = 10000;
 
-  // number of io processes
-  public static final boolean TWO_IO_PROCESS = true;
+  // number of IO processes
+  public static final boolean TWO_IO_PROCESS = false;
+  
+  // Q2 constants and parameters
+  public final static int AREA_LIMIT = 600;
+  // Max profitability value possible
+	public final static int MAX_PFT_SIZE = 1002;
 
   // input and output file
   public static final String DEFAULT_INPUT_FILE = "out/sorted_data.csv";
