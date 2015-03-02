@@ -94,12 +94,12 @@ public class TenMaxFrequency {
   public TenMaxFrequency() {
     route_freq_map = new HashMap<Route, PairQ1>(Constants.HM_INIT_SIZE,
         Constants.HM_LOAD_FACTOR);
-    freq_array = new ArrayList<ArrayList<Set<PairQ1>>>(500);
-    route_count = new Vector<Integer>(500);
-    latest_ts = new Vector<Long>(500);
+    freq_array = new ArrayList<ArrayList<Set<PairQ1>>>(Constants.FREQ_ARRAY_SIZE);
+    route_count = new Vector<Integer>(Constants.FREQ_ARRAY_SIZE);
+    latest_ts = new Vector<Long>(Constants.FREQ_ARRAY_SIZE);
 
     // Initialize frequency array
-    for(int i = 0; i < 500; i++) {
+    for(int i = 0; i < Constants.FREQ_ARRAY_SIZE; i++) {
       freq_array.add(new ArrayList<Set<PairQ1>>(1800));
       ArrayList<Set<PairQ1>> array = freq_array.get(i);
       for(int j = 0; j < 1800; j++) {

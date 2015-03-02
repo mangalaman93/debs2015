@@ -13,6 +13,9 @@ public class Constants {
 
   // number of IO processes
   public static final boolean TWO_IO_PROCESS = true;
+
+  // Q1 constants
+  public static final int FREQ_ARRAY_SIZE = 10000;
   
   // Q2 constants and parameters
   public final static int AREA_LIMIT = 600;
