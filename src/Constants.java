@@ -20,7 +20,7 @@ public class Constants {
 	public final static int MAX_PFT_SIZE = 1002;
 
   // input and output file
-  public static final String DEFAULT_INPUT_FILE = "out/sorted_data.csv";
+  public static final String DEFAULT_INPUT_FILE = "out/sorted_data_full.csv";
   public static final String Q1_FILE = "out/q1_out.csv";
   public static final String Q2_FILE = "out/q2_out.csv";
 }

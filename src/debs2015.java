@@ -304,6 +304,7 @@ class IoProcessQ2 implements Runnable {
 			BufferedReader input_file = new BufferedReader(new FileReader(file));
 			SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 			String line;
+
 			while((line = input_file.readLine()) != null) {
 				try {
 					StringTokenizer st = new StringTokenizer(line, ",");
@@ -502,9 +503,23 @@ class Q2Process implements Runnable {
 
 	@Override
 	public void run() {
+		int in_count = 0;
+		long in_start_time = System.currentTimeMillis();
+
 		try {
 			Q2Elem newevent = queue.take();
+
 			while(newevent.pickup_longitude != -100) {
+				// throughput calculation
+				if(in_count == 1000000) {
+					System.out.print("throughput: ");
+					System.out.print(1000000.0f/((float)(System.currentTimeMillis()-in_start_time)));
+					System.out.println("K events/s");
+					in_start_time = System.currentTimeMillis();
+					in_count = 0;
+				}
+				in_count++;
+
 				maxpft.storeMaxTenCopy();
 
 				// Check if events are leaving the sliding window and process them
@@ -598,7 +613,7 @@ public class debs2015 {
 	public static void main(String[] args) throws FileNotFoundException {
 		String test_file;
 		if(args.length == 0) {
-			test_file = "out/sorted_data.csv";
+			test_file = Constants.DEFAULT_INPUT_FILE;
 		} else {
 			test_file = args[0];
 		}
