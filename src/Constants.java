@@ -12,7 +12,7 @@ public class Constants {
   public static final int QUEUE2_CAPACITY = 10000;
 
   // number of IO processes
-  public static final boolean TWO_IO_PROCESS = false;
+  public static final boolean TWO_IO_PROCESS = true;
   
   // Q2 constants and parameters
   public final static int AREA_LIMIT = 600;

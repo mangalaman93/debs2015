@@ -553,7 +553,7 @@ class Q2Process implements Runnable {
 						newevent.dropoff_latitude);
 				Area pickup_area = geo.translate(newevent.pickup_longitude,
 						newevent.pickup_latitude);
-				if(dropoff_area != null) {
+				if(dropoff_area != null && pickup_area != null) {
 					maxpft.enterProfitSlidingWindow(pickup_area,
 							newevent.fare_amount+newevent.tip_amount,
 							newevent.dropoff_datetime.getTime());
