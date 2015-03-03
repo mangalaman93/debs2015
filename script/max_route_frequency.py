@@ -14,14 +14,21 @@ def geo(lat, lon):
 
 def max_route_frequency(file, fromX, fromY, toX, toY):
 	queue = deque([])
+	max_count = 0
 	count = 0
 	with open(file) as infile:
 		for line in infile:
 			params = line.split(',')
-			fromA = geo(float(params[6]), float(params[7]))
+			try:
+				fromA = geo(float(params[6]), float(params[7]))
+			except ValueError:
+				pass
 			if(fromA[0] == fromX):
 				if(fromA[1] == fromY):
-					toA = geo(float(params[8]), float(params[9]))
+					try:
+						toA = geo(float(params[8]), float(params[9]))
+					except ValueError:
+						pass
 					if(toA[0] == toX):
 						if(toA[1] == toY):
 							dttime = datetime.strptime(params[3], "%Y-%m-%d %H:%M:%S")
@@ -43,7 +50,9 @@ def max_route_frequency(file, fromX, fromY, toX, toY):
 								count = count + 1
 							queue.append(dt)
 							count = count + 1
+							if(count > max_count):
+								max_count = count
 							print count
-	print "max_route_frequency ", count
+	print "max_route_frequency ", max_count
 
 max_route_frequency("out/sorted_data_full.csv", 160, 159, 156, 160)
