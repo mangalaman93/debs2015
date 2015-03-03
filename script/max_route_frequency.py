@@ -10,7 +10,7 @@ def geo(lat, lon):
 
 	distY = ((41.474937-lon)*110.54*1000) + 0.5*500;
 	y = distY / 500;
-	return [x, y]
+	return [int(x), int(y)]
 
 def max_route_frequency(file, fromX, fromY, toX, toY):
 	queue = deque([])
@@ -23,7 +23,7 @@ def max_route_frequency(file, fromX, fromY, toX, toY):
 				if(fromA[1] == fromY):
 					toA = geo(float(params[8]), float(params[9]))
 					if(toA[0] == toX):
-						if(toA[9] == toY):
+						if(toA[1] == toY):
 							dttime = datetime.strptime(params[3], "%Y-%m-%d %H:%M:%S")
 							dt = (dttime - datetime(1970,1,1)).total_seconds()
 							flag = 0
@@ -46,4 +46,4 @@ def max_route_frequency(file, fromX, fromY, toX, toY):
 							print count
 	print "max_route_frequency ", count
 
-max_route_frequency("out/sorted_data.csv", 160, 159, 156, 160)
+max_route_frequency("out/sorted_data_full.csv", 160, 159, 156, 160)
