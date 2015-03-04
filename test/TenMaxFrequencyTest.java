@@ -1,23 +1,25 @@
 import static org.junit.Assert.*;
 import java.sql.Timestamp;
 import java.util.Vector;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 class UniqueTimestamp {
-  static Timestamp last_ts = null;
+  static long last_ts = 0;
 
-  public static Timestamp getTimestamp() {
-    if(last_ts == null) {
-      last_ts = new Timestamp((new java.util.Date()).getTime());
+  public static long getTimestamp() {
+    if(last_ts == 0) {
+      last_ts = (new java.util.Date()).getTime();
       return last_ts;
     }
 
-    Timestamp ts;
+    long ts;
     do {
-      ts = new Timestamp((new java.util.Date()).getTime());
-    }  while(ts.compareTo(last_ts) <= 0);
+      ts = (new java.util.Date()).getTime();
+    }  while(ts <= last_ts);
 
     last_ts = ts;
     return ts;
@@ -27,14 +29,14 @@ class UniqueTimestamp {
 public class TenMaxFrequencyTest {
   Route[] r;
   Area[] a;
-  Timestamp[] ts;
+  long[] ts;
   TenMaxFrequency tmf;
 
   @Before
   public void setUp() throws Exception {
     r = new Route[14];
     a = new Area[9];
-    ts = new Timestamp[1000];
+    ts = new long[1000];
 
     a[0] = new Area(1, 1);
     a[1] = new Area(0, 1);
@@ -73,217 +75,197 @@ public class TenMaxFrequencyTest {
   }
 
   @Test
-  public void testGetMaxTen1() {
-    tmf.update(r[0], new Freq(1, ts[0]));
-    Vector<KeyVal<Route, Freq>> temp = new Vector<KeyVal<Route, Freq>>();
-    temp.add(new KeyVal<Route, Freq>(r[0], new Freq(1, ts[0])));
-    for(int i=1; i<10; i++)
-      temp.add(null);
-    assertTrue(tmf.getMaxTen().equals(temp));
+  public void testGetMaxTen1() throws Exception{
+    tmf.increaseFrequency(r[0], ts[0]);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
+    assertTrue(!tmf.isSameMaxTenKey());
+    assertEquals("4.3,2.2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,", baos.toString());
   }
 
   @Test
   public void tesGetMaxTen2() {
-    Vector<KeyVal<Route, Freq>> temp = new Vector<KeyVal<Route, Freq>>();
-
-    for(int i=0; i<6; i++)
-      tmf.update(r[i], new Freq(1, ts[i]));
-
-    for(int i=5; i>=0; i--)
-      temp.add(new KeyVal<Route, Freq>(r[i], new Freq(1, ts[i])));
-
-    for(int i=6; i<10; i++)
-      temp.add(null);
-
-    assertTrue(tmf.getMaxTen().equals(temp));
+    for(int i=0; i<6; i++){
+      tmf.increaseFrequency(r[i], ts[i] + i*1000);
+    }
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
+    assertTrue(!tmf.isSameMaxTenKey());
+    assertEquals("4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,1.2,2.1,4.3,2.2,NULL,NULL,NULL,NULL,", baos.toString());
   }
 
   @Test
   public void tesGetMaxTen3() {
-    Vector<KeyVal<Route, Freq>> temp = new Vector<KeyVal<Route, Freq>>();
-
-    for(int i=0; i<11; i++)
-      tmf.update(r[i], new Freq(1, ts[i]));
-
-    for(int i=10; i>0; i--)
-      temp.add(new KeyVal<Route, Freq>(r[i], new Freq(1, ts[i])));
-
-    assertTrue(tmf.getMaxTen().equals(temp));
+    for(int i=0; i<11; i++){
+      tmf.increaseFrequency(r[i], ts[i] + i*1000);
+    }
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
+    assertTrue(!tmf.isSameMaxTenKey());
+    assertEquals("1.2,2.2,2.1,5.6,3.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,1.2,2.1,", baos.toString());
   }
 
   @Test
   public void tesGetMaxTen4() {
-    Vector<KeyVal<Route, Freq>> temp = new Vector<KeyVal<Route, Freq>>();
-
-    for(int i=0; i<8; i++)
-      tmf.update(r[i], new Freq(1, ts[i]));
-    tmf.update(r[0], new Freq(1, ts[8]));
-
-    temp.add(new KeyVal<Route, Freq>(r[0], new Freq(2, ts[8])));
-    for(int i=7; i>0; i--)
-      temp.add(new KeyVal<Route, Freq>(r[i], new Freq(1, ts[i])));
-    temp.add(null);
-    temp.add(null);
-
-    assertTrue(tmf.getMaxTen().equals(temp));
+    for(int i=0; i<8; i++){
+      tmf.increaseFrequency(r[i], ts[i] + i*1000);
+    }
+    tmf.increaseFrequency(r[0], ts[8] + 8*1000);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
+    assertTrue(!tmf.isSameMaxTenKey());
+    assertEquals("4.3,2.2,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,1.2,2.1,NULL,NULL,", baos.toString());
   }
 
   @Test
   public void testGetMaxTen5() {
-    Vector<KeyVal<Route, Freq>> temp = new Vector<KeyVal<Route, Freq>>();
-
-    for(int i=0; i<11; i++)
-      tmf.update(r[i], new Freq(1, ts[i]));
-    tmf.update(r[0], new Freq(1, ts[11]));
-
-    temp.add(new KeyVal<Route, Freq>(r[0], new Freq(2, ts[11])));
-    for(int i=10; i>1; i--)
-      temp.add(new KeyVal<Route, Freq>(r[i], new Freq(1, ts[i])));
-
-    assertTrue(tmf.getMaxTen().equals(temp));
+    for(int i=0; i<11; i++){
+      tmf.increaseFrequency(r[i], ts[i] + i*1000);
+    }
+    tmf.increaseFrequency(r[0], ts[11] + 11*1000);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
+    assertTrue(!tmf.isSameMaxTenKey());
+    assertEquals("4.3,2.2,1.2,2.2,2.1,5.6,3.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,", baos.toString());
   }
 
   @Test
   public void tesGetMaxTen6() {
-    Vector<KeyVal<Route, Freq>> temp = new Vector<KeyVal<Route, Freq>>();
-
-    for(int i=0; i<8; i++)
-      tmf.update(r[i], new Freq(1, ts[i]));
-    tmf.update(r[0], new Freq(-1, ts[8]));
-
-    for(int i=7; i>0; i--)
-      temp.add(new KeyVal<Route, Freq>(r[i], new Freq(1, ts[i])));
-    temp.add(null);
-    temp.add(null);
-    temp.add(null);
-
-    assertTrue(tmf.getMaxTen().equals(temp));
+    for(int i=0; i<8; i++){
+      tmf.increaseFrequency(r[i], ts[i] + i*1000);
+    }
+    tmf.decreaseFrequency(r[0], ts[8] + 8*1000);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
+    assertTrue(!tmf.isSameMaxTenKey());
+    assertEquals("2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,1.2,2.1,NULL,NULL,NULL,", baos.toString());
   }
 
   @Test
   public void testGetMaxTen7() {
-    Vector<KeyVal<Route, Freq>> temp = new Vector<KeyVal<Route, Freq>>();
-
-    for(int i=0; i<11; i++)
-      tmf.update(r[i], new Freq(1, ts[i]));
-    tmf.update(r[0], new Freq(-1, ts[11]));
-
-    for(int i=10; i>0; i--)
-      temp.add(new KeyVal<Route, Freq>(r[i], new Freq(1, ts[i])));
-
-    assertTrue(tmf.getMaxTen().equals(temp));
+    for(int i=0; i<11; i++){
+      tmf.storeMaxTenCopy();
+      tmf.increaseFrequency(r[i], ts[i] + i*1000);
+      assertTrue(!tmf.isSameMaxTenKey());
+    }
+    tmf.storeMaxTenCopy();
+    tmf.decreaseFrequency(r[0], ts[11] + 11*1000);
+    assertTrue(tmf.isSameMaxTenKey());
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
+    assertEquals("1.2,2.2,2.1,5.6,3.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,1.2,2.1,", baos.toString());
   }
 
   @Test
   public void testGetMaxTen8() {
-    Vector<KeyVal<Route, Freq>> temp = new Vector<KeyVal<Route, Freq>>();
+    for(int i=0; i<11; i++){
+      tmf.increaseFrequency(r[i], ts[i] + i*1000);
+    }
+    tmf.increaseFrequency(r[1], ts[11] + 11*1000);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
 
-    for(int i=0; i<11; i++)
-      tmf.update(r[i], new Freq(1, ts[i]));
-    tmf.update(r[1], new Freq(1, ts[11]));
-
-    temp.add(new KeyVal<Route, Freq>(r[1], new Freq(2, ts[11])));
-    for(int i=10; i>1; i--)
-      temp.add(new KeyVal<Route, Freq>(r[i], new Freq(1, ts[i])));
-
-    assertTrue(tmf.getMaxTen().equals(temp));
+    assertTrue(!tmf.isSameMaxTenKey());
+    assertEquals("1.2,2.1,1.2,2.2,2.1,5.6,3.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,", baos.toString());
   }
 
   @Test
   public void testGetMaxTen9() {
-    Vector<KeyVal<Route, Freq>> temp = new Vector<KeyVal<Route, Freq>>();
+    for(int i=0; i<11; i++){
+      tmf.increaseFrequency(r[i], ts[i] + i*1000);
+    }
+    tmf.increaseFrequency(r[2], ts[11] + 11*1000);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
 
-    for(int i=0; i<11; i++)
-      tmf.update(r[i], new Freq(1, ts[i]));
-    tmf.update(r[2], new Freq(1, ts[11]));
-
-    temp.add(new KeyVal<Route, Freq>(r[2], new Freq(2, ts[11])));
-    for(int i=10; i>2; i--)
-      temp.add(new KeyVal<Route, Freq>(r[i], new Freq(1, ts[i])));
-    temp.add(new KeyVal<Route, Freq>(r[1], new Freq(1, ts[1])));
-
-    assertTrue(tmf.getMaxTen().equals(temp));
+    assertTrue(!tmf.isSameMaxTenKey());
+    assertEquals("1.2,3.1,1.2,2.2,2.1,5.6,3.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,2.1,", baos.toString());
   }
 
   @Test
   public void testGetMaxTen10() {
-    Vector<KeyVal<Route, Freq>> temp = new Vector<KeyVal<Route, Freq>>();
+    for(int i=0; i<14; i++){
+      tmf.increaseFrequency(r[i], ts[i] + i*1000);
+    }
+    tmf.decreaseFrequency(r[8], ts[14] + 14*1000);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
 
-    for(int i=0; i<14; i++)
-      tmf.update(r[i], new Freq(1, ts[i]));
-    tmf.update(r[8], new Freq(-1, ts[14]));
-
-    for(int i=13; i>8; i--)
-      temp.add(new KeyVal<Route, Freq>(r[i], new Freq(1, ts[i])));
-    for(int i=7; i>2; i--)
-      temp.add(new KeyVal<Route, Freq>(r[i], new Freq(1, ts[i])));
-
-    assertTrue(tmf.getMaxTen().equals(temp));
+    assertTrue(!tmf.isSameMaxTenKey());
+    assertEquals("2.1,1.1,3.3,3.1,4.3,5.6,1.2,2.2,2.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,", baos.toString());
   }
 
   @Test
   public void testGetMaxTen11() {
-    Vector<KeyVal<Route, Freq>> temp = new Vector<KeyVal<Route, Freq>>();
+    tmf.storeMaxTenCopy();
+    tmf.increaseFrequency(r[0], ts[0] + 0*1000);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
+    System.out.println(baos.toString());
 
-    for(int i=0; i<6; i++)
-      tmf.update(r[i], new Freq(1, ts[i]));
-    for(int i=6; i<14; i++)
-      tmf.update(r[i], new Freq(2, ts[i]));
-    tmf.update(r[8], new Freq(-1, ts[14]));
+    tmf.storeMaxTenCopy();
+    tmf.increaseFrequency(r[1], ts[1] + 1*1000);
+    baos = new ByteArrayOutputStream();
+    ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
+    System.out.println(baos.toString());
 
-    for(int i=13; i>8; i--)
-      temp.add(new KeyVal<Route, Freq>(r[i], new Freq(2, ts[i])));
-    temp.add(new KeyVal<Route, Freq>(r[7], new Freq(2, ts[7])));
-    temp.add(new KeyVal<Route, Freq>(r[6], new Freq(2, ts[6])));
-    temp.add(new KeyVal<Route, Freq>(r[8], new Freq(1, ts[8])));
-    temp.add(new KeyVal<Route, Freq>(r[5], new Freq(1, ts[5])));
-    temp.add(new KeyVal<Route, Freq>(r[4], new Freq(1, ts[4])));
+    tmf.storeMaxTenCopy();
+    tmf.increaseFrequency(r[2], ts[2] + 2*1000);
+    baos = new ByteArrayOutputStream();
+    ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
+    System.out.println(baos.toString());
 
-    assertTrue(tmf.getMaxTen().equals(temp));
-  }
+    tmf.storeMaxTenCopy();
+    tmf.increaseFrequency(r[0], ts[3] + 3*1000);
+    baos = new ByteArrayOutputStream();
+    ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
+    System.out.println(baos.toString());
 
-  @Test
-  public void testGetMaxTen12() {
-    Vector<KeyVal<Route, Freq>> temp = new Vector<KeyVal<Route, Freq>>();
+    tmf.storeMaxTenCopy();
+    tmf.increaseFrequency(r[1], ts[4] + 4*1000);
+    baos = new ByteArrayOutputStream();
+    ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
+    System.out.println(baos.toString());
 
-    for(int i=0; i<14; i++)
-      tmf.update(r[i], new Freq(2, ts[i]));
-    tmf.update(r[3], new Freq(-1, ts[14]));
-    tmf.update(r[4], new Freq(-2, ts[15]));
+    tmf.storeMaxTenCopy();
+    tmf.increaseFrequency(r[2], ts[5] + 5*1000);
+    baos = new ByteArrayOutputStream();
+    ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
+    System.out.println(baos.toString());
 
-    for(int i=13; i>4; i--)
-      temp.add(new KeyVal<Route, Freq>(r[i], new Freq(2, ts[i])));
-    temp.add(new KeyVal<Route, Freq>(r[2], new Freq(2, ts[2])));
+    tmf.storeMaxTenCopy();
+    tmf.decreaseFrequency(r[2], ts[6] + 6*1000);
+    baos = new ByteArrayOutputStream();
+    ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
+    System.out.println(baos.toString());
 
-    assertTrue(tmf.getMaxTen().equals(temp));
-  }
+    tmf.storeMaxTenCopy();
+    tmf.decreaseFrequency(r[2], ts[7] + 7*1000);
+    baos = new ByteArrayOutputStream();
+    ps = new PrintStream(baos);
+    tmf.printMaxTen(ps);
+    System.out.println(baos.toString());
 
-  @Test
-  public void testGetMaxTen13() {
-    Vector<KeyVal<Route, Freq>> temp = new Vector<KeyVal<Route, Freq>>();
 
-    for(int i=0; i<14; i++)
-      tmf.update(r[i], new Freq(10, ts[i]));
-    tmf.update(r[6], new Freq(-8, ts[14]));
 
-    for(int i=13; i>6; i--)
-      temp.add(new KeyVal<Route, Freq>(r[i], new Freq(10, ts[i])));
-    for(int i=5; i>2; i--)
-      temp.add(new KeyVal<Route, Freq>(r[i], new Freq(10, ts[i])));
-
-    assertTrue(tmf.getMaxTen().equals(temp));
-  }
-
-  @Test
-  public void testGetMaxTen14() {
-    Vector<KeyVal<Route, Freq>> temp = new Vector<KeyVal<Route, Freq>>();
-
-    for(int i=0; i<14; i++)
-      tmf.update(r[i], new Freq(14-i, ts[i]));
-
-    for(int i=0; i<10; i++)
-      temp.add(new KeyVal<Route, Freq>(r[i], new Freq(14-i, ts[i])));
-
-    assertTrue(tmf.getMaxTen().equals(temp));
+    assertTrue(!tmf.isSameMaxTenKey());
+    //assertEquals("2.1,1.1,3.3,3.1,4.3,5.6,1.2,2.2,2.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,", baos.toString());
   }
 }
