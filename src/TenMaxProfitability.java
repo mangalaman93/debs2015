@@ -5,6 +5,34 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.Vector;
+
+class PairQ2 {
+	public Area area;
+	public float ptb;
+	public int taxi;
+
+	public PairQ2(Area area, float ptb, int taxi) {
+		this.area = area;
+		this.ptb = ptb;
+		this.taxi = taxi;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if(!(obj instanceof PairQ2))
+			return false;
+
+		if(obj == this)
+			return true;
+
+		PairQ2 pair = (PairQ2) obj;
+		if(this.area.equals(pair.area) && this.ptb == pair.ptb && this.taxi == pair.taxi)
+			return true;
+
+		return false;
+	}
+}
 
 public class TenMaxProfitability {
 	/*
@@ -75,31 +103,6 @@ public class TenMaxProfitability {
 					p.ts == this.ts) {
 				return true;
 			}
-
-			return false;
-		}
-	}
-
-	final class PairQ2 {
-		public Area area;
-		public Profitability pft;
-
-		public PairQ2(Area a, Profitability p) {
-			this.area = a;
-			this.pft = p;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if(!(obj instanceof PairQ2))
-				return false;
-
-			if(obj == this)
-				return true;
-
-			PairQ2 pair = (PairQ2) obj;
-			if(this.area.equals(pair.area) && this.pft.equals(pair.pft))
-				return true;
 
 			return false;
 		}
@@ -193,7 +196,7 @@ public class TenMaxProfitability {
 		public int compareTo(setElem s) {
 			if(this.area.equals(s.area)) {
 				return 0;
-			} else if(this.profitability < s.profitability) {
+			}else if(this.profitability < s.profitability) {
 				return 1;
 			} else if(this.profitability > s.profitability) {
 				return -1;
@@ -257,6 +260,30 @@ public class TenMaxProfitability {
 			numPrinted++;
 		}
 	}
+	
+	public Vector<PairQ2> getMaxTenCopy() {
+	    Vector<PairQ2> ans = new Vector<PairQ2>(10);
+	    int numPrinted = 0;
+		int currentIndex = Constants.MAX_PFT_SIZE-1;
+		while(numPrinted<10 && currentIndex>=0) {
+			Iterator<setElem> i = sorted_ptb_list.get(currentIndex).iterator();
+			while(i.hasNext() && numPrinted<10) {
+				setElem s = i.next();
+				Profitability p = area_ptb_map.get(s.area);
+				if(p.num_empty_taxis == 0) continue;
+				ans.add(new PairQ2(s.area,p.profitability,p.num_empty_taxis));
+				numPrinted++;
+			}
+			currentIndex--;
+		}
+
+		while(numPrinted < 10) {
+			ans.add(null);
+			numPrinted++;
+		}
+	
+	    return ans;
+	}
 
 	public void storeMaxTenCopy() {
 		int numPrinted = 0;
@@ -307,10 +334,13 @@ public class TenMaxProfitability {
 		String searchKey = medallion + hack_license;
 
 		// Check if the event leaving corresponds to the event present in the area
-		if(ts == grid_present.get(searchKey).ts) {
+		if(grid_present.containsKey(searchKey) && ts == grid_present.get(searchKey).ts) {
 			// If present, then undo the effects of this event
 			this.updateEmptyTaxi(grid_present.get(searchKey).area,-1,-1);
 			grid_present.remove(searchKey);
+		}
+		else if(!grid_present.containsKey(searchKey)) {
+			System.out.println("What the heck happpened to this cab!");
 		}
 	}
 
@@ -360,6 +390,7 @@ public class TenMaxProfitability {
 	 */
 	public void updateEmptyTaxi(Area a, int diffTaxiNumber, long ts) {
 		Profitability old_ptb_val = area_ptb_map.get(a);
+		int old_index = (int) old_ptb_val.profitability;
 		Profitability new_ptb_val = new Profitability();
 		new_ptb_val.mprofit = old_ptb_val.mprofit;
 		new_ptb_val.num_empty_taxis = old_ptb_val.num_empty_taxis + diffTaxiNumber;
@@ -374,11 +405,12 @@ public class TenMaxProfitability {
 		area_ptb_map.put(a,new_ptb_val);
 
 		// Next change the array DS
-		int old_index = (int) old_ptb_val.profitability;
 		int new_index = (int) new_ptb_val.profitability;
 
 		// 2 setElems are equal if area is same
-		sorted_ptb_list.get(old_index).remove(new setElem(a,0,0));
+		if(!sorted_ptb_list.get(old_index).remove(new setElem(a,old_ptb_val.ts,old_ptb_val.profitability))) {
+			//System.out.println("PAIN1");
+		}
 		sorted_ptb_list.get(new_index).add(new setElem(a,
 				new_ptb_val.ts,new_ptb_val.profitability));
 	}
@@ -397,7 +429,9 @@ public class TenMaxProfitability {
 		// Next change the array DS
 		int old_index = (int) old_ptb_val.profitability;
 		int new_index = (int) new_ptb_val.profitability;
-		sorted_ptb_list.get(old_index).remove(new setElem(a,0,0));
+		if(!sorted_ptb_list.get(old_index).remove(new setElem(a,old_ptb_val.ts,old_ptb_val.profitability))) {
+			//System.out.println("PAIN2");
+		}
 		sorted_ptb_list.get(new_index).add(new setElem(a,
 				new_ptb_val.ts,new_ptb_val.profitability));
 	}
@@ -405,6 +439,7 @@ public class TenMaxProfitability {
 	public void enterProfitSlidingWindow(Area a, float profit, long ts) {
 		// First update the area-ptb map
 		Profitability old_ptb_val = area_ptb_map.get(a);
+		int old_index = (int) old_ptb_val.profitability;
 		Profitability new_ptb_val = new Profitability();
 		new_ptb_val.mprofit = old_ptb_val.mprofit;
 		new_ptb_val.mprofit.insert(profit);
@@ -414,9 +449,10 @@ public class TenMaxProfitability {
 		area_ptb_map.put(a,new_ptb_val);
 
 		// Next change the array DS
-		int old_index = (int) old_ptb_val.profitability;
 		int new_index = (int) new_ptb_val.profitability;
-		sorted_ptb_list.get(old_index).remove(new setElem(a,0,0));
+		if (!sorted_ptb_list.get(old_index).remove(new setElem(a,old_ptb_val.ts,old_ptb_val.profitability))) {
+			//System.out.println("PAIN3");
+		}
 		sorted_ptb_list.get(new_index).add(new setElem(a,new_ptb_val.ts,
 				new_ptb_val.profitability));
 	}
