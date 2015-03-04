@@ -34,6 +34,25 @@ import org.junit.Test;
   }
  */
 
+class UniqueTimestamp {
+  static Timestamp last_ts = null;
+
+  public static Timestamp getTimestamp() {
+    if(last_ts == null) {
+      last_ts = new Timestamp((new java.util.Date()).getTime());
+      return last_ts;
+    }
+
+    Timestamp ts;
+    do {
+      ts = new Timestamp((new java.util.Date()).getTime());
+    }  while(ts.compareTo(last_ts) <= 0);
+
+    last_ts = ts;
+    return ts;
+  }
+}
+
 public class TenMaxProfitabilityTest {
   TenMaxProfitability tmp;
   Area[] a;
@@ -71,53 +90,51 @@ public class TenMaxProfitabilityTest {
 
   @Test
   public void testTenMaxProfitability1() {
-    Vector<KeyVal<Area, Profitability>> temp = new Vector<KeyVal<Area, Profitability>>();
 
+  Vector<PairQ2> temp = new Vector<PairQ2>();
     for(int i=0; i<10; i++) {
       temp.add(null);
     }
-
-    assertTrue(tmp.getMaxTen().equals(temp));
+    
+    assertTrue(tmp.getMaxTenCopy().equals(temp));
   }
 
   @Test
   public void testTenMaxProfitability2() {
-    Vector<KeyVal<Area, Profitability>> temp = new Vector<KeyVal<Area, Profitability>>();
 
+    Vector<PairQ2> temp = new Vector<PairQ2>();
     for(int i=0; i<10; i++) {
-      tmp.enterProfitSlidingWindow(a[i], (float)(0.45+i*7.6), ts[i]);
+      tmp.enterProfitSlidingWindow(a[i], (float)(0.45+i*7.6), ts[i].getTime());
+    }
+    for(int i=0; i<10; i++) {
+      tmp.enterTaxiSlidingWindow(medallion[i], hack_license[i], a[i], ts[i].getTime());
     }
 
+    
     for(int i=9; i>=0; i--) {
-      temp.add(new KeyVal<Area, Profitability>(a[i],
-          new Profitability((float)(0.45+i*7.6), 0, ts[i])));
+        temp.add(new PairQ2(a[i],(float)(0.45+i*7.6),1));
     }
-
-    assertTrue(tmp.getMaxTen().equals(temp));
+    
+    assertTrue(tmp.getMaxTenCopy().equals(temp));
   }
 
   @Test
   public void testTenMaxProfitability3() {
-    Vector<KeyVal<Area, Profitability>> temp = new Vector<KeyVal<Area, Profitability>>();
-
+  Vector<PairQ2> temp = new Vector<PairQ2>();
     for(int i=0; i<10; i++) {
-      tmp.enterProfitSlidingWindow(a[i], 100.45f, ts[9-i]);
+      tmp.enterProfitSlidingWindow(a[i], 100.45f, ts[9-i].getTime());
     }
-
     for(int i=0; i<10; i++) {
-      temp.add(new KeyVal<Area, Profitability>(a[i],
-          new Profitability(100.45f, 0, ts[9-i])));
-    }
-
-    assertTrue(tmp.getMaxTen().equals(temp));
+        temp.add(null);
+      }
+    assertTrue(tmp.getMaxTenCopy().equals(temp));
   }
 
   @Test
   public void testTenMaxProfitability4() {
-    Vector<KeyVal<Area, Profitability>> temp = new Vector<KeyVal<Area, Profitability>>();
-
+    Vector<PairQ2> temp = new Vector<PairQ2>();
     for(int i=0; i<10; i++) {
-      tmp.enterProfitSlidingWindow(a[i], 100.45f, ts[i]);
+      tmp.enterProfitSlidingWindow(a[i], 100.45f, ts[i].getTime());
     }
 
     for(int i=10; i<20; i++) {
@@ -125,76 +142,71 @@ public class TenMaxProfitabilityTest {
     }
 
     for(int i=0; i<10; i++) {
-      temp.add(null);
-    }
-
-    assertTrue(tmp.getMaxTen().equals(temp));
+        temp.add(null);
+      }
+    assertTrue(tmp.getMaxTenCopy().equals(temp));
   }
 
   @Test
   public void testTenMaxProfitability5() {
-    Vector<KeyVal<Area, Profitability>> temp = new Vector<KeyVal<Area, Profitability>>();
-
+    Vector<PairQ2> temp = new Vector<PairQ2>();
     for(int i=0; i<10; i++) {
-      tmp.enterProfitSlidingWindow(a[i], 100.45f, ts[i]);
+      tmp.enterProfitSlidingWindow(a[i], 100.45f, ts[i].getTime());
     }
 
     for(int i=10; i<20; i++) {
-      tmp.enterProfitSlidingWindow(a[i-10], 100.465f, ts[29-i]);
+      tmp.enterProfitSlidingWindow(a[i-10], 100.465f, ts[29-i].getTime());
     }
-
     for(int i=0; i<10; i++) {
-      temp.add(new KeyVal<Area, Profitability>(a[i],
-          new Profitability((100.45f+100.465f)/2, 0, ts[19-i])));
+      tmp.enterTaxiSlidingWindow(medallion[i], hack_license[i], a[i], ts[20-i].getTime());
+  }
+    for(int i=0; i<10; i++) {
+      temp.add(new PairQ2(a[i],(100.45f+100.465f)/2,1));
     }
-
-    assertTrue(tmp.getMaxTen().equals(temp));
+    
+    assertTrue(tmp.getMaxTenCopy().equals(temp));
   }
 
   @Test
   public void testTenMaxProfitability6() {
-    Vector<KeyVal<Area, Profitability>> temp = new Vector<KeyVal<Area, Profitability>>();
     int count = 0;
-
+    Vector<PairQ2> temp = new Vector<PairQ2>();
     for(int i=0; i<10; i++) {
-      tmp.enterProfitSlidingWindow(a[i], 100.45f, ts[count]);
+      tmp.enterProfitSlidingWindow(a[i], 100.45f, ts[count].getTime());
       count++;
     }
 
     int taxi_count = 0;
     for(int i=0; i<10; i++) {
       for(int j=0; j<i+1; j++) {
-        tmp.enterTaxiSlidingWindow(medallion[taxi_count], hack_license[taxi_count], a[i], ts[count]);
+        tmp.enterTaxiSlidingWindow(medallion[taxi_count], hack_license[taxi_count], a[i], ts[count].getTime());
         taxi_count++;
         count++;
       }
-      temp.add(new KeyVal<Area, Profitability>(a[i],
-          new Profitability(100.45f/(i+1), i+1, ts[count-1])));
+      temp.add(new PairQ2(a[i],100.45f/(i+1), i+1));
     }
 
-    assertTrue(tmp.getMaxTen().equals(temp));
+    assertTrue(tmp.getMaxTenCopy().equals(temp));
   }
 
   @Test
   public void testTenMaxProfitability7() {
-    Vector<KeyVal<Area, Profitability>> temp = new Vector<KeyVal<Area, Profitability>>();
     int count = 0;
+    Vector<PairQ2> temp = new Vector<PairQ2>();
 
     for(int i=0; i<10; i++) {
-      tmp.enterProfitSlidingWindow(a[i], 100.45f, ts[count]);
+      tmp.enterProfitSlidingWindow(a[i], 100.45f, ts[count].getTime());
       count++;
     }
 
     for(int i=0; i<10; i++) {
       for(int j=0; j<i+1; j++) {
-        tmp.enterTaxiSlidingWindow(medallion[i], hack_license[i], a[i], ts[count]);
+        tmp.enterTaxiSlidingWindow(medallion[i], hack_license[i], a[i], ts[count].getTime());
         count++;
       }
-      temp.add(new KeyVal<Area, Profitability>(a[i],
-          new Profitability(100.45f, 1, ts[count-1])));
+      temp.add(new PairQ2(a[i],100.45f, 1));
     }
-
     Collections.reverse(temp);
-    assertTrue(tmp.getMaxTen().equals(temp));
+    assertTrue(tmp.getMaxTenCopy().equals(temp));
   }
 }
