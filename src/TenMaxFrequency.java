@@ -99,10 +99,10 @@ public class TenMaxFrequency {
     latest_ts = new Vector<Long>(Constants.FREQ_ARRAY_SIZE);
 
     // Initialize frequency array
-    for(int i = 0; i < Constants.FREQ_ARRAY_SIZE; i++) {
-      freq_array.add(new ArrayList<Set<PairQ1>>(1800));
+    for(int i=0; i<Constants.FREQ_ARRAY_SIZE; i++) {
+      freq_array.add(new ArrayList<Set<PairQ1>>(Constants.MAX_NUM_TS));
       ArrayList<Set<PairQ1>> array = freq_array.get(i);
-      for(int j = 0; j < 1800; j++) {
+      for(int j=0; j<Constants.MAX_NUM_TS; j++) {
         array.add(new HashSet<PairQ1>());
       }
       route_count.add(0);
@@ -135,7 +135,7 @@ public class TenMaxFrequency {
         if(freq_array.get(temp_frequency).get(ts).size() == 0) {
           ts = ts - 1;
           if(ts == -1) {
-          	ts = 1799;
+          	ts = Constants.MAX_NUM_TS-1;
           }
         }
 
@@ -276,9 +276,10 @@ public class TenMaxFrequency {
   }
 
   public boolean increaseFrequency(Route r, long ts) {
-    if(route_freq_map.containsKey(r)) {
-      // Get the pair from hashmap
-      PairQ1 p = route_freq_map.get(r);
+  	// Get the pair from hashmap
+    PairQ1 p = route_freq_map.get(r);
+
+    if(p != null) {
       // Remove from current frequency
       freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).remove(p);
       int new_count = route_count.get(p.freq.frequency) - 1;
@@ -300,7 +301,7 @@ public class TenMaxFrequency {
     else {
       // Create new objects
       Freq f = new Freq(1, ts);
-      PairQ1 p = new PairQ1(r, f);
+      p = new PairQ1(r, f);
       // Insert in the hashmap
       route_freq_map.put(r, p);
       // Frequency = 1

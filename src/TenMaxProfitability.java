@@ -119,9 +119,10 @@ public class TenMaxProfitability {
 			this.ySize = yLimit;
 			this.data = new Profitability[this.xSize][this.ySize];
 			this.size = 0;
+
 			for(int i=0; i<this.xSize; i++) {
 				for(int j=0; j<this.ySize; j++) {
-					data[i][j] = new Profitability();
+					data[i][j] = null;
 				}
 			}
 		}
@@ -329,34 +330,30 @@ public class TenMaxProfitability {
 		return true;
 	}
 
-	public void leaveTaxiSlidingWindow(String medallion, String hack_license,
+	public void leaveTaxiSlidingWindow(String medallion_hack_license,
 			long ts) {
-		String searchKey = medallion + hack_license;
-
 		// Check if the event leaving corresponds to the event present in the area
-		if(grid_present.containsKey(searchKey) && ts == grid_present.get(searchKey).ts) {
+		if(grid_present.containsKey(medallion_hack_license) && ts == grid_present.get(medallion_hack_license).ts) {
 			// If present, then undo the effects of this event
-			this.updateEmptyTaxi(grid_present.get(searchKey).area,-1,-1);
-			grid_present.remove(searchKey);
+			this.updateEmptyTaxi(grid_present.get(medallion_hack_license).area,-1,-1);
+			grid_present.remove(medallion_hack_license);
 		}
-		else if(!grid_present.containsKey(searchKey)) {
+		else if(!grid_present.containsKey(medallion_hack_license)) {
 			System.out.println("What the heck happpened to this cab!");
 		}
 	}
 
-	public void enterTaxiSlidingWindow(String medallion, String hack_license,
+	public void enterTaxiSlidingWindow(String medallion_hack_license,
 			Area a, long ts) {
-		String searchKey = medallion + hack_license;
-
 		// This taxi was in consideration earlier
 		// => has reached a new place within 30 mins
-		if(grid_present.containsKey(searchKey)) {
+		if(grid_present.containsKey(medallion_hack_license)) {
 			/*
 			 * Remove this taxi from previous grid ->
 			 * Change profitability to decrease empty taxi number corresponding to
-			 * Area grid_present[searchKey].a
+			 * Area grid_present[medallion_hack_license].a
 			 */
-			this.updateEmptyTaxi(grid_present.get(searchKey).area,-1,-1);
+			this.updateEmptyTaxi(grid_present.get(medallion_hack_license).area,-1,-1);
 
 			/*
 			 * Add this taxi to the new destination grid ->
@@ -366,8 +363,8 @@ public class TenMaxProfitability {
 			this.updateEmptyTaxi(a,1,ts);
 
 			// Update the area - TaxiInfo map
-			grid_present.get(searchKey).area = a;
-			grid_present.get(searchKey).ts = ts;
+			grid_present.get(medallion_hack_license).area = a;
+			grid_present.get(medallion_hack_license).ts = ts;
 		}
 
 		// This taxi was not in consideration earlier
@@ -379,7 +376,7 @@ public class TenMaxProfitability {
 			 * corresponding to Area a
 			 */
 			this.updateEmptyTaxi(a,1,ts);
-			grid_present.put(searchKey, new TaxiInfo(a,ts));
+			grid_present.put(medallion_hack_license, new TaxiInfo(a,ts));
 		}
 	}
 
