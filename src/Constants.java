@@ -12,9 +12,9 @@ public class Constants {
   public static final boolean TWO_IO_PROCESS = true;
 
   // Q1 constants
-  public static final int FREQ_ARRAY_SIZE = 100;
+  public static final int FREQ_ARRAY_SIZE = 500;
   public static final int MAX_NUM_TS = 1800;
-  
+
   // Q2 constants and parameters
   public final static int AREA_LIMIT = 600;
 

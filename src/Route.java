@@ -18,7 +18,8 @@ public class Route {
 
   private void computeHash() {
   	// TODO: not sure this is better?
-    Long temp = (((long)fromArea.hash) << 32) + toArea.hash;
+    Integer temp = (((((this.fromArea.x << 8) + this.fromArea.y) << 8)
+    		+ this.toArea.x) << 8) + this.fromArea.y;
     this.hash = temp.hashCode();
   }
 

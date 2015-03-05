@@ -272,7 +272,6 @@ public class TenMaxFrequency {
       }
     }
     return true;
-
   }
 
   public boolean increaseFrequency(Route r, long ts) {
@@ -284,6 +283,7 @@ public class TenMaxFrequency {
       freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).remove(p);
       int new_count = route_count.get(p.freq.frequency) - 1;
       route_count.set(p.freq.frequency, new_count);
+
       // Add to next frequency
       p.freq.frequency = p.freq.frequency + 1;
       p.freq.ts = ts;
@@ -293,17 +293,19 @@ public class TenMaxFrequency {
       }
       new_count = route_count.get(p.freq.frequency) + 1;
       route_count.set(p.freq.frequency, new_count);
+
       // Increment max frequency if necessary
       if(max_frequency < p.freq.frequency) {
         max_frequency = p.freq.frequency;
       }
-    }
-    else {
+    } else {
       // Create new objects
       Freq f = new Freq(1, ts);
       p = new PairQ1(r, f);
+
       // Insert in the hashmap
       route_freq_map.put(r, p);
+
       // Frequency = 1
       freq_array.get(1).get((int)(ts/1000)%1800).add(p);
       if(latest_ts.get(1) < ts) {
@@ -311,6 +313,7 @@ public class TenMaxFrequency {
       }
       int new_count = route_count.get(1) + 1;
       route_count.set(1,new_count);
+
       // Increment max frequency if necessary
       if(max_frequency == 0) {
         max_frequency = 1;

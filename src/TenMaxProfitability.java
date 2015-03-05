@@ -27,7 +27,8 @@ class PairQ2 {
 			return true;
 
 		PairQ2 pair = (PairQ2) obj;
-		if(this.area.equals(pair.area) && this.ptb == pair.ptb && this.taxi == pair.taxi)
+		if(this.area.equals(pair.area) && this.ptb == pair.ptb &&
+				this.taxi == pair.taxi)
 			return true;
 
 		return false;
@@ -210,7 +211,7 @@ public class TenMaxProfitability {
 	}
 
 	// Maps taxi identifier to (taxi area + ts). Used in the empty taxi algo
-	private HashMap<String,TaxiInfo> grid_present;
+	private HashMap<String, TaxiInfo> grid_present;
 
 	// Maps area to profitability
 	private ArrayMap area_ptb_map;
@@ -261,7 +262,7 @@ public class TenMaxProfitability {
 			numPrinted++;
 		}
 	}
-	
+
 	public Vector<PairQ2> getMaxTenCopy() {
 	    Vector<PairQ2> ans = new Vector<PairQ2>(10);
 	    int numPrinted = 0;
@@ -282,7 +283,7 @@ public class TenMaxProfitability {
 			ans.add(null);
 			numPrinted++;
 		}
-	
+
 	    return ans;
 	}
 

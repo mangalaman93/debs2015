@@ -55,7 +55,7 @@ class IoProcess implements Runnable {
 	public void run() {
 		try {
 			BufferedReader inputstream = new BufferedReader(new FileReader(inputfile));
-			SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+			SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			float pickup_longitude, pickup_latitude, dropoff_longitude, dropoff_latitude;
 			Area from, to;
 			String line;
@@ -180,7 +180,7 @@ class IoProcessQ1 implements Runnable {
 	public void run() {
 		try {
 			BufferedReader inputstream = new BufferedReader(new FileReader(inputfile));
-			SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+			SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			Area from, to;
 			String line;
 
@@ -263,7 +263,7 @@ class IoProcessQ2 implements Runnable {
 	public void run() {
 		try {
 			BufferedReader inputstream = new BufferedReader(new FileReader(inputfile));
-			SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+			SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			String line;
 
 			while((line = inputstream.readLine()) != null) {
@@ -354,11 +354,21 @@ class Q1Process implements Runnable {
 
 	@Override
 	public void run() {
+		int in_count = 0;
+		long last_time = System.currentTimeMillis();
+
 		try {
 			Q1Elem lastevent, newevent=queue.take();
-			long lastms;
+			long lastms = 0;
 
 			while(newevent.time_in != 0) {
+				in_count++;
+				if(in_count == 100000) {
+					System.out.println("throughput: "+(100000/(System.currentTimeMillis()-last_time)));
+					in_count = 0;
+					last_time = System.currentTimeMillis();
+				}
+
 				maxfs.storeMaxTenCopy();
 
 				// Check if events are leaving the sliding window and process them
@@ -430,11 +440,19 @@ class Q2Process implements Runnable {
 
 	@Override
 	public void run() {
+		int in_count = 0;
+		long last_time = System.currentTimeMillis();
 		try {
 			Q2Elem lastevent, newevent = queue.take();
 			long lastms;
 
 			while(newevent.time_in != 0) {
+				in_count++;
+				if(in_count == 10000) {
+					System.out.println("throughput: "+(10000/(System.currentTimeMillis()-last_time)));
+					in_count = 0;
+					last_time = System.currentTimeMillis();
+				}
 				maxpft.storeMaxTenCopy();
 
 				// Check if events are leaving the sliding window and process them
@@ -529,7 +547,7 @@ public class debs2015 {
 			Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, test_file));
 			threadForIoProcessQ1.start();
 //			threadForIoProcessQ2.start();
-		} else{
+		} else {
 			Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1, queue_for_Q2, test_file));
 			threadForIoProcess.start();
 		}
@@ -537,7 +555,7 @@ public class debs2015 {
 		PrintStream q1out = new PrintStream(new FileOutputStream(Constants.Q1_FILE, false));
 		Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, q1out));
 		threadForQ1Process.start();
-		
+
 //		PrintStream q2out = new PrintStream(new FileOutputStream(Constants.Q2_FILE, false));
 //		Thread threadForQ2Process = new Thread(new Q2Process(queue_for_Q2, q2out));
 //		threadForQ2Process.start();
