@@ -4,7 +4,7 @@ TDIR = test
 JAR_PKG = debs2015.jar
 ENTRY_POINT = debs2015
 
-JFLAGS = -d $(ODIR)
+JFLAGS = -O -d $(ODIR)
 JUNITJAR = /usr/share/java/junit4.jar
 JC = javac
 JAVA = java
