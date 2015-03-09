@@ -408,6 +408,9 @@ class Q1Process implements Runnable {
 				// Get the next event to process from the queue
 				newevent = queue.take();
 			}
+
+			print_stream.println("Maximum frequency = " + maxfs.data_max_frequency);
+			print_stream.println("Maximum set size = " + maxfs.max_set_size);
 		} catch(InterruptedException e) {
 			System.out.println("Error in Q1Process!");
 			System.out.println(e.getMessage());

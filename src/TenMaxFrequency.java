@@ -84,6 +84,8 @@ public class TenMaxFrequency {
 
   // Max frequency
   private int max_frequency;
+  public int data_max_frequency;
+  public int max_set_size;
 
   // Number of routes for each frequency
   private Vector<Integer> route_count;
@@ -110,6 +112,8 @@ public class TenMaxFrequency {
     }
 
     max_frequency = 0;
+    data_max_frequency = 0;
+    max_set_size = 0;
 
     // temporary data initialization
     old_max_ten_routes = new Vector<Route>(10);
@@ -288,6 +292,9 @@ public class TenMaxFrequency {
       p.freq.frequency = p.freq.frequency + 1;
       p.freq.ts = ts;
       freq_array.get(p.freq.frequency).get((int)(ts/1000)%1800).add(p);
+      if(freq_array.get(p.freq.frequency).get((int)(ts/1000)%1800).size() > max_set_size){
+        max_set_size = freq_array.get(p.freq.frequency).get((int)(ts/1000)%1800).size();
+      }
       if(latest_ts.get(p.freq.frequency) < ts) {
         latest_ts.set(p.freq.frequency, ts);
       }
@@ -297,6 +304,9 @@ public class TenMaxFrequency {
       // Increment max frequency if necessary
       if(max_frequency < p.freq.frequency) {
         max_frequency = p.freq.frequency;
+        if(max_frequency > data_max_frequency){
+          data_max_frequency = max_frequency;
+        }
       }
     } else {
       // Create new objects
@@ -308,6 +318,9 @@ public class TenMaxFrequency {
 
       // Frequency = 1
       freq_array.get(1).get((int)(ts/1000)%1800).add(p);
+      if(freq_array.get(1).get((int)(ts/1000)%1800).size() > max_set_size){
+        max_set_size = freq_array.get(1).get((int)(ts/1000)%1800).size();
+      }
       if(latest_ts.get(1) < ts) {
         latest_ts.set(p.freq.frequency, ts);
       }
@@ -317,6 +330,9 @@ public class TenMaxFrequency {
       // Increment max frequency if necessary
       if(max_frequency == 0) {
         max_frequency = 1;
+        if(max_frequency > data_max_frequency){
+          data_max_frequency = max_frequency;
+        }
       }
     }
     return true;
@@ -342,6 +358,9 @@ public class TenMaxFrequency {
     else {
     // Add to lower frequency
       freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).add(p);
+      if(freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).size() > max_set_size){
+        max_set_size = freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).size();
+      }
       if(latest_ts.get(p.freq.frequency) < p.freq.ts) {
         latest_ts.set(p.freq.frequency, p.freq.ts);
       }
