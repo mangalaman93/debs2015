@@ -1,6 +1,5 @@
 import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.Vector;
 import java.util.Set;
 import java.util.Iterator;
 import java.util.HashSet;
@@ -80,23 +79,23 @@ public class TenMaxFrequency {
   // Note that same object is stored in both* the data structures
   private HashMap<Route, PairQ1> route_freq_map;
   private ArrayList<ArrayList<Set<PairQ1>>> freq_array;
-  private Vector<Long> latest_ts;
+  private ArrayList<Long> latest_ts;
 
   // Max frequency
   private int max_frequency;
 
   // Number of routes for each frequency
-  private Vector<Integer> route_count;
+  private ArrayList<Integer> route_count;
 
   // temporary data so that new need not be called
-  private Vector<Route> old_max_ten_routes;
+  private ArrayList<Route> old_max_ten_routes;
 
   public TenMaxFrequency() {
     route_freq_map = new HashMap<Route, PairQ1>(Constants.HM_INIT_SIZE,
         Constants.HM_LOAD_FACTOR);
     freq_array = new ArrayList<ArrayList<Set<PairQ1>>>(Constants.FREQ_ARRAY_SIZE);
-    route_count = new Vector<Integer>(Constants.FREQ_ARRAY_SIZE);
-    latest_ts = new Vector<Long>(Constants.FREQ_ARRAY_SIZE);
+    route_count = new ArrayList<Integer>(Constants.FREQ_ARRAY_SIZE);
+    latest_ts = new ArrayList<Long>(Constants.FREQ_ARRAY_SIZE);
 
     // Initialize frequency array
     for(int i=0; i<Constants.FREQ_ARRAY_SIZE; i++) {
@@ -112,7 +111,7 @@ public class TenMaxFrequency {
     max_frequency = 0;
 
     // temporary data initialization
-    old_max_ten_routes = new Vector<Route>(10);
+    old_max_ten_routes = new ArrayList<Route>(10);
     for(int i=0; i<10; i++) {
       old_max_ten_routes.add(null);
     }
@@ -219,7 +218,7 @@ public class TenMaxFrequency {
   }
 
   public boolean isSameMaxTenKey() {
-    Vector<Route> new_max_ten = new Vector<Route>(10);
+    ArrayList<Route> new_max_ten = new ArrayList<Route>(10);
     int temp_frequency = max_frequency;
     int temp_route_count = route_count.get(temp_frequency);
     int ts = (int)(latest_ts.get(temp_frequency)/1000)%1800;
