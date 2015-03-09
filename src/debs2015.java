@@ -1,6 +1,7 @@
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.LinkedList;
+import java.util.Queue;
 import java.util.StringTokenizer;
 import java.util.Date;
 import java.io.BufferedReader;
@@ -166,12 +167,12 @@ class IoProcess implements Runnable {
  *  *create and share kernel queues
  */
 class IoProcessQ1 implements Runnable {
-	private BlockingQueue<Q1Elem> queue_q1;
+	private Queue<Q1Elem> queue_q1;
 	private Geo geoq1;
 	private String inputfile;
 
-	public IoProcessQ1(BlockingQueue<Q1Elem> queue1, String ifile) {
-		this.queue_q1 = queue1;
+	public IoProcessQ1(Queue<Q1Elem> queue_for_Q1, String ifile) {
+		this.queue_q1 = queue_for_Q1;
 		this.geoq1 = new Geo(-74.913585f, 41.474937f, 500, 500, 300, 300);
 		this.inputfile = ifile;
 	}
@@ -221,7 +222,10 @@ class IoProcessQ1 implements Runnable {
 					q1event.time_in = System.currentTimeMillis();
 
 					// Put events into queues for Q1
-					queue_q1.put(q1event);
+					while(!queue_q1.offer(q1event)) {
+	          Thread.yield();
+	        }
+					//queue_q1.put(q1event);
 				} catch(Exception e) {
 					System.out.println("Error parsing for query 1. Skipping..." + line);
 					System.out.println(e.getMessage());
@@ -232,7 +236,10 @@ class IoProcessQ1 implements Runnable {
 			// Add sentinel
 			Q1Elem q1event = new Q1Elem();
 			q1event.time_in = 0;
-			queue_q1.put(q1event);
+			while(!queue_q1.offer(q1event)) {
+        Thread.yield();
+      }
+			//queue_q1.put(q1event);
 			inputstream.close();
 		} catch(Exception e) {
 			System.out.println("Error in IoProcess!");
@@ -340,13 +347,13 @@ class IoProcessQ2 implements Runnable {
  *  *output if list of 10 most frequent routes change
  */
 class Q1Process implements Runnable {
-	private BlockingQueue<Q1Elem> queue;
+	private Queue<Q1Elem> queue;
 	private TenMaxFrequency maxfs;
 	private LinkedList<Q1Elem> sliding_window;
 	private PrintStream print_stream;
 
-	public Q1Process(BlockingQueue<Q1Elem> queue, OutputStream print_stream) {
-		this.queue = queue;
+	public Q1Process(Queue<Q1Elem> queue_for_Q1, OutputStream print_stream) {
+		this.queue = queue_for_Q1;
 		this.maxfs = new TenMaxFrequency();
 		this.sliding_window = new LinkedList<Q1Elem>();
 		this.print_stream = new PrintStream(print_stream);
@@ -357,62 +364,62 @@ class Q1Process implements Runnable {
 		int in_count = 0;
 		long last_time = System.currentTimeMillis();
 
-		try {
-			Q1Elem lastevent, newevent=queue.take();
-			long lastms = 0;
+		Q1Elem lastevent, newevent;
+    while(null == (newevent = queue.poll())) {
+      Thread.yield();
+    }
+    long lastms = 0;
 
-			while(newevent.time_in != 0) {
-				in_count++;
-				if(in_count == 100000) {
-					System.out.println("throughput: "+(100000/(System.currentTimeMillis()-last_time)));
-					in_count = 0;
-					last_time = System.currentTimeMillis();
-				}
+    while(newevent.time_in != 0) {
+    	in_count++;
+    	if(in_count == 100000) {
+    		System.out.println("throughput: "+(100000/(System.currentTimeMillis()-last_time)));
+    		in_count = 0;
+    		last_time = System.currentTimeMillis();
+    	}
 
-				maxfs.storeMaxTenCopy();
+    	maxfs.storeMaxTenCopy();
 
-				// Check if events are leaving the sliding window and process them
-				long currentms = newevent.dropoff_datetime.getTime();
-				if(sliding_window.size() != 0) {
-					lastevent = sliding_window.getFirst();
-					lastms = lastevent.dropoff_datetime.getTime();
+    	// Check if events are leaving the sliding window and process them
+    	long currentms = newevent.dropoff_datetime.getTime();
+    	if(sliding_window.size() != 0) {
+    		lastevent = sliding_window.getFirst();
+    		lastms = lastevent.dropoff_datetime.getTime();
 
-					// Remove the elements from the start of the window
-					while((currentms-lastms) >= 1800000) {
-						maxfs.decreaseFrequency(lastevent.route, lastevent.dropoff_datetime.getTime());
-						sliding_window.removeFirst();
+    		// Remove the elements from the start of the window
+    		while((currentms-lastms) >= 1800000) {
+    			maxfs.decreaseFrequency(lastevent.route, lastevent.dropoff_datetime.getTime());
+    			sliding_window.removeFirst();
 
-						if(sliding_window.size() != 0) {
-							lastevent = sliding_window.getFirst();
-							lastms = lastevent.dropoff_datetime.getTime();
-						} else {
-							break;
-						}
-					}
-				}
+    			if(sliding_window.size() != 0) {
+    				lastevent = sliding_window.getFirst();
+    				lastms = lastevent.dropoff_datetime.getTime();
+    			} else {
+    				break;
+    			}
+    		}
+    	}
 
-				// Insert the current element in the sliding window
-				maxfs.increaseFrequency(newevent.route, newevent.dropoff_datetime.getTime());
-				sliding_window.addLast(newevent);
+    	// Insert the current element in the sliding window
+    	maxfs.increaseFrequency(newevent.route, newevent.dropoff_datetime.getTime());
+    	sliding_window.addLast(newevent);
 
-				if(!maxfs.isSameMaxTenKey()) {
-					print_stream.print(newevent.pickup_datetime.toString());
-					print_stream.print(",");
-					print_stream.print(newevent.dropoff_datetime.toString());
-					print_stream.print(",");
-					maxfs.printMaxTen(print_stream);
-					print_stream.print(System.currentTimeMillis() - newevent.time_in);
-					print_stream.print("\n");
-				}
+    	if(!maxfs.isSameMaxTenKey()) {
+    		print_stream.print(newevent.pickup_datetime.toString());
+    		print_stream.print(",");
+    		print_stream.print(newevent.dropoff_datetime.toString());
+    		print_stream.print(",");
+    		maxfs.printMaxTen(print_stream);
+    		print_stream.print(System.currentTimeMillis() - newevent.time_in);
+    		print_stream.print("\n");
+    	}
 
-				// Get the next event to process from the queue
-				newevent = queue.take();
-			}
-		} catch(InterruptedException e) {
-			System.out.println("Error in Q1Process!");
-			System.out.println(e.getMessage());
-			e.printStackTrace();
-		}
+    	// Get the next event to process from the queue
+    	while(null == (newevent = queue.poll())) {
+        Thread.yield();
+      }
+//				newevent = queue.take();
+    }
 	}
 }
 
@@ -526,8 +533,8 @@ class Q2Process implements Runnable {
 }
 
 public class debs2015 {
-	private static BlockingQueue<Q1Elem> queue_for_Q1;
-	private static BlockingQueue<Q2Elem> queue_for_Q2;
+	private static Queue<Q1Elem> queue_for_Q1;
+	private static Queue<Q2Elem> queue_for_Q2;
 
 	public static void main(String[] args) throws FileNotFoundException {
 		String test_file;
@@ -538,18 +545,18 @@ public class debs2015 {
 		}
 
 		// Initializing queues
-		queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, false);
-		queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(Constants.QUEUE2_CAPACITY, false);
+		queue_for_Q1 = new MyBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY);
+		queue_for_Q2 = new MyBlockingQueue<Q2Elem>(Constants.QUEUE2_CAPACITY);
 
 		// start threads
 		if(Constants.TWO_IO_PROCESS) {
 			Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, test_file));
-			Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, test_file));
+			// Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, test_file));
 			threadForIoProcessQ1.start();
 //			threadForIoProcessQ2.start();
 		} else {
-			Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1, queue_for_Q2, test_file));
-			threadForIoProcess.start();
+			//Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1, queue_for_Q2, test_file));
+			//threadForIoProcess.start();
 		}
 
 		PrintStream q1out = new PrintStream(new FileOutputStream(Constants.Q1_FILE, false));
