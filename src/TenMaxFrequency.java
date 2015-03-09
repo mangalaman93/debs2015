@@ -84,6 +84,8 @@ public class TenMaxFrequency {
 
   // Max frequency
   private int max_frequency;
+  public int data_max_frequency;
+  public int max_set_size;
 
   // Number of routes for each frequency
   private Vector<Integer> route_count;
@@ -99,10 +101,10 @@ public class TenMaxFrequency {
     latest_ts = new Vector<Long>(Constants.FREQ_ARRAY_SIZE);
 
     // Initialize frequency array
-    for(int i = 0; i < Constants.FREQ_ARRAY_SIZE; i++) {
-      freq_array.add(new ArrayList<Set<PairQ1>>(1800));
+    for(int i=0; i<Constants.FREQ_ARRAY_SIZE; i++) {
+      freq_array.add(new ArrayList<Set<PairQ1>>(Constants.MAX_NUM_TS));
       ArrayList<Set<PairQ1>> array = freq_array.get(i);
-      for(int j = 0; j < 1800; j++) {
+      for(int j=0; j<Constants.MAX_NUM_TS; j++) {
         array.add(new HashSet<PairQ1>());
       }
       route_count.add(0);
@@ -110,6 +112,8 @@ public class TenMaxFrequency {
     }
 
     max_frequency = 0;
+    data_max_frequency = 0;
+    max_set_size = 0;
 
     // temporary data initialization
     old_max_ten_routes = new Vector<Route>(10);
@@ -135,7 +139,7 @@ public class TenMaxFrequency {
         if(freq_array.get(temp_frequency).get(ts).size() == 0) {
           ts = ts - 1;
           if(ts == -1) {
-          	ts = 1799;
+          	ts = Constants.MAX_NUM_TS-1;
           }
         }
 
@@ -272,47 +276,63 @@ public class TenMaxFrequency {
       }
     }
     return true;
-
   }
 
   public boolean increaseFrequency(Route r, long ts) {
-    if(route_freq_map.containsKey(r)) {
-      // Get the pair from hashmap
-      PairQ1 p = route_freq_map.get(r);
+  	// Get the pair from hashmap
+    PairQ1 p = route_freq_map.get(r);
+
+    if(p != null) {
       // Remove from current frequency
       freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).remove(p);
       int new_count = route_count.get(p.freq.frequency) - 1;
       route_count.set(p.freq.frequency, new_count);
+
       // Add to next frequency
       p.freq.frequency = p.freq.frequency + 1;
       p.freq.ts = ts;
       freq_array.get(p.freq.frequency).get((int)(ts/1000)%1800).add(p);
+      if(freq_array.get(p.freq.frequency).get((int)(ts/1000)%1800).size() > max_set_size){
+        max_set_size = freq_array.get(p.freq.frequency).get((int)(ts/1000)%1800).size();
+      }
       if(latest_ts.get(p.freq.frequency) < ts) {
         latest_ts.set(p.freq.frequency, ts);
       }
       new_count = route_count.get(p.freq.frequency) + 1;
       route_count.set(p.freq.frequency, new_count);
+
       // Increment max frequency if necessary
       if(max_frequency < p.freq.frequency) {
         max_frequency = p.freq.frequency;
+        if(max_frequency > data_max_frequency){
+          data_max_frequency = max_frequency;
+        }
       }
-    }
-    else {
+    } else {
       // Create new objects
       Freq f = new Freq(1, ts);
-      PairQ1 p = new PairQ1(r, f);
+      p = new PairQ1(r, f);
+
       // Insert in the hashmap
       route_freq_map.put(r, p);
+
       // Frequency = 1
       freq_array.get(1).get((int)(ts/1000)%1800).add(p);
+      if(freq_array.get(1).get((int)(ts/1000)%1800).size() > max_set_size){
+        max_set_size = freq_array.get(1).get((int)(ts/1000)%1800).size();
+      }
       if(latest_ts.get(1) < ts) {
         latest_ts.set(p.freq.frequency, ts);
       }
       int new_count = route_count.get(1) + 1;
       route_count.set(1,new_count);
+
       // Increment max frequency if necessary
       if(max_frequency == 0) {
         max_frequency = 1;
+        if(max_frequency > data_max_frequency){
+          data_max_frequency = max_frequency;
+        }
       }
     }
     return true;
@@ -338,6 +358,9 @@ public class TenMaxFrequency {
     else {
     // Add to lower frequency
       freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).add(p);
+      if(freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).size() > max_set_size){
+        max_set_size = freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).size();
+      }
       if(latest_ts.get(p.freq.frequency) < p.freq.ts) {
         latest_ts.set(p.freq.frequency, p.freq.ts);
       }
