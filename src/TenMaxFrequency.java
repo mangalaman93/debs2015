@@ -218,14 +218,10 @@ public class TenMaxFrequency {
   }
 
   public boolean isSameMaxTenKey() {
-    ArrayList<Route> new_max_ten = new ArrayList<Route>(10);
     int temp_frequency = max_frequency;
     int temp_route_count = route_count.get(temp_frequency);
     int ts = (int)(latest_ts.get(temp_frequency)/1000)%1800;
     int count = 0;
-    for(int  i = 0; i < 10; i++) {
-      new_max_ten.add(null);
-    }
     while(count < 10 && temp_frequency > 0) {
       // Number of routes remaining for that frequency = 0
       // =>  means take next one
@@ -246,7 +242,9 @@ public class TenMaxFrequency {
           iter = freq_array.get(temp_frequency).get(ts).iterator();
           while (iter.hasNext()) {
             PairQ1 p = (PairQ1)iter.next();
-            new_max_ten.set(count, p.route);
+            if((old_max_ten_routes.get(count) == null) || (!p.route.equals(old_max_ten_routes.get(count)))){
+              return false;
+            }
             temp_route_count = temp_route_count - 1;
             count = count + 1;
             if(count >= 10) {
@@ -258,17 +256,14 @@ public class TenMaxFrequency {
         }
       }
     }
-    // Compare new ten max and old ten max
-    for(int i=0; i<10; i++) {
-      if(new_max_ten.get(i) == null && old_max_ten_routes.get(i) == null) {
-        return true;
-      } else if((new_max_ten.get(i) == null &&
-      		old_max_ten_routes.get(i) != null) ||
-          (old_max_ten_routes.get(i)== null &&
-          new_max_ten.get(i) != null) ||
-          (!new_max_ten.get(i).equals(old_max_ten_routes.get(i)))) {
+    if(count >= 10){
+      return true;
+    }
+    while(count < 10){
+      if(old_max_ten_routes.get(count) != null){
         return false;
       }
+      count = count + 1;
     }
     return true;
   }
