@@ -77,7 +77,7 @@ public class TenMaxFrequency {
   }
 
   // Note that same object is stored in both* the data structures
-  private HashMap<Route, PairQ1> route_freq_map;
+  private ArrayList<ArrayList<HashMap<Area, PairQ1>>> route_freq_map;
   private ArrayList<ArrayList<Set<PairQ1>>> freq_array;
   private ArrayList<Long> latest_ts;
 
@@ -92,8 +92,7 @@ public class TenMaxFrequency {
   private ArrayList<Route> old_max_ten_routes;
 
   public TenMaxFrequency() {
-    route_freq_map = new HashMap<Route, PairQ1>(Constants.HM_INIT_SIZE,
-        Constants.HM_LOAD_FACTOR);
+    route_freq_map = new ArrayList<ArrayList<HashMap<Area, PairQ1>>>(300);
     freq_array = new ArrayList<ArrayList<Set<PairQ1>>>(Constants.FREQ_ARRAY_SIZE);
     route_count = new ArrayList<Integer>(Constants.FREQ_ARRAY_SIZE);
     latest_ts = new ArrayList<Long>(Constants.FREQ_ARRAY_SIZE);
@@ -107,6 +106,15 @@ public class TenMaxFrequency {
       }
       route_count.add(0);
       latest_ts.add((long)-1);
+    }
+
+    // Initialize route frequency map
+    for(int i=0; i<300; i++) {
+      route_freq_map.add(new ArrayList<HashMap<Area, PairQ1>>(300));
+      ArrayList<HashMap<Area, PairQ1>> array = route_freq_map.get(i);
+      for(int j=0; j<300; j++) {
+        array.add(new HashMap<Area, PairQ1>());
+      }
     }
 
     max_frequency = 0;
@@ -273,7 +281,7 @@ public class TenMaxFrequency {
 
   public boolean increaseFrequency(Route r, long ts) {
   	// Get the pair from hashmap
-    PairQ1 p = route_freq_map.get(r);
+    PairQ1 p = route_freq_map.get(r.fromArea.x).get(r.fromArea.y).get(r.toArea);
     boolean ret_val = false;
 
     if(p != null) {
@@ -308,7 +316,7 @@ public class TenMaxFrequency {
       p = new PairQ1(r, f);
 
       // Insert in the hashmap
-      route_freq_map.put(r, p);
+      route_freq_map.get(r.fromArea.x).get(r.fromArea.y).put(r.toArea, p);
 
       // Frequency = 1
       freq_array.get(1).get((int)(ts/1000)%1800).add(p);
@@ -331,7 +339,7 @@ public class TenMaxFrequency {
 
   public boolean decreaseFrequency(Route r, long ts) {
     // Get the pair from hashmap
-    PairQ1 p = route_freq_map.get(r);
+    PairQ1 p = route_freq_map.get(r.fromArea.x).get(r.fromArea.y).get(r.toArea);
     boolean ret_val = false;
     // Remove from current frequency
     freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).remove(p);
@@ -348,7 +356,7 @@ public class TenMaxFrequency {
     p.freq.frequency = p.freq.frequency - 1;
     // Remove from hashmap if frequency hits zero
     if(p.freq.frequency == 0) {
-      route_freq_map.remove(r);
+      route_freq_map.get(r.fromArea.x).get(r.fromArea.y).remove(r.toArea);
     }
     else {
     // Add to lower frequency
