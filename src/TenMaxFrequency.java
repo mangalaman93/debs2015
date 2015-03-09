@@ -83,6 +83,7 @@ public class TenMaxFrequency {
 
   // Max frequency
   private int max_frequency;
+  private int tenth_frequency;
 
   // Number of routes for each frequency
   private ArrayList<Integer> route_count;
@@ -109,6 +110,7 @@ public class TenMaxFrequency {
     }
 
     max_frequency = 0;
+    tenth_frequency = 0;
 
     // temporary data initialization
     old_max_ten_routes = new ArrayList<Route>(10);
@@ -166,6 +168,7 @@ public class TenMaxFrequency {
         }
       }
     }
+    tenth_frequency = temp_frequency;
 
     while(count < 10) {
       print_stream.print("NULL");
@@ -271,17 +274,24 @@ public class TenMaxFrequency {
   public boolean increaseFrequency(Route r, long ts) {
   	// Get the pair from hashmap
     PairQ1 p = route_freq_map.get(r);
+    boolean ret_val = false;
 
     if(p != null) {
       // Remove from current frequency
       freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).remove(p);
       int new_count = route_count.get(p.freq.frequency) - 1;
+      if(p.freq.frequency >= tenth_frequency){
+        ret_val = true;
+      }
       route_count.set(p.freq.frequency, new_count);
 
       // Add to next frequency
       p.freq.frequency = p.freq.frequency + 1;
       p.freq.ts = ts;
       freq_array.get(p.freq.frequency).get((int)(ts/1000)%1800).add(p);
+      if(p.freq.frequency >= tenth_frequency){
+        ret_val = true;
+      }
       if(latest_ts.get(p.freq.frequency) < ts) {
         latest_ts.set(p.freq.frequency, ts);
       }
@@ -302,6 +312,9 @@ public class TenMaxFrequency {
 
       // Frequency = 1
       freq_array.get(1).get((int)(ts/1000)%1800).add(p);
+      if(1 >= tenth_frequency){
+        ret_val = true;
+      }
       if(latest_ts.get(1) < ts) {
         latest_ts.set(p.freq.frequency, ts);
       }
@@ -313,14 +326,18 @@ public class TenMaxFrequency {
         max_frequency = 1;
       }
     }
-    return true;
+    return ret_val;
   }
 
   public boolean decreaseFrequency(Route r, long ts) {
     // Get the pair from hashmap
     PairQ1 p = route_freq_map.get(r);
+    boolean ret_val = false;
     // Remove from current frequency
     freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).remove(p);
+    if(p.freq.frequency >= tenth_frequency){
+      ret_val = true;
+    }
     int new_count = route_count.get(p.freq.frequency) - 1;
     route_count.set(p.freq.frequency, new_count);
     if(max_frequency == p.freq.frequency &&
@@ -336,12 +353,15 @@ public class TenMaxFrequency {
     else {
     // Add to lower frequency
       freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).add(p);
+      if(p.freq.frequency >= tenth_frequency){
+        ret_val = true;
+      }
       if(latest_ts.get(p.freq.frequency) < p.freq.ts) {
         latest_ts.set(p.freq.frequency, p.freq.ts);
       }
       new_count = route_count.get(p.freq.frequency) + 1;
       route_count.set(p.freq.frequency, new_count);
     }
-    return true;
+    return ret_val;
   }
 }
