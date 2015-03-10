@@ -560,19 +560,19 @@ public class debs2015 {
 		if(Constants.TWO_IO_PROCESS) {
 			Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, test_file));
 			Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, test_file));
-			threadForIoProcessQ1.start();
-//			threadForIoProcessQ2.start();
+//			threadForIoProcessQ1.start();
+			threadForIoProcessQ2.start();
 		} else {
 			Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1, queue_for_Q2, test_file));
 			threadForIoProcess.start();
 		}
 
-		PrintStream q1out = new PrintStream(new FileOutputStream(Constants.Q1_FILE, false));
-		Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, q1out));
-		threadForQ1Process.start();
+//		PrintStream q1out = new PrintStream(new FileOutputStream(Constants.Q1_FILE, false));
+//		Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, q1out));
+//		threadForQ1Process.start();
 
-//		PrintStream q2out = new PrintStream(new FileOutputStream(Constants.Q2_FILE, false));
-//		Thread threadForQ2Process = new Thread(new Q2Process(queue_for_Q2, q2out));
-//		threadForQ2Process.start();
+		PrintStream q2out = new PrintStream(new FileOutputStream(Constants.Q2_FILE, false));
+		Thread threadForQ2Process = new Thread(new Q2Process(queue_for_Q2, q2out));
+		threadForQ2Process.start();
 	}
 }
