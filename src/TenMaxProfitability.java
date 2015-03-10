@@ -5,35 +5,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.Vector;
-
-class PairQ2 {
-	public Area area;
-	public float ptb;
-	public int taxi;
-
-	public PairQ2(Area area, float ptb, int taxi) {
-		this.area = area;
-		this.ptb = ptb;
-		this.taxi = taxi;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if(!(obj instanceof PairQ2))
-			return false;
-
-		if(obj == this)
-			return true;
-
-		PairQ2 pair = (PairQ2) obj;
-		if(this.area.equals(pair.area) && this.ptb == pair.ptb &&
-				this.taxi == pair.taxi)
-			return true;
-
-		return false;
-	}
-}
 
 public class TenMaxProfitability {
 	/*
@@ -183,19 +154,19 @@ public class TenMaxProfitability {
 	 * Done so that Treeset can print in descending order
 	 * Also note that 2 setElems are equal if the area is same
 	 */
-	class setElem implements Comparable<setElem> {
+	class SetElem implements Comparable<SetElem> {
 		public Area area;
 		public long ts;
 		public float profitability;
 
-		public setElem(Area a, long ts, float profitability) {
+		public SetElem(Area a, long ts, float profitability) {
 			this.area = a;
 			this.ts = ts;
 			this.profitability = profitability;
 		}
 
 		@Override
-		public int compareTo(setElem s) {
+		public int compareTo(SetElem s) {
 			if(this.area.equals(s.area)) {
 				return 0;
 			}else if(this.profitability < s.profitability) {
@@ -217,7 +188,7 @@ public class TenMaxProfitability {
 	private ArrayMap area_ptb_map;
 
 	// the array DS
-	private List<Set<setElem>> sorted_ptb_list;
+	private List<Set<SetElem>> sorted_ptb_list;
 
 	// Stores previous top 10 areas
 	private Area[] top10Area;
@@ -228,9 +199,9 @@ public class TenMaxProfitability {
 	public TenMaxProfitability() {
 		area_ptb_map = new ArrayMap(Constants.AREA_LIMIT, Constants.AREA_LIMIT);
 		grid_present = new HashMap<String, TaxiInfo>();
-		sorted_ptb_list = new ArrayList<Set<setElem>>(Constants.MAX_PFT_SIZE);
+		sorted_ptb_list = new ArrayList<Set<SetElem>>(Constants.MAX_PFT_SIZE);
 		for(int i=0; i<Constants.MAX_PFT_SIZE; i++) {
-			sorted_ptb_list.add(i, new TreeSet<setElem>());
+			sorted_ptb_list.add(i, new TreeSet<SetElem>());
 		}
 		top10Area = new Area[10];
 		top10ptb = new Profitability[10];
@@ -244,9 +215,9 @@ public class TenMaxProfitability {
 		int numPrinted = 0;
 		int currentIndex = Constants.MAX_PFT_SIZE-1;
 		while(numPrinted<10 && currentIndex>=0) {
-			Iterator<setElem> i = sorted_ptb_list.get(currentIndex).iterator();
+			Iterator<SetElem> i = sorted_ptb_list.get(currentIndex).iterator();
 			while(i.hasNext() && numPrinted<10) {
-				setElem s = i.next();
+				SetElem s = i.next();
 				Profitability p = area_ptb_map.get(s.area);
 				if(p.num_empty_taxis == 0) continue;
 				print_stream.print((s.area.x+1) + "." + (s.area.y+1) + "," +
@@ -263,37 +234,13 @@ public class TenMaxProfitability {
 		}
 	}
 
-	public Vector<PairQ2> getMaxTenCopy() {
-	    Vector<PairQ2> ans = new Vector<PairQ2>(10);
-	    int numPrinted = 0;
-		int currentIndex = Constants.MAX_PFT_SIZE-1;
-		while(numPrinted<10 && currentIndex>=0) {
-			Iterator<setElem> i = sorted_ptb_list.get(currentIndex).iterator();
-			while(i.hasNext() && numPrinted<10) {
-				setElem s = i.next();
-				Profitability p = area_ptb_map.get(s.area);
-				if(p.num_empty_taxis == 0) continue;
-				ans.add(new PairQ2(s.area,p.profitability,p.num_empty_taxis));
-				numPrinted++;
-			}
-			currentIndex--;
-		}
-
-		while(numPrinted < 10) {
-			ans.add(null);
-			numPrinted++;
-		}
-
-	    return ans;
-	}
-
 	public void storeMaxTenCopy() {
 		int numPrinted = 0;
 		int currentIndex = Constants.MAX_PFT_SIZE-1;
 		while(numPrinted < 10 && currentIndex >= 0) {
-			Iterator<setElem> i = sorted_ptb_list.get(currentIndex).iterator();
+			Iterator<SetElem> i = sorted_ptb_list.get(currentIndex).iterator();
 			while(i.hasNext() && numPrinted < 10) {
-				setElem s = i.next();
+				SetElem s = i.next();
 				Profitability p = area_ptb_map.get(s.area);
 				if(p.num_empty_taxis == 0) {
 					continue;
@@ -310,9 +257,9 @@ public class TenMaxProfitability {
 		int numPrinted = 0;
 		int currentIndex = Constants.MAX_PFT_SIZE-1;
 		while(numPrinted<10 && currentIndex>=0) {
-			Iterator<setElem> i = sorted_ptb_list.get(currentIndex).iterator();
+			Iterator<SetElem> i = sorted_ptb_list.get(currentIndex).iterator();
 			while(i.hasNext() && numPrinted<10) {
-				setElem s = i.next();
+				SetElem s = i.next();
 				Profitability p = area_ptb_map.get(s.area);
 				if(p.num_empty_taxis == 0) continue;
 				if(top10Area[numPrinted] == null ||
@@ -334,12 +281,12 @@ public class TenMaxProfitability {
 	public void leaveTaxiSlidingWindow(String medallion_hack_license,
 			long ts) {
 		// Check if the event leaving corresponds to the event present in the area
-		if(grid_present.containsKey(medallion_hack_license) && ts == grid_present.get(medallion_hack_license).ts) {
+		if(grid_present.containsKey(medallion_hack_license) &&
+		    ts == grid_present.get(medallion_hack_license).ts) {
 			// If present, then undo the effects of this event
 			this.updateEmptyTaxi(grid_present.get(medallion_hack_license).area,-1,-1);
 			grid_present.remove(medallion_hack_license);
-		}
-		else if(!grid_present.containsKey(medallion_hack_license)) {
+		} else if(!grid_present.containsKey(medallion_hack_license)) {
 			System.out.println("What the heck happpened to this cab!");
 		}
 	}
@@ -406,10 +353,10 @@ public class TenMaxProfitability {
 		int new_index = (int) new_ptb_val.profitability;
 
 		// 2 setElems are equal if area is same
-		if(!sorted_ptb_list.get(old_index).remove(new setElem(a,old_ptb_val.ts,old_ptb_val.profitability))) {
+		if(!sorted_ptb_list.get(old_index).remove(new SetElem(a,old_ptb_val.ts,old_ptb_val.profitability))) {
 			//System.out.println("PAIN1");
 		}
-		sorted_ptb_list.get(new_index).add(new setElem(a,
+		sorted_ptb_list.get(new_index).add(new SetElem(a,
 				new_ptb_val.ts,new_ptb_val.profitability));
 	}
 
@@ -427,10 +374,10 @@ public class TenMaxProfitability {
 		// Next change the array DS
 		int old_index = (int) old_ptb_val.profitability;
 		int new_index = (int) new_ptb_val.profitability;
-		if(!sorted_ptb_list.get(old_index).remove(new setElem(a,old_ptb_val.ts,old_ptb_val.profitability))) {
+		if(!sorted_ptb_list.get(old_index).remove(new SetElem(a,old_ptb_val.ts,old_ptb_val.profitability))) {
 			//System.out.println("PAIN2");
 		}
-		sorted_ptb_list.get(new_index).add(new setElem(a,
+		sorted_ptb_list.get(new_index).add(new SetElem(a,
 				new_ptb_val.ts,new_ptb_val.profitability));
 	}
 
@@ -448,10 +395,10 @@ public class TenMaxProfitability {
 
 		// Next change the array DS
 		int new_index = (int) new_ptb_val.profitability;
-		if (!sorted_ptb_list.get(old_index).remove(new setElem(a,old_ptb_val.ts,old_ptb_val.profitability))) {
+		if (!sorted_ptb_list.get(old_index).remove(new SetElem(a,old_ptb_val.ts,old_ptb_val.profitability))) {
 			//System.out.println("PAIN3");
 		}
-		sorted_ptb_list.get(new_index).add(new setElem(a,new_ptb_val.ts,
+		sorted_ptb_list.get(new_index).add(new SetElem(a,new_ptb_val.ts,
 				new_ptb_val.profitability));
 	}
 }
