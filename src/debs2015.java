@@ -383,11 +383,9 @@ class Q1Process implements Runnable {
 					while((currentms-lastms) >= 1800000) {
 						if(!ten_max_changed) {
 							ten_max_changed = maxfs.decreaseFrequency(lastevent.route, lastevent.dropoff_datetime.getTime());
-						}
-						else{
+						} else {
 							maxfs.decreaseFrequency(lastevent.route, lastevent.dropoff_datetime.getTime());
 						}
-
 						sliding_window.removeFirst();
 
 						if(sliding_window.size() != 0) {
@@ -514,7 +512,6 @@ class Q2Process implements Runnable {
 						newevent.total_fare, newevent.dropoff_datetime.getTime());
 				maxpft.enterTaxiSlidingWindow(newevent.medallion_hack_license,
 						newevent.dropoff_area, newevent.dropoff_datetime.getTime());
-
 
 				swindow15.addLast(newevent);
 				swindow30.addLast(newevent);
