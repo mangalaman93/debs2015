@@ -15,11 +15,13 @@ public class Constants {
   public static final int FREQ_ARRAY_SIZE = 500;
   public static final int MAX_NUM_TS = 1800;
 
+  // Max profitability value possible
+  public final static int MAX_PFT_SIZE = 1000;
   // Q2 constants and parameters
   public final static int AREA_LIMIT = 600;
+  public final static int NUM_EMPTY_BUCKETS = 2000;
+  public final static float BUCKET_SIZE = (float) MAX_PFT_SIZE/ (float) NUM_EMPTY_BUCKETS;
 
-  // Max profitability value possible
-	public final static int MAX_PFT_SIZE = 1002;
 
   // input and output file
   public static final String DEFAULT_INPUT_FILE = "out/sorted_data_full.csv";
