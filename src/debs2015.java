@@ -3,6 +3,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
 import java.util.Date;
+import java.nio.file.*;
+import java.nio.charset.StandardCharsets;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -50,6 +52,7 @@ class IoProcess implements Runnable {
 		this.geoq2 = new Geo(-74.913585f, 41.474937f, 250, 250, 600, 600);
 		this.inputfile = ifile;
 	}
+
 
 	@Override
 	public void run() {
@@ -169,17 +172,61 @@ class IoProcessQ1 implements Runnable {
 	private BlockingQueue<Q1Elem> queue_q1;
 	private Geo geoq1;
 	private String inputfile;
+	long counter = 0, threshold = Long.parseLong(System.getProperty("measurements.throughput"));
+	long ptime = System.currentTimeMillis();
+
+
 
 	public IoProcessQ1(BlockingQueue<Q1Elem> queue1, String ifile) {
 		this.queue_q1 = queue1;
 		this.geoq1 = new Geo(-74.913585f, 41.474937f, 500, 500, 300, 300);
 		this.inputfile = ifile;
 	}
+	
+	public static long parseDate(String date) {
+		long timestamp = 1356998400;
+		int temp=0;
+		int i=1;
+		int[] cdays = {	0,
+							31,
+							31+28,
+							31+28+31,
+							31+28+31+30,
+							31+28+31+30+31,
+							31+28+31+30+31+30,
+							31+28+31+30+31+30+31,
+							31+28+31+30+31+30+31+31,
+							31+28+31+30+31+30+31+31+30,
+							31+28+31+30+31+30+31+31+30+31,
+							31+28+31+30+31+30+31+31+30+31+30};
+
+		for (int c = 0; c < date.length(); c++) {
+			char ch = date.charAt(c);
+			if (ch == '-' || ch == ':' || ch == ' ') {
+				switch (i) {
+					case 1 : timestamp += (temp-2013)*365	*24*60*60; break;
+					case 2 : timestamp += cdays[temp-1]		*24*60*60; break;
+					case 3 : timestamp += (temp-1)			*24*60*60; break;
+					case 4 : timestamp += temp				   *60*60; break;
+					case 5 : timestamp += temp				      *60; break;
+				}
+				temp = 0;
+				i++;
+			}
+			else {
+				temp *= 10;
+				temp += ch -'0';
+			}
+			//System.out.println("timestamp : "+timestamp+" temp : " + temp + " ch : "+ch +" i : "+ i);
+		}
+		timestamp += temp;
+		return timestamp*1000;
+	}
 
 	@Override
 	public void run() {
 		try {
-			BufferedReader inputstream = new BufferedReader(new FileReader(inputfile));
+			BufferedReader inputstream = Files.newBufferedReader(FileSystems.getDefault().getPath(inputfile),StandardCharsets.UTF_8);
 			SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			Area from, to;
 			String line;
@@ -195,9 +242,10 @@ class IoProcessQ1 implements Runnable {
 					st.nextToken();
 
 					// pickup datetime
-					q1event.pickup_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
+					q1event.pickup_datetime = new java.sql.Timestamp(parseDate(st.nextToken()));
 					// dropoff datetime
-					q1event.dropoff_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
+					q1event.dropoff_datetime = new java.sql.Timestamp(parseDate(st.nextToken()));
+//					q1event.dropoff_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
 
 					// trip time in secs
 					st.nextToken();
@@ -222,6 +270,13 @@ class IoProcessQ1 implements Runnable {
 
 					// Put events into queues for Q1
 					queue_q1.put(q1event);
+			counter++;
+	        if (counter >= threshold) {
+    			    	System.out.println("Throughput = "+ (counter*1000/(System.currentTimeMillis()-ptime)));
+		        	ptime = System.currentTimeMillis();
+		        	counter = 0;
+			}
+
 				} catch(Exception e) {
 					System.out.println("Error parsing for query 1. Skipping..." + line);
 					System.out.println(e.getMessage());
