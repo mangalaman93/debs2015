@@ -9,11 +9,11 @@ import java.util.TreeSet;
 public class TenMaxProfitability {
   class TaxiInfo implements Comparable<TaxiInfo> {
     public Area area;
-    public long ts;
+    public long id;
 
-    public TaxiInfo(Area a, long ts) {
+    public TaxiInfo(Area a, int id) {
       this.area = a;
-      this.ts = ts;
+      this.id = id;
     }
 
     @Override
@@ -63,17 +63,23 @@ public class TenMaxProfitability {
       if(this == elem || this.area.equals(elem.area)) {
         return 0;
       } else if(this.num_empty_taxis == 0 && elem.num_empty_taxis != 0) {
-        return -1;
+        return 1;
       } else if(this.num_empty_taxis != 0 && elem.num_empty_taxis == 0) {
+        return -1;
+      } else if(this.mprofit.size() == 0 && elem.mprofit.size() == 0 && 
+          this.num_empty_taxis > elem.num_empty_taxis) {
+        return -1;
+      } else if(this.mprofit.size() == 0 && elem.mprofit.size() == 0 &&
+          this.num_empty_taxis < elem.num_empty_taxis) {
         return 1;
       } else if(this.profitability < elem.profitability) {
-        return 1;
+        return -1;
       } else if(this.profitability > elem.profitability) {
-        return -1;
-      } else if(this.ts < elem.ts) {
         return 1;
-      } else if(this.ts > elem.ts) {
+      } else if(this.ts < elem.ts) {
         return -1;
+      } else if(this.ts > elem.ts) {
+        return 1;
       } else {
         return 0;
       }
@@ -119,10 +125,6 @@ public class TenMaxProfitability {
       return (data[a.x][a.y].area != null);
     }
 
-    public void put(Area a, SetElem elem) {
-      data[a.x][a.y] = elem;
-    }
-
     public SetElem get(Area a) {
       return data[a.x][a.y];
     }
@@ -164,7 +166,7 @@ public class TenMaxProfitability {
   }
 
   public void enterTaxiSlidingWindow(String medallion_hack_license,
-      Area a, long ts) {
+      Area a, int id) {
     TaxiInfo taxi = grid_present.get(medallion_hack_license);
     // This taxi was in consideration earlier
     // => has reached a new place within 30 mins
@@ -181,11 +183,11 @@ public class TenMaxProfitability {
        * Change profitability to increase empty taxi number
        * corresponding to Area a
        */
-      this.updateEmptyTaxi(a, 1, ts);
+      this.updateEmptyTaxi(a, 1, id);
 
       // Update the area - TaxiInfo map
       taxi.area = a;
-      taxi.ts = ts;
+      taxi.id = id;
     }
 
     // This taxi was not in consideration earlier
@@ -196,16 +198,16 @@ public class TenMaxProfitability {
        * Change profitability to increase empty taxi number
        * corresponding to Area a
        */
-      this.updateEmptyTaxi(a, 1, ts);
-      grid_present.put(medallion_hack_license, new TaxiInfo(a, ts));
+      this.updateEmptyTaxi(a, 1, id);
+      grid_present.put(medallion_hack_license, new TaxiInfo(a, id));
     }
   }
 
   public void leaveTaxiSlidingWindow(String medallion_hack_license,
-      long ts) {
+      int id) {
     // Check if the event leaving corresponds to the event present in the area
     TaxiInfo taxi = grid_present.get(medallion_hack_license);
-    if(taxi != null && ts == taxi.ts) {
+    if(taxi != null && id == taxi.id) {
       // If present, then undo the effects of this event
       this.updateEmptyTaxi(taxi.area, -1, -1);
       grid_present.remove(medallion_hack_license);
@@ -224,25 +226,20 @@ public class TenMaxProfitability {
     if(area_elem_map.containsKey(a)) {
       SetElem old_elem = area_elem_map.get(a);
       int old_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
+      sorted_ptb_list.get(old_index).remove(old_elem);
       old_elem.num_empty_taxis += diffTaxiNumber;
       if(ts != -1) {
         old_elem.ts = ts;
       }
 
-      if(old_elem.mprofit.size()==0 &&
-          old_elem.num_empty_taxis==0) {
-        sorted_ptb_list.get(old_index).remove(old_elem);
+      if(old_elem.mprofit.size()==0 && old_elem.num_empty_taxis==0) {
         area_elem_map.remove(a);
       } else {
         old_elem.resetProfitability();
 
         // Next change the array DS
         int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
-
-        if(old_index != new_index) {
-          sorted_ptb_list.get(old_index).remove(old_elem);
-          sorted_ptb_list.get(new_index).add(old_elem);
-        }
+        sorted_ptb_list.get(new_index).add(old_elem);
       }
     } else if(diffTaxiNumber < 0) {
       System.out.println("What the heck happpened to this cab!");
@@ -265,22 +262,17 @@ public class TenMaxProfitability {
       // First update the area-ptb map
       SetElem old_elem = area_elem_map.get(a);
       int old_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
+      sorted_ptb_list.get(old_index).remove(old_elem);
       old_elem.mprofit.delete(profit);
 
-      if(old_elem.mprofit.size()==0 &&
-          old_elem.num_empty_taxis==0) {
-        sorted_ptb_list.get(old_index).remove(old_elem);
+      if(old_elem.mprofit.size()==0 && old_elem.num_empty_taxis==0) {
         area_elem_map.remove(a);
       } else {
         old_elem.resetProfitability();
 
         // Next change the array DS
         int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
-
-        if(old_index != new_index) {
-          sorted_ptb_list.get(old_index).remove(old_elem);
-          sorted_ptb_list.get(new_index).add(old_elem);
-        }
+        sorted_ptb_list.get(new_index).add(old_elem);
       }
     } else {
       System.out.println("What the heck happpened to this cab!");
@@ -293,17 +285,15 @@ public class TenMaxProfitability {
       // First update the area-ptb map
       SetElem old_elem = area_elem_map.get(a);
       int old_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
+      sorted_ptb_list.get(old_index).remove(old_elem);
+
       old_elem.mprofit.insert(profit);
       old_elem.ts = ts;
       old_elem.resetProfitability();
 
       // Next change the array DS
       int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
-
-      if(old_index != new_index) {
-        sorted_ptb_list.get(old_index).remove(old_elem);
-        sorted_ptb_list.get(new_index).add(old_elem);
-      }
+      sorted_ptb_list.get(new_index).add(old_elem);
     } else {
       SetElem old_elem = area_elem_map.get(a);
       old_elem.area = a;
