@@ -27,6 +27,7 @@ class Q2Elem {
 	public Area dropoff_area;
 	public float total_fare;
 	public long time_in;
+	public int id;
 }
 
 /* IoProcessor: Task to perform-
@@ -252,11 +253,13 @@ class IoProcessQ2 implements Runnable {
 	private BlockingQueue<Q2Elem> queue_q2;
 	private Geo geoq2;
 	private String inputfile;
+	private int id;
 
 	public IoProcessQ2(BlockingQueue<Q2Elem> queue2, String ifile) {
 		this.queue_q2 = queue2;
 		this.geoq2 = new Geo(-74.913585f, 41.474937f, 250, 250, 600, 600);
 		this.inputfile = ifile;
+		id = 0;
 	}
 
 	@Override
@@ -313,6 +316,7 @@ class IoProcessQ2 implements Runnable {
 					q2event.time_in = System.currentTimeMillis();
 
 					// Put events into queues for Q2
+					q2event.id = id++;
 					queue_q2.put(q2event);
 				} catch(Exception e) {
 					System.out.println("Error parsing for query 2. Skipping..." + line);
