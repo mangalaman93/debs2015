@@ -1,4 +1,4 @@
-public class Route {
+public class Route implements Comparable<Route>{
   public Area fromArea;
   public Area toArea;
   public int hash;
@@ -17,9 +17,9 @@ public class Route {
   }
 
   private void computeHash() {
-  	// TODO: not sure this is better?
+    // TODO: not sure this is better?
     Integer temp = (((((this.fromArea.x << 8) + this.fromArea.y) << 8)
-    		+ this.toArea.x) << 8) + this.fromArea.y;
+        + this.toArea.x) << 8) + this.fromArea.y;
     this.hash = temp.hashCode();
   }
 
@@ -40,6 +40,42 @@ public class Route {
 
   @Override
   public int hashCode() {
-  	return hash;
+    return hash;
+  }
+
+  public int compareTo(Route anotherRoute) {
+    if(anotherRoute.fromArea.x < this.fromArea.x){
+      return 1;
+    }
+    else if(anotherRoute.fromArea.x > this.fromArea.x){
+      return -1;
+    }
+    else{
+      if(anotherRoute.fromArea.y < this.fromArea.y){
+        return 1;
+      }
+      else if(anotherRoute.fromArea.y > this.fromArea.y){
+        return -1;
+      }
+      else{
+        if(anotherRoute.toArea.x < this.toArea.x){
+          return 1;
+        }
+        else if(anotherRoute.toArea.x > this.toArea.x){
+          return -1;
+        }
+        else{
+          if(anotherRoute.toArea.y < this.toArea.y){
+            return 1;
+          }
+          else if(anotherRoute.toArea.y > this.toArea.y){
+            return -1;
+          }
+          else{
+            return 0;
+          }
+        }
+      }
+    }
   }
 }

@@ -2,7 +2,7 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.Iterator;
-import java.util.HashSet;
+import java.util.TreeMap;
 import java.io.PrintStream;
 
 public class TenMaxFrequency {
@@ -78,7 +78,7 @@ public class TenMaxFrequency {
 
   // Note that same object is stored in both* the data structures
   private ArrayList<ArrayList<HashMap<Area, PairQ1>>> route_freq_map;
-  private ArrayList<ArrayList<Set<PairQ1>>> freq_array;
+  private ArrayList<ArrayList<TreeMap<Route, PairQ1>>> freq_array;
   private ArrayList<Long> latest_ts;
 
   // Max frequency
@@ -93,16 +93,16 @@ public class TenMaxFrequency {
 
   public TenMaxFrequency() {
     route_freq_map = new ArrayList<ArrayList<HashMap<Area, PairQ1>>>(300);
-    freq_array = new ArrayList<ArrayList<Set<PairQ1>>>(Constants.FREQ_ARRAY_SIZE);
+    freq_array = new ArrayList<ArrayList<TreeMap<Route, PairQ1>>>(Constants.FREQ_ARRAY_SIZE);
     route_count = new ArrayList<Integer>(Constants.FREQ_ARRAY_SIZE);
     latest_ts = new ArrayList<Long>(Constants.FREQ_ARRAY_SIZE);
 
     // Initialize frequency array
     for(int i=0; i<Constants.FREQ_ARRAY_SIZE; i++) {
-      freq_array.add(new ArrayList<Set<PairQ1>>(Constants.MAX_NUM_TS));
-      ArrayList<Set<PairQ1>> array = freq_array.get(i);
+      freq_array.add(new ArrayList<TreeMap<Route, PairQ1>>(Constants.MAX_NUM_TS));
+      ArrayList<TreeMap<Route, PairQ1>> array = freq_array.get(i);
       for(int j=0; j<Constants.MAX_NUM_TS; j++) {
-        array.add(new HashSet<PairQ1>());
+        array.add(new TreeMap<Route, PairQ1>());
       }
       route_count.add(0);
       latest_ts.add((long)-1);
@@ -150,10 +150,10 @@ public class TenMaxFrequency {
 
         // Iterate for routes in the current timestamp
         else {
-          Iterator<PairQ1> iter;
-          iter = freq_array.get(temp_frequency).get(ts).iterator();
+          Iterator<Route> iter;
+          iter = freq_array.get(temp_frequency).get(ts).keySet().iterator();
           while(iter.hasNext()) {
-            PairQ1 p = (PairQ1)iter.next();
+            PairQ1 p = freq_array.get(temp_frequency).get(ts).get(iter.next());
             print_stream.print(p.route.fromArea.x + 1);
             print_stream.print(".");
             print_stream.print(p.route.fromArea.y + 1);
@@ -206,10 +206,10 @@ public class TenMaxFrequency {
 
         // Iterate for routes in the current timestamp
         else {
-          Iterator<PairQ1> iter;
-          iter = freq_array.get(temp_frequency).get(ts).iterator();
-          while (iter.hasNext()) {
-            PairQ1 p = (PairQ1)iter.next();
+          Iterator<Route> iter;
+          iter = freq_array.get(temp_frequency).get(ts).keySet().iterator();
+          while(iter.hasNext()) {
+            PairQ1 p = freq_array.get(temp_frequency).get(ts).get(iter.next());
             old_max_ten_routes.set(count, p.route);
             temp_route_count = temp_route_count - 1;
             count = count + 1;
@@ -249,10 +249,10 @@ public class TenMaxFrequency {
 
         // Iterate for routes in the current timestamp
         else {
-          Iterator<PairQ1> iter;
-          iter = freq_array.get(temp_frequency).get(ts).iterator();
-          while (iter.hasNext()) {
-            PairQ1 p = (PairQ1)iter.next();
+          Iterator<Route> iter;
+          iter = freq_array.get(temp_frequency).get(ts).keySet().iterator();
+          while(iter.hasNext()) {
+            PairQ1 p = freq_array.get(temp_frequency).get(ts).get(iter.next());
             if((old_max_ten_routes.get(count) == null) || (!p.route.equals(old_max_ten_routes.get(count)))){
               return false;
             }
@@ -286,7 +286,7 @@ public class TenMaxFrequency {
 
     if(p != null) {
       // Remove from current frequency
-      freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).remove(p);
+      freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).remove(r);
       int new_count = route_count.get(p.freq.frequency) - 1;
       if(p.freq.frequency >= tenth_frequency){
         ret_val = true;
@@ -296,7 +296,7 @@ public class TenMaxFrequency {
       // Add to next frequency
       p.freq.frequency = p.freq.frequency + 1;
       p.freq.ts = ts;
-      freq_array.get(p.freq.frequency).get((int)(ts/1000)%1800).add(p);
+      freq_array.get(p.freq.frequency).get((int)(ts/1000)%1800).put(r, p);
       if(p.freq.frequency >= tenth_frequency){
         ret_val = true;
       }
@@ -319,7 +319,7 @@ public class TenMaxFrequency {
       route_freq_map.get(r.fromArea.x).get(r.fromArea.y).put(r.toArea, p);
 
       // Frequency = 1
-      freq_array.get(1).get((int)(ts/1000)%1800).add(p);
+      freq_array.get(1).get((int)(ts/1000)%1800).put(r, p);
       if(1 >= tenth_frequency){
         ret_val = true;
       }
@@ -342,7 +342,7 @@ public class TenMaxFrequency {
     PairQ1 p = route_freq_map.get(r.fromArea.x).get(r.fromArea.y).get(r.toArea);
     boolean ret_val = false;
     // Remove from current frequency
-    freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).remove(p);
+    freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).remove(r);
     if(p.freq.frequency >= tenth_frequency){
       ret_val = true;
     }
@@ -360,7 +360,7 @@ public class TenMaxFrequency {
     }
     else {
     // Add to lower frequency
-      freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).add(p);
+      freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000)%1800).put(r, p);
       if(p.freq.frequency >= tenth_frequency){
         ret_val = true;
       }
