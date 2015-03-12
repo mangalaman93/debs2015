@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.*;
 
 public class TenMaxProfitability {
   class TaxiInfo implements Comparable<TaxiInfo> {
@@ -140,29 +141,19 @@ public class TenMaxProfitability {
   private ArrayMap area_elem_map;
   // the array DS
   private List<Set<SetElem>> sorted_ptb_list;
-  // Stores previous top 10 areas
-  private Area[] top10_area;
-  // Stores previous top 10 median profit values
-  private float[] top10_medianpft;
-  // Stores previous top 10 empty taxi values
-  private float[] top10_empty_taxi;
+
+  private float last_10th_pft_val;
+  private boolean has_top_10_changed;
 
   public TenMaxProfitability() {
     area_elem_map = new ArrayMap(Constants.AREA_LIMIT, Constants.AREA_LIMIT);
     grid_present = new HashMap<String, TaxiInfo>();
     sorted_ptb_list = new ArrayList<Set<SetElem>>(Constants.NUM_EMPTY_BUCKETS);
     for(int i=0; i<Constants.NUM_EMPTY_BUCKETS; i++) {
-      sorted_ptb_list.add(i, new TreeSet<SetElem>());
+      sorted_ptb_list.add(i, new TreeSet<SetElem>(Collections.reverseOrder()));
     }
-
-    top10_area = new Area[10];
-    top10_medianpft = new float[10];
-    top10_empty_taxi = new float[10];
-    for(int i=0; i<10; i++) {
-      top10_area[i] = null;
-      top10_medianpft[i] = -1;
-      top10_empty_taxi[i] = -1;
-    }
+    last_10th_pft_val = 0.0f;
+    has_top_10_changed = false;
   }
 
   public void enterTaxiSlidingWindow(String medallion_hack_license,
@@ -227,6 +218,9 @@ public class TenMaxProfitability {
       SetElem old_elem = area_elem_map.get(a);
       int old_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
       sorted_ptb_list.get(old_index).remove(old_elem);
+      if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>=last_10th_pft_val) {
+      	has_top_10_changed = true;
+      }
       old_elem.num_empty_taxis += diffTaxiNumber;
       if(ts != -1) {
         old_elem.ts = ts;
@@ -236,6 +230,9 @@ public class TenMaxProfitability {
         area_elem_map.remove(a);
       } else {
         old_elem.resetProfitability();
+        if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>last_10th_pft_val) {
+	        has_top_10_changed = true;
+	      }
 
         // Next change the array DS
         int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
@@ -250,6 +247,9 @@ public class TenMaxProfitability {
       old_elem.num_empty_taxis = diffTaxiNumber;
       old_elem.ts = ts;
       old_elem.resetProfitability();
+      if(!has_top_10_changed && old_elem.profitability>=last_10th_pft_val) {
+        has_top_10_changed = true;
+      }
 
       // Next change the array DS
       int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
@@ -263,12 +263,20 @@ public class TenMaxProfitability {
       SetElem old_elem = area_elem_map.get(a);
       int old_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
       sorted_ptb_list.get(old_index).remove(old_elem);
+
+      if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>=last_10th_pft_val) {
+      	has_top_10_changed = true;
+      }
+
       old_elem.mprofit.delete(profit);
 
       if(old_elem.mprofit.size()==0 && old_elem.num_empty_taxis==0) {
         area_elem_map.remove(a);
       } else {
         old_elem.resetProfitability();
+        if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>last_10th_pft_val) {
+      	  has_top_10_changed = true;
+        }
 
         // Next change the array DS
         int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
@@ -287,9 +295,17 @@ public class TenMaxProfitability {
       int old_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
       sorted_ptb_list.get(old_index).remove(old_elem);
 
+      if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>=last_10th_pft_val) {
+      	has_top_10_changed = true;
+      }
+
       old_elem.mprofit.insert(profit);
       old_elem.ts = ts;
       old_elem.resetProfitability();
+
+      if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>=last_10th_pft_val) {
+      	has_top_10_changed = true;
+      }
 
       // Next change the array DS
       int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
@@ -311,6 +327,7 @@ public class TenMaxProfitability {
   public void printMaxTen(PrintStream print_stream) {
     int numPrinted = 0;
     int currentIndex = Constants.NUM_EMPTY_BUCKETS-1;
+    last_10th_pft_val = 0.0f;
     while(numPrinted<10 && currentIndex>=0) {
       Iterator<SetElem> i = sorted_ptb_list.get(currentIndex).iterator();
       while(i.hasNext() && numPrinted<10) {
@@ -322,66 +339,22 @@ public class TenMaxProfitability {
         print_stream.print((s.area.x+1) + "." + (s.area.y+1) + "," +
             elem.num_empty_taxis + "," +  elem.mprofit.getMedian() + "," +
             elem.profitability + ",");
+        last_10th_pft_val = elem.profitability;
         numPrinted++;
       }
       currentIndex--;
     }
+
+    has_top_10_changed = false;
 
     while(numPrinted < 10) {
-      print_stream.print("NULL,");
-      numPrinted++;
-    }
-  }
-
-  public void storeMaxTenCopy() {
-    int numPrinted = 0;
-    int currentIndex = Constants.NUM_EMPTY_BUCKETS-1;
-    while(numPrinted < 10 && currentIndex >= 0) {
-      Iterator<SetElem> i = sorted_ptb_list.get(currentIndex).iterator();
-      while(i.hasNext() && numPrinted < 10) {
-        SetElem s = i.next();
-        SetElem elem = area_elem_map.get(s.area);
-        if(elem.num_empty_taxis == 0) {
-          continue;
-        }
-        top10_area[numPrinted] = s.area;
-        top10_medianpft[numPrinted] = elem.mprofit.getMedian();
-        top10_empty_taxi[numPrinted] = elem.num_empty_taxis;
-        numPrinted++;
-      }
-      currentIndex--;
+    	last_10th_pft_val = 0.0f;
+    	print_stream.print("NULL,");
+    	numPrinted++;
     }
   }
 
   public boolean isSameMaxTenKey() {
-    int numPrinted = 0;
-    int currentIndex = Constants.NUM_EMPTY_BUCKETS-1;
-    while(numPrinted<10 && currentIndex>=0) {
-      Iterator<SetElem> i = sorted_ptb_list.get(currentIndex).iterator();
-      while(i.hasNext() && numPrinted<10) {
-        SetElem s = i.next();
-        if(s == null || s.area == null) {
-          System.out.println("aman");
-        }
-        SetElem elem = area_elem_map.get(s.area);
-        if(elem.num_empty_taxis == 0) {
-          continue;
-        }
-        if(top10_area[numPrinted] == null ||
-            !top10_area[numPrinted].equals(s.area) ||
-            top10_medianpft[numPrinted] != elem.mprofit.getMedian() ||
-            top10_empty_taxi[numPrinted] != elem.num_empty_taxis) {
-          return false;
-        }
-        numPrinted++;
-      }
-      currentIndex--;
-    }
-
-    if(numPrinted<10 && top10_area[numPrinted] != null) {
-      return false;
-    }
-
-    return true;
+    return !has_top_10_changed;
   }
 }
