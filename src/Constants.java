@@ -13,7 +13,7 @@ public class Constants {
 
   // Q1 constants
   public static final int FREQ_ARRAY_SIZE = 500;
-  public static final int MAX_NUM_TS = 1800;
+  public static final int MAX_NUM_TS = 2048;
 
   // Max profitability value possible
   public final static int MAX_PFT_SIZE = 1000;
