@@ -498,7 +498,7 @@ class Q2Process implements Runnable {
 
 						while((currentms-lastms) >= 900000) {
 							maxpft.leaveProfitSlidingWindow(lastevent.pickup_area,
-									lastevent.total_fare);
+									lastevent.id,lastevent.total_fare);
 							swindow15.removeFirst();
 
 							if(swindow15.size() != 0) {
@@ -512,7 +512,7 @@ class Q2Process implements Runnable {
 				}
 
 				// add the incoming event
-				maxpft.enterProfitSlidingWindow(newevent.pickup_area,
+				maxpft.enterProfitSlidingWindow(newevent.pickup_area,newevent.id,
 						newevent.total_fare, newevent.dropoff_datetime.getTime());
 				maxpft.enterTaxiSlidingWindow(newevent.medallion_hack_license,
 						newevent.dropoff_area, newevent.id);

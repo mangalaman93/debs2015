@@ -219,7 +219,7 @@ public class TenMaxProfitability {
       int old_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
       sorted_ptb_list.get(old_index).remove(old_elem);
       if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>=last_10th_pft_val) {
-      	has_top_10_changed = true;
+        has_top_10_changed = true;
       }
       old_elem.num_empty_taxis += diffTaxiNumber;
       if(ts != -1) {
@@ -231,8 +231,8 @@ public class TenMaxProfitability {
       } else {
         old_elem.resetProfitability();
         if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>last_10th_pft_val) {
-	        has_top_10_changed = true;
-	      }
+          has_top_10_changed = true;
+        }
 
         // Next change the array DS
         int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
@@ -257,7 +257,7 @@ public class TenMaxProfitability {
     }
   }
 
-  public void leaveProfitSlidingWindow(Area a, float profit) {
+  public void leaveProfitSlidingWindow(Area a, int id, float profit) {
     if(area_elem_map.containsKey(a)) {
       // First update the area-ptb map
       SetElem old_elem = area_elem_map.get(a);
@@ -265,17 +265,20 @@ public class TenMaxProfitability {
       sorted_ptb_list.get(old_index).remove(old_elem);
 
       if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>=last_10th_pft_val) {
-      	has_top_10_changed = true;
+        has_top_10_changed = true;
       }
 
-      old_elem.mprofit.delete(profit);
+      if(id==5870) {
+        System.out.println("DEL called " + id + " " + profit);
+      }
+      old_elem.mprofit.delete(id,profit);
 
       if(old_elem.mprofit.size()==0 && old_elem.num_empty_taxis==0) {
         area_elem_map.remove(a);
       } else {
         old_elem.resetProfitability();
         if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>last_10th_pft_val) {
-      	  has_top_10_changed = true;
+          has_top_10_changed = true;
         }
 
         // Next change the array DS
@@ -288,7 +291,7 @@ public class TenMaxProfitability {
     }
   }
 
-  public void enterProfitSlidingWindow(Area a, float profit, long ts) {
+  public void enterProfitSlidingWindow(Area a, int id, float profit, long ts) {
     if(area_elem_map.containsKey(a)) {
       // First update the area-ptb map
       SetElem old_elem = area_elem_map.get(a);
@@ -296,15 +299,18 @@ public class TenMaxProfitability {
       sorted_ptb_list.get(old_index).remove(old_elem);
 
       if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>=last_10th_pft_val) {
-      	has_top_10_changed = true;
+        has_top_10_changed = true;
       }
 
-      old_elem.mprofit.insert(profit);
+      if(id==5870) {
+        System.out.println("INS called " + id + " " + profit);
+      }
+      old_elem.mprofit.insert(id,profit);
       old_elem.ts = ts;
       old_elem.resetProfitability();
 
       if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>=last_10th_pft_val) {
-      	has_top_10_changed = true;
+        has_top_10_changed = true;
       }
 
       // Next change the array DS
@@ -314,7 +320,7 @@ public class TenMaxProfitability {
       SetElem old_elem = area_elem_map.get(a);
       old_elem.area = a;
       old_elem.num_empty_taxis = 0;
-      old_elem.mprofit.insert(profit);
+      old_elem.mprofit.insert(id,profit);
       old_elem.ts = ts;
       old_elem.resetProfitability();
 
@@ -348,9 +354,9 @@ public class TenMaxProfitability {
     has_top_10_changed = false;
 
     while(numPrinted < 10) {
-    	last_10th_pft_val = 0.0f;
-    	print_stream.print("NULL,");
-    	numPrinted++;
+      last_10th_pft_val = 0.0f;
+      print_stream.print("NULL,");
+      numPrinted++;
     }
   }
 
