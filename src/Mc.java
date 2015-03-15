@@ -21,13 +21,14 @@ public class Mc {
     @Override
     public int compareTo(McElem e) {
       if(id==e.id) return 0;
-      else if(id>e.id) return 1;
-      else if(id<e.id) return -1;
-      else return id-e.id;
+      else if(val>e.val) return 1;
+      else if(val<e.val) return -1;
+      else return 0;
     }
 
     public boolean equals(McElem e) {
-      return id==e.id;
+      if(id==e.id) return true;
+      return false;
     }
   }
 
@@ -83,16 +84,57 @@ public class Mc {
   }
 
   public void delete(int id, float val) {
-    Iterator it = minheap.iterator();
-    while (it.hasNext()){
-      McElem curr = (McElem) it.next();
-      if(curr.id==id) return;
+    // Empty PQ case
+    if(maxheap_size == 0) {
+      return;
     }
-    it = maxheap.iterator();
-    while (it.hasNext()){
-      McElem curr = (McElem) it.next();
-      if(curr.id==id) return;
+
+    // Even number case 
+    else if(minheap_size == maxheap_size) {
+      Iterator it = maxheap.iterator();
+      while (it.hasNext()){
+        McElem curr = (McElem) it.next();
+        if(curr.id==id) {
+          if(!maxheap.remove(curr)) System.out.println("PAIN");
+          maxheap.add(minheap.poll());
+          minheap_size--;
+          return;
+        }
+      }
+      it = minheap.iterator();
+      while (it.hasNext()){
+        McElem curr = (McElem) it.next();
+        if(curr.id==id) {
+          if(!minheap.remove(curr)) System.out.println("PAIN");
+          minheap_size--;
+          return;
+        }
+      }
     }
+
+    // Odd number case
+    else {
+      Iterator it = minheap.iterator();
+      while (it.hasNext()){
+        McElem curr = (McElem) it.next();
+        if(curr.id==id) {
+          if(!minheap.remove(curr)) System.out.println("PAIN");
+          minheap.add(maxheap.poll());
+          maxheap_size--;
+          return;
+        }
+      }
+      it = maxheap.iterator();
+      while (it.hasNext()){
+        McElem curr = (McElem) it.next();
+        if(curr.id==id) {
+          if(!maxheap.remove(curr)) System.out.println("PAIN");;
+          maxheap_size--;
+          return;
+        }
+      }
+    }
+
     System.out.println("PAIN");
   }
 
@@ -106,10 +148,11 @@ public class Mc {
     else if(minheap_size == maxheap_size) {
       if(maxheap.remove(new McElem(id,val))) {
         // Remove from minheap and then add to maxheap  
-        maxheap.add(minheap.poll());
-      } else if(maxheap.remove(new McElem(id,val))) {
+        maxheap.add(minheap.peek());
+        minheap.poll();
+      } else if(minheap.remove(new McElem(id,val))) {
       } else {
-        if(id==5870) System.out.println(id + " not deleted");
+        if(id==5870) System.out.println(id + " 1not deleted");
       }
       minheap_size--;
     }
@@ -118,10 +161,11 @@ public class Mc {
     else {
       if(minheap.remove(new McElem(id,val))) {
         // Remove from maxheap and then add to minheap  
-        minheap.add(maxheap.poll());
+        minheap.add(maxheap.peek());
+        maxheap.poll();
       } else if(maxheap.remove(new McElem(id,val))) {
       } else {
-        if(id==5870) System.out.println(id + " not deleted");
+        if(id==5870) System.out.println(id + " 2not deleted");
       }
       maxheap_size--;
     }
