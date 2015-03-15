@@ -470,7 +470,7 @@ class Q2Process implements Runnable {
 					in_count = 0;
 					last_time = System.currentTimeMillis();
 				}
-				maxpft.storeMaxTenCopy();
+				// maxpft.storeMaxTenCopy();
 
 				// Check if events are leaving the sliding window and process them
 				long currentms = newevent.dropoff_datetime.getTime();
@@ -554,26 +554,26 @@ public class debs2015 {
 		}
 
 		// Initializing queues
-		queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, false);
+		// queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, false);
 		queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(Constants.QUEUE2_CAPACITY, false);
 
 		// start threads
 		if(Constants.TWO_IO_PROCESS) {
-			Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, test_file));
+			// Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, test_file));
 			Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, test_file));
-			threadForIoProcessQ1.start();
-			// threadForIoProcessQ2.start();
+			// threadForIoProcessQ1.start();
+			threadForIoProcessQ2.start();
 		} else {
 			Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1, queue_for_Q2, test_file));
 			threadForIoProcess.start();
 		}
 
-		PrintStream q1out = new PrintStream(new FileOutputStream(Constants.Q1_FILE, false));
-		Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, q1out));
-		threadForQ1Process.start();
+		// PrintStream q1out = new PrintStream(new FileOutputStream(Constants.Q1_FILE, false));
+		// Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, q1out));
+		// threadForQ1Process.start();
 
-		// PrintStream q2out = new PrintStream(new FileOutputStream(Constants.Q2_FILE, false));
-		// Thread threadForQ2Process = new Thread(new Q2Process(queue_for_Q2, q2out));
-		// threadForQ2Process.start();
+		PrintStream q2out = new PrintStream(new FileOutputStream(Constants.Q2_FILE, false));
+		Thread threadForQ2Process = new Thread(new Q2Process(queue_for_Q2, q2out));
+		threadForQ2Process.start();
 	}
 }
