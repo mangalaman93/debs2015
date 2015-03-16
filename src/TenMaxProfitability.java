@@ -268,9 +268,11 @@ public class TenMaxProfitability {
         has_top_10_changed = true;
       }
 
+      /*
       if(id==5870) {
         System.out.println("DEL called " + id + " " + profit);
       }
+      */
       old_elem.mprofit.delete(id,profit);
 
       if(old_elem.mprofit.size()==0 && old_elem.num_empty_taxis==0) {
@@ -302,9 +304,11 @@ public class TenMaxProfitability {
         has_top_10_changed = true;
       }
 
+      /*
       if(id==5870) {
         System.out.println("INS called " + id + " " + profit);
       }
+      */
       old_elem.mprofit.insert(id,profit);
       old_elem.ts = ts;
       old_elem.resetProfitability();
