@@ -57,16 +57,14 @@ public class TenMaxProfitabilityTest {
   TenMaxProfitability tmp;
   Area[] a;
   Timestamp[] ts;
-  String[] medallion;
-  String[] hack_license;
+  String[] medallion_hack_license;
 
   @Before
   public void setUp() throws Exception {
     tmp = new TenMaxProfitability();
     a = new Area[25];
     ts = new Timestamp[100];
-    medallion = new String[100];
-    hack_license = new String[100];
+    medallion_hack_license = new String[200];
 
     for(int i=0; i<5; i++) {
       for(int j=0; j<5; j++) {
@@ -78,9 +76,8 @@ public class TenMaxProfitabilityTest {
       ts[i] = UniqueTimestamp.getTimestamp();
     }
 
-    for(int i=0; i<100; i++) {
-      medallion[i] = UUID.randomUUID().toString();
-      hack_license[i] = UUID.randomUUID().toString();
+    for(int i=0; i<200; i++) {
+      medallion_hack_license[i] = UUID.randomUUID().toString();
     }
   }
 
@@ -103,18 +100,17 @@ public class TenMaxProfitabilityTest {
   public void testTenMaxProfitability2() {
 
     Vector<PairQ2> temp = new Vector<PairQ2>();
+    Vector<PairQ2> t = new Vector<PairQ2>();
     for(int i=0; i<10; i++) {
-      tmp.enterProfitSlidingWindow(a[i], (float)(0.45+i*7.6), ts[i].getTime());
+      tmp.enterProfitSlidingWindow(a[i], i, (float)(0.45+i*7.6), ts[i].getTime());
     }
     for(int i=0; i<10; i++) {
-      tmp.enterTaxiSlidingWindow(medallion[i], hack_license[i], a[i], ts[i].getTime());
+      tmp.enterTaxiSlidingWindow(medallion_hack_license[i], a[i], i);
     }
-
     
     for(int i=9; i>=0; i--) {
         temp.add(new PairQ2(a[i],(float)(0.45+i*7.6),1));
     }
-    
     assertTrue(tmp.getMaxTenCopy().equals(temp));
   }
 
@@ -122,7 +118,7 @@ public class TenMaxProfitabilityTest {
   public void testTenMaxProfitability3() {
   Vector<PairQ2> temp = new Vector<PairQ2>();
     for(int i=0; i<10; i++) {
-      tmp.enterProfitSlidingWindow(a[i], 100.45f, ts[9-i].getTime());
+      tmp.enterProfitSlidingWindow(a[i], i, 100.45f, ts[9-i].getTime());
     }
     for(int i=0; i<10; i++) {
         temp.add(null);
@@ -134,11 +130,11 @@ public class TenMaxProfitabilityTest {
   public void testTenMaxProfitability4() {
     Vector<PairQ2> temp = new Vector<PairQ2>();
     for(int i=0; i<10; i++) {
-      tmp.enterProfitSlidingWindow(a[i], 100.45f, ts[i].getTime());
+      tmp.enterProfitSlidingWindow(a[i], i, 100.45f, ts[i].getTime());
     }
 
     for(int i=10; i<20; i++) {
-      tmp.leaveProfitSlidingWindow(a[i-10], 100.45f);
+      tmp.leaveProfitSlidingWindow(a[i-10], i-10, 100.45f);
     }
 
     for(int i=0; i<10; i++) {
@@ -151,16 +147,18 @@ public class TenMaxProfitabilityTest {
   public void testTenMaxProfitability5() {
     Vector<PairQ2> temp = new Vector<PairQ2>();
     for(int i=0; i<10; i++) {
-      tmp.enterProfitSlidingWindow(a[i], 100.45f, ts[i].getTime());
+      tmp.enterProfitSlidingWindow(a[i], i, 100.45f, ts[i].getTime());
     }
 
     for(int i=10; i<20; i++) {
-      tmp.enterProfitSlidingWindow(a[i-10], 100.465f, ts[29-i].getTime());
+      tmp.enterProfitSlidingWindow(a[i-10], i, 100.465f, ts[29-i].getTime());
     }
     for(int i=0; i<10; i++) {
-      tmp.enterTaxiSlidingWindow(medallion[i], hack_license[i], a[i], ts[20-i].getTime());
+      tmp.enterTaxiSlidingWindow(medallion_hack_license[i], a[i], i+20);
   }
-    for(int i=0; i<10; i++) {
+    
+    
+    for(int i=9; i>=0; i--) {
       temp.add(new PairQ2(a[i],(100.45f+100.465f)/2,1));
     }
     
@@ -172,14 +170,14 @@ public class TenMaxProfitabilityTest {
     int count = 0;
     Vector<PairQ2> temp = new Vector<PairQ2>();
     for(int i=0; i<10; i++) {
-      tmp.enterProfitSlidingWindow(a[i], 100.45f, ts[count].getTime());
+      tmp.enterProfitSlidingWindow(a[i], i, 100.45f, ts[count].getTime());
       count++;
     }
 
     int taxi_count = 0;
     for(int i=0; i<10; i++) {
       for(int j=0; j<i+1; j++) {
-        tmp.enterTaxiSlidingWindow(medallion[taxi_count], hack_license[taxi_count], a[i], ts[count].getTime());
+        tmp.enterTaxiSlidingWindow(medallion_hack_license[taxi_count], a[i], j);
         taxi_count++;
         count++;
       }
@@ -193,20 +191,23 @@ public class TenMaxProfitabilityTest {
   public void testTenMaxProfitability7() {
     int count = 0;
     Vector<PairQ2> temp = new Vector<PairQ2>();
+    Vector<PairQ2> t = new Vector<PairQ2>();
 
     for(int i=0; i<10; i++) {
-      tmp.enterProfitSlidingWindow(a[i], 100.45f, ts[count].getTime());
+      tmp.enterProfitSlidingWindow(a[i], i, 100.45f, ts[count].getTime());
       count++;
     }
 
     for(int i=0; i<10; i++) {
       for(int j=0; j<i+1; j++) {
-        tmp.enterTaxiSlidingWindow(medallion[i], hack_license[i], a[i], ts[count].getTime());
+        tmp.enterTaxiSlidingWindow(medallion_hack_license[i], a[i], j);
         count++;
       }
       temp.add(new PairQ2(a[i],100.45f, 1));
     }
     Collections.reverse(temp);
+    
+    
     assertTrue(tmp.getMaxTenCopy().equals(temp));
   }
 }
