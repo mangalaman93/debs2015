@@ -1,3 +1,4 @@
+package utils;
 public class Area {
   public int x;
   public int y;

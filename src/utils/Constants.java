@@ -1,3 +1,4 @@
+package utils;
 // parameters and constants
 public class Constants {
 	// tuning parameter for HashMap

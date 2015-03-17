@@ -1,3 +1,4 @@
+package utils;
 public class Route implements Comparable<Route>{
   public Area fromArea;
   public Area toArea;
