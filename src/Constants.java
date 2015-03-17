@@ -21,6 +21,7 @@ public class Constants {
   public final static int AREA_LIMIT = 600;
   public final static int NUM_EMPTY_BUCKETS = 2000;
   public final static float BUCKET_SIZE = (float) MAX_PFT_SIZE/ (float) NUM_EMPTY_BUCKETS;
+  public final static float INV_BUCKET_SIZE = (float) NUM_EMPTY_BUCKETS / (float) MAX_PFT_SIZE;
 
 
   // input and output file

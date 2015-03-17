@@ -1,6 +1,32 @@
 import java.io.PrintStream;
 import java.util.*;
 
+/*
+ * This class is used only for the unit tests
+ */
+class PairQ2 {
+  Area a;
+  float pft;
+  int num_empty_taxi;
+  
+  PairQ2(Area a, float pft, int num_empty_taxi) {
+    this.a = a;
+    this.pft = pft;
+    this.num_empty_taxi = num_empty_taxi;
+  }
+  
+  public boolean equals(Object obj) {
+    PairQ2 e = (PairQ2) obj;
+    if(this == e) {
+      return true;
+    }
+    if(a.equals(e.a) && pft==e.pft && num_empty_taxi==e.num_empty_taxi) {
+      return true;
+    }
+    return false;
+  }
+}
+
 public class TenMaxProfitability {
   class TaxiInfo implements Comparable<TaxiInfo> {
     public Area area;
@@ -220,127 +246,142 @@ public class TenMaxProfitability {
    */
   private void updateEmptyTaxi(Area a, int diffTaxiNumber, long ts) {
     if(area_elem_map.containsKey(a)) {
-      SetElem old_elem = area_elem_map.get(a);
-      int old_index = old_elem.aindex;
-      sorted_ptb_list.get(old_index).remove(old_elem);
-      if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>=last_10th_pft_val) {
+      // Delete the old entry corresponding to the area
+      SetElem elem = area_elem_map.get(a);
+      int old_index = elem.aindex;
+      sorted_ptb_list.get(old_index).remove(elem);
+
+      if(!has_top_10_changed && elem.num_empty_taxis>0 && elem.profitability>=last_10th_pft_val) {
         has_top_10_changed = true;
       }
-      old_elem.num_empty_taxis += diffTaxiNumber;
+      
+      // Update the area
+      elem.num_empty_taxis += diffTaxiNumber;
       if(ts != -1) {
-        old_elem.ts = ts;
+        elem.ts = ts;
       }
 
-      if(old_elem.mprofit.size()==0 && old_elem.num_empty_taxis==0) {
+      if(elem.mprofit.size()==0 && elem.num_empty_taxis==0) {
         area_elem_map.remove(a);
       } else {
-        old_elem.resetProfitability();
-        if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>last_10th_pft_val) {
+        elem.resetProfitability();
+        if(!has_top_10_changed && elem.num_empty_taxis>0 && elem.profitability>last_10th_pft_val) {
           has_top_10_changed = true;
         }
 
-        // Next change the array DS
-        int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
-        if(new_index > (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1)) {
-          new_index = (int) (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1);
+        // Add the updated area
+        int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
+        if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
+          new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
         }
-        old_elem.aindex = new_index;
-        sorted_ptb_list.get(new_index).add(old_elem);
+        elem.aindex = new_index;
+        sorted_ptb_list.get(new_index).add(elem);
       }
     } else if(diffTaxiNumber > 0) {
-      SetElem old_elem = area_elem_map.get(a);
-      old_elem.area = a;
-      old_elem.num_empty_taxis = diffTaxiNumber;
-      old_elem.ts = ts;
-      old_elem.resetProfitability();
-      if(!has_top_10_changed && old_elem.profitability>=last_10th_pft_val) {
+      // This area is not present
+      // create new entry corresponding to this area
+      SetElem elem = area_elem_map.get(a);
+      elem.area = a;
+      elem.num_empty_taxis = diffTaxiNumber;
+      elem.ts = ts;
+      elem.resetProfitability();
+      if(!has_top_10_changed && elem.profitability>=last_10th_pft_val) {
         has_top_10_changed = true;
       }
 
-      // Next change the array DS
-      int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
-      if(new_index > (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1)) {
-        new_index = (int) (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1);
+      // Add the area
+      int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
+      if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
+        new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
       }
-      old_elem.aindex = new_index;
-      sorted_ptb_list.get(new_index).add(old_elem);
+      elem.aindex = new_index;
+      sorted_ptb_list.get(new_index).add(elem);
     }
   }
 
   public void leaveProfitSlidingWindow(Area a, int id, float profit) {
+  // This area is should be already present as it is in the sliding window
     if(area_elem_map.containsKey(a)) {
-      // First update the area-ptb map
-      SetElem old_elem = area_elem_map.get(a);
-      int old_index = old_elem.aindex;
-      sorted_ptb_list.get(old_index).remove(old_elem);
 
-      if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>=last_10th_pft_val) {
+      // delete old data
+      SetElem elem = area_elem_map.get(a);
+      int old_index = elem.aindex;
+      sorted_ptb_list.get(old_index).remove(elem);
+
+      if(!has_top_10_changed && elem.num_empty_taxis>0 && elem.profitability>=last_10th_pft_val) {
         has_top_10_changed = true;
       }
 
-      old_elem.mprofit.delete(id,profit);
+      // update the data
+      elem.mprofit.delete(id,profit);
 
-      if(old_elem.mprofit.size()==0 && old_elem.num_empty_taxis==0) {
+      if(elem.mprofit.size()==0 && elem.num_empty_taxis==0) {
         area_elem_map.remove(a);
       } else {
-        old_elem.resetProfitability();
-        if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>last_10th_pft_val) {
+        elem.resetProfitability();
+        if(!has_top_10_changed && elem.num_empty_taxis>0 && elem.profitability>last_10th_pft_val) {
           has_top_10_changed = true;
         }
 
-        // Next change the array DS
-        int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
-        if(new_index > (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1)) {
-          new_index = (int) (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1);
+        // Add the updated data
+        int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
+        if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
+          new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
         }
-        old_elem.aindex = new_index;
-        sorted_ptb_list.get(new_index).add(old_elem);
+        elem.aindex = new_index;
+        sorted_ptb_list.get(new_index).add(elem);
       }
     }
   }
 
   public void enterProfitSlidingWindow(Area a, int id, float profit, long ts) {
+  
+    // This area is already present
     if(area_elem_map.containsKey(a)) {
-      // First update the area-ptb map
-      SetElem old_elem = area_elem_map.get(a);
-      int old_index = old_elem.aindex;
-      sorted_ptb_list.get(old_index).remove(old_elem);
+      // delete old data
+      SetElem elem = area_elem_map.get(a);
+      int old_index = elem.aindex;
+      sorted_ptb_list.get(old_index).remove(elem);
 
-      if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>=last_10th_pft_val) {
+      if(!has_top_10_changed && elem.num_empty_taxis>0 && elem.profitability>=last_10th_pft_val) {
         has_top_10_changed = true;
       }
 
-      old_elem.mprofit.insert(id,profit);
-      old_elem.ts = ts;
-      old_elem.resetProfitability();
+      // update the data
+      elem.mprofit.insert(id,profit);
+      elem.ts = ts;
+      elem.resetProfitability();
 
-      if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>=last_10th_pft_val) {
+      if(!has_top_10_changed && elem.num_empty_taxis>0 && elem.profitability>=last_10th_pft_val) {
         has_top_10_changed = true;
       }
 
-      // Next change the array DS
-      int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
-      if(new_index > (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1)) {
-        new_index = (int) (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1);
+      // Add the updated data
+      int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
+      if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
+        new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
       }
-      old_elem.aindex = new_index;
-      sorted_ptb_list.get(new_index).add(old_elem);
+      elem.aindex = new_index;
+      sorted_ptb_list.get(new_index).add(elem);
+      
     } else {
-      SetElem old_elem = area_elem_map.get(a);
-      old_elem.area = a;
-      old_elem.num_empty_taxis = 0;
-      old_elem.mprofit.insert(id,profit);
-      old_elem.ts = ts;
-      old_elem.resetProfitability();
+      // This area is not present
+      // create new entry corresponding to this area
+      SetElem elem = area_elem_map.get(a);
+      elem.area = a;
+      elem.num_empty_taxis = 0;
+      elem.mprofit.insert(id,profit);
+      elem.ts = ts;
+      elem.resetProfitability();
 
-      // Next change the array DS
-      int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
-      if(new_index > (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1)) {
-        new_index = (int) (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1);
+      // Add this area
+      int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
+      if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
+        new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
       }
-      sorted_ptb_list.get(new_index).contains(old_elem);
-      sorted_ptb_list.get(new_index).add(old_elem);
-      old_elem.aindex = new_index;
+      sorted_ptb_list.get(new_index).contains(elem);
+      sorted_ptb_list.get(new_index).add(elem);
+      elem.aindex = new_index;
     }
   }
 
@@ -377,4 +418,34 @@ public class TenMaxProfitability {
   public boolean isSameMaxTenKey() {
     return !has_top_10_changed;
   }
+  
+  /*
+   * This function is used only for the unit tests
+   */
+  public Vector<PairQ2> getMaxTenCopy() {
+  Vector<PairQ2> ret_val = new Vector<PairQ2>(10);
+  
+    int numPrinted = 0;
+    int currentIndex = Constants.NUM_EMPTY_BUCKETS-1;
+    while(numPrinted<10 && currentIndex>=0) {
+      Iterator<SetElem> i = sorted_ptb_list.get(currentIndex).iterator();
+      while(i.hasNext() && numPrinted<10) {
+        SetElem s = i.next();
+        SetElem elem = area_elem_map.get(s.area);
+        if(elem.num_empty_taxis == 0) {
+          continue;
+        }
+        ret_val.add(new PairQ2(s.area,elem.profitability,elem.num_empty_taxis));
+        numPrinted++;
+      }
+      currentIndex--;
+    }
+
+    while(numPrinted < 10) {
+      ret_val.add(null);
+      numPrinted++;
+    }
+  return ret_val;
+  }
+  
 }
