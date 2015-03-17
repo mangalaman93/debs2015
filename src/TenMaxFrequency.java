@@ -130,21 +130,21 @@ public class TenMaxFrequency {
   public void printMaxTen(PrintStream print_stream) {
     int temp_frequency = max_frequency;
     int temp_route_count = route_count.get(temp_frequency);
-    int ts = (int)(latest_ts.get(temp_frequency)/1000) & 2043;
+    int ts = (int)(latest_ts.get(temp_frequency)/1000) & 2047;
     int count = 0;
     while(count < 10 && temp_frequency > 0) {
       // Number of routes remaining for that frequency = 0
-    	// => means take next one
+      // => means take next one
       if(temp_route_count == 0) {
         temp_frequency = temp_frequency - 1;
         temp_route_count = route_count.get(temp_frequency);
-        ts = (int)(latest_ts.get(temp_frequency)/1000) & 2043;
+        ts = (int)(latest_ts.get(temp_frequency)/1000) & 2047;
       } else {
         // No routes in the current timestamp
         if(freq_array.get(temp_frequency).get(ts).size() == 0) {
           ts = ts - 1;
           if(ts == -1) {
-          	ts = Constants.MAX_NUM_TS-1;
+            ts = Constants.MAX_NUM_TS-1;
           }
         }
 
@@ -171,7 +171,7 @@ public class TenMaxFrequency {
           }
           ts = ts - 1;
           if(ts == -1) {
-          	ts = 1799;
+            ts = 2047;
           }
         }
       }
@@ -188,20 +188,20 @@ public class TenMaxFrequency {
   public void storeMaxTenCopy() {
     int temp_frequency = max_frequency;
     int temp_route_count = route_count.get(temp_frequency);
-    int ts = (int)(latest_ts.get(temp_frequency)/1000) & 2043;;
+    int ts = (int)(latest_ts.get(temp_frequency)/1000) & 2047;;
     int count = 0;
     while(count < 10 && temp_frequency > 0) {
       // Number of routes remaining for that frequency = 0
-    	// => means take next one
+      // => means take next one
       if(temp_route_count == 0) {
         temp_frequency = temp_frequency - 1;
         temp_route_count = route_count.get(temp_frequency);
-        ts = (int)(latest_ts.get(temp_frequency)/1000) & 2043;
+        ts = (int)(latest_ts.get(temp_frequency)/1000) & 2047;
       } else {
         // No routes in the current timestamp
         if(freq_array.get(temp_frequency).get(ts).size() == 0) {
           ts = ts - 1;
-          if(ts == -1) ts = 1799;
+          if(ts == -1) ts = 2047;
         }
 
         // Iterate for routes in the current timestamp
@@ -218,7 +218,7 @@ public class TenMaxFrequency {
             }
           }
           ts = ts - 1;
-          if(ts == -1) ts = 1799;
+          if(ts == -1) ts = 2047;
         }
       }
     }
@@ -231,7 +231,7 @@ public class TenMaxFrequency {
   public boolean isSameMaxTenKey() {
     int temp_frequency = max_frequency;
     int temp_route_count = route_count.get(temp_frequency);
-    int ts = (int)(latest_ts.get(temp_frequency)/1000) & 2043;
+    int ts = (int)(latest_ts.get(temp_frequency)/1000) & 2047;
     int count = 0;
     while(count < 10 && temp_frequency > 0) {
       // Number of routes remaining for that frequency = 0
@@ -239,12 +239,12 @@ public class TenMaxFrequency {
       if(temp_route_count == 0) {
         temp_frequency = temp_frequency - 1;
         temp_route_count = route_count.get(temp_frequency);
-        ts = (int)(latest_ts.get(temp_frequency)/1000) & 2043;
+        ts = (int)(latest_ts.get(temp_frequency)/1000) & 2047;
       } else {
         // No routes in the current timestamp
         if(freq_array.get(temp_frequency).get(ts).size() == 0) {
           ts = ts - 1;
-          if(ts == -1) ts = 1799;
+          if(ts == -1) ts = 2047;
         }
 
         // Iterate for routes in the current timestamp
@@ -263,7 +263,7 @@ public class TenMaxFrequency {
             }
           }
           ts = ts - 1;
-          if(ts == -1) ts = 1799;
+          if(ts == -1) ts = 2047;
         }
       }
     }
@@ -280,23 +280,23 @@ public class TenMaxFrequency {
   }
 
   public boolean increaseFrequency(Route r, long ts) {
-  	// Get the pair from hashmap
+    // Get the pair from hashmap
     PairQ1 p = route_freq_map.get(r.fromArea.x).get(r.fromArea.y).get(r.toArea);
     boolean ret_val = false;
 
     if(p != null) {
       // Remove from current frequency
-      freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000) & 2043).remove(r);
+      freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000) & 2047).remove(r);
       int new_count = route_count.get(p.freq.frequency) - 1;
+      route_count.set(p.freq.frequency, new_count);
       if(p.freq.frequency >= tenth_frequency){
         ret_val = true;
       }
-      route_count.set(p.freq.frequency, new_count);
 
       // Add to next frequency
       p.freq.frequency = p.freq.frequency + 1;
       p.freq.ts = ts;
-      freq_array.get(p.freq.frequency).get((int)(ts/1000) & 2043).put(r, p);
+      freq_array.get(p.freq.frequency).get((int)(ts/1000) & 2047).put(r, p);
       if(p.freq.frequency >= tenth_frequency){
         ret_val = true;
       }
@@ -319,7 +319,7 @@ public class TenMaxFrequency {
       route_freq_map.get(r.fromArea.x).get(r.fromArea.y).put(r.toArea, p);
 
       // Frequency = 1
-      freq_array.get(1).get((int)(ts/1000) & 2043).put(r, p);
+      freq_array.get(1).get((int)(ts/1000) & 2047).put(r, p);
       if(1 >= tenth_frequency){
         ret_val = true;
       }
@@ -342,14 +342,14 @@ public class TenMaxFrequency {
     PairQ1 p = route_freq_map.get(r.fromArea.x).get(r.fromArea.y).get(r.toArea);
     boolean ret_val = false;
     // Remove from current frequency
-    freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000) & 2043).remove(r);
+    freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000) & 2047).remove(r);
     if(p.freq.frequency >= tenth_frequency){
       ret_val = true;
     }
     int new_count = route_count.get(p.freq.frequency) - 1;
     route_count.set(p.freq.frequency, new_count);
     if(max_frequency == p.freq.frequency &&
-    		route_count.get(p.freq.frequency) == 0) {
+        route_count.get(p.freq.frequency) == 0) {
       max_frequency = p.freq.frequency - 1;
     }
     // Decrement frequency
@@ -360,7 +360,7 @@ public class TenMaxFrequency {
     }
     else {
     // Add to lower frequency
-      freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000) & 2043).put(r, p);
+      freq_array.get(p.freq.frequency).get((int)(p.freq.ts/1000) & 2047).put(r, p);
       if(p.freq.frequency >= tenth_frequency){
         ret_val = true;
       }
