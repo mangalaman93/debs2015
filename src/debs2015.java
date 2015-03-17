@@ -42,6 +42,7 @@ class IoProcess implements Runnable {
   private Geo geoq1;
   private Geo geoq2;
   private String inputfile;
+  private int id;
 
   public IoProcess(BlockingQueue<Q1Elem> queue1,
       BlockingQueue<Q2Elem> queue2, String ifile) {
@@ -50,6 +51,7 @@ class IoProcess implements Runnable {
     this.geoq1 = new Geo(-74.913585f, 41.474937f, 500, 500, 300, 300);
     this.geoq2 = new Geo(-74.913585f, 41.474937f, 250, 250, 600, 600);
     this.inputfile = ifile;
+    this.id = 0;
   }
 
   @Override
@@ -88,10 +90,37 @@ class IoProcess implements Runnable {
           pickup_longitude = Float.parseFloat(st.nextToken());
           // pickup latitude
           pickup_latitude = Float.parseFloat(st.nextToken());
+
+          // geo q1
+          from = geoq1.translate(pickup_longitude, pickup_latitude);
+          if(from == null) {
+            continue;
+          }
+
+          // geo q2
+          q2event.pickup_area = geoq2.translate(pickup_longitude, pickup_latitude);
+          if(q2event.pickup_area==null) {
+            continue;
+          }
+
           // dropoff longitude
           dropoff_longitude = Float.parseFloat(st.nextToken());
           // dropoff latitude
           dropoff_latitude = Float.parseFloat(st.nextToken());
+
+          // geo q1
+          to = geoq1.translate(dropoff_longitude, dropoff_latitude);
+          if(to == null) {
+            continue;
+          }
+          q1event.route = new Route(from, to);
+
+          // geo q2
+          q2event.dropoff_area = geoq2.translate(dropoff_longitude, dropoff_latitude);
+          if(q2event.dropoff_area==null) {
+            continue;
+          }
+
           // payment type
           st.nextToken();
           // fare amount
@@ -100,33 +129,17 @@ class IoProcess implements Runnable {
           st.nextToken();
           // mta tax
           st.nextToken();
+
           // tip amount
           q2event.total_fare += Float.parseFloat(st.nextToken());
+          if(q2event.total_fare < 0) {
+            continue;
+          }
+
           // tolls amount
           st.nextToken();
           // total amount
           st.nextToken();
-
-          // geo q1
-          from = geoq1.translate(pickup_longitude, pickup_latitude);
-          if(from == null) {
-            continue;
-          }
-          to = geoq1.translate(dropoff_longitude, dropoff_latitude);
-          if(to == null) {
-            continue;
-          }
-          q1event.route = new Route(from, to);
-
-          // geo q2
-          q2event.pickup_area = geoq2.translate(pickup_longitude, pickup_latitude);
-          if(q2event.pickup_area==null) {
-            continue;
-          }
-          q2event.dropoff_area = geoq2.translate(dropoff_longitude, dropoff_latitude);
-          if(q2event.dropoff_area==null) {
-            continue;
-          }
 
           // putting current time
           q1event.time_in = System.currentTimeMillis();
@@ -134,6 +147,7 @@ class IoProcess implements Runnable {
 
           // Put events into queues for Q1 and Q2
           queue_q1.put(q1event);
+          q2event.id = id++;
           queue_q2.put(q2event);
         } catch(Exception e) {
           // System.out.println("Error in parsing. Skipping..." + line);
