@@ -373,7 +373,7 @@ class Q1Process implements Runnable {
         ten_max_changed = false;
         in_count++;
         if(in_count == 100000) {
-          System.out.println("throughput: "+(100000/(System.currentTimeMillis()-last_time)));
+          System.out.println("Query 1 throughput: "+(100000/(System.currentTimeMillis()-last_time)));
           in_count = 0;
           last_time = System.currentTimeMillis();
         }
@@ -467,8 +467,8 @@ class Q2Process implements Runnable {
 
       while(newevent.time_in != 0) {
         in_count++;
-        if(in_count == 10000) {
-          System.out.println("throughput: "+(10000/(System.currentTimeMillis()-last_time)));
+        if(in_count == 100000) {
+          System.out.println("Query 2 throughput: "+(100000/(System.currentTimeMillis()-last_time)));
           in_count = 0;
           last_time = System.currentTimeMillis();
         }
