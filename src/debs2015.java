@@ -305,6 +305,9 @@ class IoProcessQ2 implements Runnable {
 					st.nextToken();
 					// fare amount
 					q2event.total_fare = Float.parseFloat(st.nextToken());
+					if(q2event.total_fare < 0) {
+					  continue;
+					}
 					// surcharge
 					st.nextToken();
 					// mta tax

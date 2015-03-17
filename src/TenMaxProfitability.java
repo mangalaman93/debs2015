@@ -1,10 +1,4 @@
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.*;
 
 public class TenMaxProfitability {
@@ -39,6 +33,7 @@ public class TenMaxProfitability {
     public int num_empty_taxis;
     public float profitability;
     public long ts;
+    public int aindex;
 
     public SetElem(Area a, int n, long t) {
       this.area = a;
@@ -46,6 +41,7 @@ public class TenMaxProfitability {
       this.num_empty_taxis = n;
       this.profitability = 0;
       this.ts = t;
+      this.aindex = -1;
     }
 
     public void resetProfitability() {
@@ -58,28 +54,26 @@ public class TenMaxProfitability {
       }
     }
 
-    /* reverse compareTO */
     @Override
     public int compareTo(SetElem elem) {
       if(this == elem || this.area.equals(elem.area)) {
         return 0;
-      } else if(this.num_empty_taxis == 0 && elem.num_empty_taxis != 0) {
-        return 1;
-      } else if(this.num_empty_taxis != 0 && elem.num_empty_taxis == 0) {
-        return -1;
-      } else if(this.mprofit.size() == 0 && elem.mprofit.size() == 0 && 
-          this.num_empty_taxis > elem.num_empty_taxis) {
-        return -1;
-      } else if(this.mprofit.size() == 0 && elem.mprofit.size() == 0 &&
-          this.num_empty_taxis < elem.num_empty_taxis) {
-        return 1;
-      } else if(this.profitability < elem.profitability) {
+      } 
+      else if(this.profitability < elem.profitability) {
         return -1;
       } else if(this.profitability > elem.profitability) {
         return 1;
       } else if(this.ts < elem.ts) {
         return -1;
       } else if(this.ts > elem.ts) {
+        return 1;
+      } else if(this.area.x < elem.area.x) {
+        return -1;
+      } else if(this.area.x > elem.area.x) {
+        return 1;
+      } else if(this.area.y < elem.area.y) {
+        return -1;
+      } else if(this.area.y > elem.area.y) {
         return 1;
       } else {
         return 0;
@@ -103,14 +97,19 @@ public class TenMaxProfitability {
 
       return false;
     }
+
+    @Override
+    public int hashCode() {
+      return this.area.hashCode();
+    }
   }
 
-  class ArrayMap {
+  class SetElemMap {
     private int xSize;
     private int ySize;
     private SetElem[][] data;
 
-    public ArrayMap(int xLimit, int yLimit) {
+    public SetElemMap(int xLimit, int yLimit) {
       this.xSize = xLimit;
       this.ySize = yLimit;
       this.data = new SetElem[this.xSize][this.ySize];
@@ -131,14 +130,23 @@ public class TenMaxProfitability {
     }
 
     public void remove(Area a) {
-      data[a.x][a.y].area = null;
+      SetElem se = data[a.x][a.y];
+      se.area = null;
+      if(se.mprofit.size() != 0) {
+        se.mprofit = null;
+        se.mprofit = new Mc();
+      }
+      se.num_empty_taxis = 0;
+      se.profitability = 0;
+      se.ts = -1;
+      se.aindex = -1;
     }
   }
 
   // Maps taxi identifier to (taxi area + ts). Used in the empty taxi algo
   private HashMap<String, TaxiInfo> grid_present;
   // Maps area to profitability
-  private ArrayMap area_elem_map;
+  private SetElemMap area_elem_map;
   // the array DS
   private List<Set<SetElem>> sorted_ptb_list;
 
@@ -146,7 +154,7 @@ public class TenMaxProfitability {
   private boolean has_top_10_changed;
 
   public TenMaxProfitability() {
-    area_elem_map = new ArrayMap(Constants.AREA_LIMIT, Constants.AREA_LIMIT);
+    area_elem_map = new SetElemMap(Constants.AREA_LIMIT, Constants.AREA_LIMIT);
     grid_present = new HashMap<String, TaxiInfo>();
     sorted_ptb_list = new ArrayList<Set<SetElem>>(Constants.NUM_EMPTY_BUCKETS);
     for(int i=0; i<Constants.NUM_EMPTY_BUCKETS; i++) {
@@ -202,9 +210,6 @@ public class TenMaxProfitability {
       // If present, then undo the effects of this event
       this.updateEmptyTaxi(taxi.area, -1, -1);
       grid_present.remove(medallion_hack_license);
-    } else if(taxi == null) {
-      System.out.println("What the heck happpened to this cab!");
-      System.exit(0);
     }
   }
 
@@ -216,7 +221,7 @@ public class TenMaxProfitability {
   private void updateEmptyTaxi(Area a, int diffTaxiNumber, long ts) {
     if(area_elem_map.containsKey(a)) {
       SetElem old_elem = area_elem_map.get(a);
-      int old_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
+      int old_index = old_elem.aindex;
       sorted_ptb_list.get(old_index).remove(old_elem);
       if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>=last_10th_pft_val) {
         has_top_10_changed = true;
@@ -236,12 +241,13 @@ public class TenMaxProfitability {
 
         // Next change the array DS
         int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
+        if(new_index > (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1)) {
+          new_index = (int) (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1);
+        }
+        old_elem.aindex = new_index;
         sorted_ptb_list.get(new_index).add(old_elem);
       }
-    } else if(diffTaxiNumber < 0) {
-      System.out.println("What the heck happpened to this cab!");
-      System.exit(0);
-    } else {
+    } else if(diffTaxiNumber > 0) {
       SetElem old_elem = area_elem_map.get(a);
       old_elem.area = a;
       old_elem.num_empty_taxis = diffTaxiNumber;
@@ -253,6 +259,10 @@ public class TenMaxProfitability {
 
       // Next change the array DS
       int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
+      if(new_index > (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1)) {
+        new_index = (int) (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1);
+      }
+      old_elem.aindex = new_index;
       sorted_ptb_list.get(new_index).add(old_elem);
     }
   }
@@ -261,18 +271,13 @@ public class TenMaxProfitability {
     if(area_elem_map.containsKey(a)) {
       // First update the area-ptb map
       SetElem old_elem = area_elem_map.get(a);
-      int old_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
+      int old_index = old_elem.aindex;
       sorted_ptb_list.get(old_index).remove(old_elem);
 
       if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>=last_10th_pft_val) {
         has_top_10_changed = true;
       }
 
-      /*
-      if(id==5870) {
-        System.out.println("DEL called " + id + " " + profit);
-      }
-      */
       old_elem.mprofit.delete(id,profit);
 
       if(old_elem.mprofit.size()==0 && old_elem.num_empty_taxis==0) {
@@ -285,11 +290,12 @@ public class TenMaxProfitability {
 
         // Next change the array DS
         int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
+        if(new_index > (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1)) {
+          new_index = (int) (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1);
+        }
+        old_elem.aindex = new_index;
         sorted_ptb_list.get(new_index).add(old_elem);
       }
-    } else {
-      System.out.println("What the heck happpened to this cab!");
-      System.exit(0);
     }
   }
 
@@ -297,18 +303,13 @@ public class TenMaxProfitability {
     if(area_elem_map.containsKey(a)) {
       // First update the area-ptb map
       SetElem old_elem = area_elem_map.get(a);
-      int old_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
+      int old_index = old_elem.aindex;
       sorted_ptb_list.get(old_index).remove(old_elem);
 
       if(!has_top_10_changed && old_elem.num_empty_taxis>0 && old_elem.profitability>=last_10th_pft_val) {
         has_top_10_changed = true;
       }
 
-      /*
-      if(id==5870) {
-        System.out.println("INS called " + id + " " + profit);
-      }
-      */
       old_elem.mprofit.insert(id,profit);
       old_elem.ts = ts;
       old_elem.resetProfitability();
@@ -319,6 +320,10 @@ public class TenMaxProfitability {
 
       // Next change the array DS
       int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
+      if(new_index > (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1)) {
+        new_index = (int) (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1);
+      }
+      old_elem.aindex = new_index;
       sorted_ptb_list.get(new_index).add(old_elem);
     } else {
       SetElem old_elem = area_elem_map.get(a);
@@ -330,7 +335,12 @@ public class TenMaxProfitability {
 
       // Next change the array DS
       int new_index = (int) (old_elem.profitability/Constants.BUCKET_SIZE);
+      if(new_index > (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1)) {
+        new_index = (int) (Constants.MAX_PFT_SIZE/Constants.BUCKET_SIZE -1);
+      }
+      sorted_ptb_list.get(new_index).contains(old_elem);
       sorted_ptb_list.get(new_index).add(old_elem);
+      old_elem.aindex = new_index;
     }
   }
 
