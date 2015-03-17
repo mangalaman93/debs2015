@@ -548,23 +548,30 @@ public class debs2015 {
 
   public static void main(String[] args) throws FileNotFoundException {
     String test_file;
+    boolean two_io_process = true;
+    boolean running_q1 = true;
+    boolean running_q2 = true;
+    int shift = 0;
+
     if(args.length == 0) {
       test_file = Constants.DEFAULT_INPUT_FILE;
     } else {
-      test_file = args[0];
+      if(args.length > 0 && !args[0].equals("1") && !args[0].equals("2")) {
+        test_file = args[0];
+        shift = 1;
+      } else {
+        test_file = Constants.DEFAULT_INPUT_FILE;
+      }
     }
 
-    boolean two_io_process = true;
-    if(args.length > 1) {
-      if(args[1] == "1") {
+    if(args.length > (0+shift)) {
+      if(args[0+shift].equals("1")) {
         two_io_process = false;
       }
     }
 
-    boolean running_q1 = true;
-    boolean running_q2 = true;
-    if(args.length > 2) {
-      if(args[2] == "1") {
+    if(args.length > (1+shift)) {
+      if(args[1+shift].equals("1")) {
         running_q2 = false;
       } else {
         running_q1 = false;
