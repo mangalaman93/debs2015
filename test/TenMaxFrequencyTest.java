@@ -1,13 +1,11 @@
 import static org.junit.Assert.*;
-import java.sql.Timestamp;
-import java.util.Vector;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-class UniqueTimestamp {
+class MyUniqueTimestamp {
   static long last_ts = 0;
 
   public static long getTimestamp() {
@@ -64,7 +62,7 @@ public class TenMaxFrequencyTest {
     r[13] = new Route(a[2], a[4]);
 
     for(int i=0; i<1000; i++) {
-      ts[i] = UniqueTimestamp.getTimestamp();
+      ts[i] = MyUniqueTimestamp.getTimestamp();
     }
 
     tmf = new TenMaxFrequency();
@@ -204,5 +202,4 @@ public class TenMaxFrequencyTest {
     assertTrue(!tmf.isSameMaxTenKey());
     assertEquals("2.1,1.1,3.3,3.1,4.3,5.6,1.2,2.2,2.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,", baos.toString());
   }
-
 }

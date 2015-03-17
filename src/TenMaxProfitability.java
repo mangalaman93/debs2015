@@ -8,42 +8,36 @@ class PairQ2 {
   Area a;
   float pft;
   int num_empty_taxi;
-  
+
   PairQ2(Area a, float pft, int num_empty_taxi) {
     this.a = a;
     this.pft = pft;
     this.num_empty_taxi = num_empty_taxi;
   }
-  
+
   public boolean equals(Object obj) {
     PairQ2 e = (PairQ2) obj;
+
     if(this == e) {
       return true;
     }
+
     if(a.equals(e.a) && pft==e.pft && num_empty_taxi==e.num_empty_taxi) {
       return true;
     }
+
     return false;
   }
 }
 
 public class TenMaxProfitability {
-  class TaxiInfo implements Comparable<TaxiInfo> {
+  class TaxiInfo {
     public Area area;
     public long id;
 
     public TaxiInfo(Area a, int id) {
       this.area = a;
       this.id = id;
-    }
-
-    @Override
-    public int compareTo(TaxiInfo taxi) {
-      throw new UnsupportedOperationException();
-    }
-
-    public boolean equals(TaxiInfo taxi) {
-      throw new UnsupportedOperationException();
     }
   }
 
@@ -84,7 +78,7 @@ public class TenMaxProfitability {
     public int compareTo(SetElem elem) {
       if(this == elem || this.area.equals(elem.area)) {
         return 0;
-      } 
+      }
       else if(this.profitability < elem.profitability) {
         return -1;
       } else if(this.profitability > elem.profitability) {
@@ -156,16 +150,7 @@ public class TenMaxProfitability {
     }
 
     public void remove(Area a) {
-      SetElem se = data[a.x][a.y];
-      se.area = null;
-      if(se.mprofit.size() != 0) {
-        se.mprofit = null;
-        se.mprofit = new Mc();
-      }
-      se.num_empty_taxis = 0;
-      se.profitability = 0;
-      se.ts = -1;
-      se.aindex = -1;
+      data[a.x][a.y].area = null;
     }
   }
 
@@ -251,10 +236,11 @@ public class TenMaxProfitability {
       int old_index = elem.aindex;
       sorted_ptb_list.get(old_index).remove(elem);
 
-      if(!has_top_10_changed && elem.num_empty_taxis>0 && elem.profitability>=last_10th_pft_val) {
+      if(!has_top_10_changed && elem.num_empty_taxis>0 &&
+          elem.profitability>=last_10th_pft_val) {
         has_top_10_changed = true;
       }
-      
+
       // Update the area
       elem.num_empty_taxis += diffTaxiNumber;
       if(ts != -1) {
@@ -265,7 +251,8 @@ public class TenMaxProfitability {
         area_elem_map.remove(a);
       } else {
         elem.resetProfitability();
-        if(!has_top_10_changed && elem.num_empty_taxis>0 && elem.profitability>last_10th_pft_val) {
+        if(!has_top_10_changed && elem.num_empty_taxis>0 &&
+            elem.profitability>last_10th_pft_val) {
           has_top_10_changed = true;
         }
 
@@ -274,6 +261,7 @@ public class TenMaxProfitability {
         if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
           new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
         }
+
         elem.aindex = new_index;
         sorted_ptb_list.get(new_index).add(elem);
       }
@@ -300,7 +288,7 @@ public class TenMaxProfitability {
   }
 
   public void leaveProfitSlidingWindow(Area a, int id, float profit) {
-  // This area is should be already present as it is in the sliding window
+    // This area is should be already present as it is in the sliding window
     if(area_elem_map.containsKey(a)) {
 
       // delete old data
@@ -308,7 +296,8 @@ public class TenMaxProfitability {
       int old_index = elem.aindex;
       sorted_ptb_list.get(old_index).remove(elem);
 
-      if(!has_top_10_changed && elem.num_empty_taxis>0 && elem.profitability>=last_10th_pft_val) {
+      if(!has_top_10_changed && elem.num_empty_taxis>0 &&
+          elem.profitability>=last_10th_pft_val) {
         has_top_10_changed = true;
       }
 
@@ -319,7 +308,8 @@ public class TenMaxProfitability {
         area_elem_map.remove(a);
       } else {
         elem.resetProfitability();
-        if(!has_top_10_changed && elem.num_empty_taxis>0 && elem.profitability>last_10th_pft_val) {
+        if(!has_top_10_changed && elem.num_empty_taxis>0 &&
+            elem.profitability>last_10th_pft_val) {
           has_top_10_changed = true;
         }
 
@@ -328,6 +318,7 @@ public class TenMaxProfitability {
         if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
           new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
         }
+
         elem.aindex = new_index;
         sorted_ptb_list.get(new_index).add(elem);
       }
@@ -335,7 +326,6 @@ public class TenMaxProfitability {
   }
 
   public void enterProfitSlidingWindow(Area a, int id, float profit, long ts) {
-  
     // This area is already present
     if(area_elem_map.containsKey(a)) {
       // delete old data
@@ -343,7 +333,8 @@ public class TenMaxProfitability {
       int old_index = elem.aindex;
       sorted_ptb_list.get(old_index).remove(elem);
 
-      if(!has_top_10_changed && elem.num_empty_taxis>0 && elem.profitability>=last_10th_pft_val) {
+      if(!has_top_10_changed && elem.num_empty_taxis>0 &&
+          elem.profitability>=last_10th_pft_val) {
         has_top_10_changed = true;
       }
 
@@ -352,7 +343,8 @@ public class TenMaxProfitability {
       elem.ts = ts;
       elem.resetProfitability();
 
-      if(!has_top_10_changed && elem.num_empty_taxis>0 && elem.profitability>=last_10th_pft_val) {
+      if(!has_top_10_changed && elem.num_empty_taxis>0 &&
+          elem.profitability>=last_10th_pft_val) {
         has_top_10_changed = true;
       }
 
@@ -363,7 +355,6 @@ public class TenMaxProfitability {
       }
       elem.aindex = new_index;
       sorted_ptb_list.get(new_index).add(elem);
-      
     } else {
       // This area is not present
       // create new entry corresponding to this area
@@ -386,66 +377,71 @@ public class TenMaxProfitability {
   }
 
   public void printMaxTen(PrintStream print_stream) {
-    int numPrinted = 0;
-    int currentIndex = Constants.NUM_EMPTY_BUCKETS-1;
+    int num_printed = 0;
+    int current_index = Constants.NUM_EMPTY_BUCKETS-1;
     last_10th_pft_val = 0.0f;
-    while(numPrinted<10 && currentIndex>=0) {
-      Iterator<SetElem> i = sorted_ptb_list.get(currentIndex).iterator();
-      while(i.hasNext() && numPrinted<10) {
+    while(num_printed<10 && current_index>=0) {
+      Iterator<SetElem> i = sorted_ptb_list.get(current_index).iterator();
+      while(i.hasNext() && num_printed<10) {
         SetElem s = i.next();
         SetElem elem = area_elem_map.get(s.area);
         if(elem.num_empty_taxis == 0) {
           continue;
         }
+
         print_stream.print((s.area.x+1) + "." + (s.area.y+1) + "," +
             elem.num_empty_taxis + "," +  elem.mprofit.getMedian() + "," +
             elem.profitability + ",");
         last_10th_pft_val = elem.profitability;
-        numPrinted++;
+        num_printed++;
       }
-      currentIndex--;
+
+      current_index--;
     }
 
     has_top_10_changed = false;
 
-    while(numPrinted < 10) {
+    while(num_printed < 10) {
       last_10th_pft_val = 0.0f;
       print_stream.print("NULL,");
-      numPrinted++;
+      num_printed++;
     }
   }
 
   public boolean isSameMaxTenKey() {
     return !has_top_10_changed;
   }
-  
+
   /*
    * This function is used only for the unit tests
    */
   public Vector<PairQ2> getMaxTenCopy() {
-  Vector<PairQ2> ret_val = new Vector<PairQ2>(10);
-  
-    int numPrinted = 0;
-    int currentIndex = Constants.NUM_EMPTY_BUCKETS-1;
-    while(numPrinted<10 && currentIndex>=0) {
-      Iterator<SetElem> i = sorted_ptb_list.get(currentIndex).iterator();
-      while(i.hasNext() && numPrinted<10) {
+    Vector<PairQ2> ret_val = new Vector<PairQ2>(10);
+
+    int num_printed = 0;
+    int current_index = Constants.NUM_EMPTY_BUCKETS-1;
+    while(num_printed<10 && current_index>=0) {
+      Iterator<SetElem> i = sorted_ptb_list.get(current_index).iterator();
+      while(i.hasNext() && num_printed<10) {
         SetElem s = i.next();
         SetElem elem = area_elem_map.get(s.area);
         if(elem.num_empty_taxis == 0) {
           continue;
         }
-        ret_val.add(new PairQ2(s.area,elem.profitability,elem.num_empty_taxis));
-        numPrinted++;
+
+        ret_val.add(new PairQ2(s.area,elem.profitability,
+            elem.num_empty_taxis));
+        num_printed++;
       }
-      currentIndex--;
+
+      current_index--;
     }
 
-    while(numPrinted < 10) {
+    while(num_printed < 10) {
       ret_val.add(null);
-      numPrinted++;
+      num_printed++;
     }
-  return ret_val;
+
+    return ret_val;
   }
-  
 }

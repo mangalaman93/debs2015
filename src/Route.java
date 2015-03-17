@@ -17,7 +17,6 @@ public class Route implements Comparable<Route>{
   }
 
   private void computeHash() {
-    // TODO: not sure this is better?
     Integer temp = (((((this.fromArea.x << 8) + this.fromArea.y) << 8)
         + this.toArea.x) << 8) + this.fromArea.y;
     this.hash = temp.hashCode();
@@ -46,32 +45,24 @@ public class Route implements Comparable<Route>{
   public int compareTo(Route anotherRoute) {
     if(anotherRoute.fromArea.x < this.fromArea.x){
       return 1;
-    }
-    else if(anotherRoute.fromArea.x > this.fromArea.x){
+    } else if(anotherRoute.fromArea.x > this.fromArea.x){
       return -1;
-    }
-    else{
+    } else{
       if(anotherRoute.fromArea.y < this.fromArea.y){
         return 1;
-      }
-      else if(anotherRoute.fromArea.y > this.fromArea.y){
+      } else if(anotherRoute.fromArea.y > this.fromArea.y){
         return -1;
-      }
-      else{
+      } else{
         if(anotherRoute.toArea.x < this.toArea.x){
           return 1;
-        }
-        else if(anotherRoute.toArea.x > this.toArea.x){
+        } else if(anotherRoute.toArea.x > this.toArea.x){
           return -1;
-        }
-        else{
+        } else{
           if(anotherRoute.toArea.y < this.toArea.y){
             return 1;
-          }
-          else if(anotherRoute.toArea.y > this.toArea.y){
+          } else if(anotherRoute.toArea.y > this.toArea.y){
             return -1;
-          }
-          else{
+          } else{
             return 0;
           }
         }

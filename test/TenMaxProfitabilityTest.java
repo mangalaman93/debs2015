@@ -3,36 +3,8 @@ import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.Vector;
-
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-/* PRINT FUNCTION
- for(int i=0; i<10; i++) {
-    System.out.print(tmp.getMaxTen().get(i).key.x);
-    System.out.print(",");
-    System.out.print(tmp.getMaxTen().get(i).key.y);
-    System.out.print("->");
-    System.out.print(tmp.getMaxTen().get(i).val.num_empty_taxis);
-    System.out.print(",");
-    System.out.print(tmp.getMaxTen().get(i).val.profitability);
-    System.out.print(",");
-    System.out.print(tmp.getMaxTen().get(i).val.ts);
-    System.out.print("\t");
-
-    System.out.print(temp.get(i).key.x);
-    System.out.print(",");
-    System.out.print(temp.get(i).key.y);
-    System.out.print("->");
-    System.out.print(temp.get(i).val.num_empty_taxis);
-    System.out.print(",");
-    System.out.print(temp.get(i).val.profitability);
-    System.out.print(",");
-    System.out.print(temp.get(i).val.ts);
-    System.out.print("\n");
-  }
- */
 
 class UniqueTimestamp {
   static Timestamp last_ts = null;
@@ -46,7 +18,7 @@ class UniqueTimestamp {
     Timestamp ts;
     do {
       ts = new Timestamp((new java.util.Date()).getTime());
-    }  while(ts.compareTo(last_ts) <= 0);
+    } while(ts.compareTo(last_ts) <= 0);
 
     last_ts = ts;
     return ts;
@@ -81,48 +53,45 @@ public class TenMaxProfitabilityTest {
     }
   }
 
-  @After
-  public void tearDown() throws Exception {
-  }
-
   @Test
   public void testTenMaxProfitability1() {
-
-  Vector<PairQ2> temp = new Vector<PairQ2>();
+    Vector<PairQ2> temp = new Vector<PairQ2>();
     for(int i=0; i<10; i++) {
       temp.add(null);
     }
-    
+
     assertTrue(tmp.getMaxTenCopy().equals(temp));
   }
 
   @Test
   public void testTenMaxProfitability2() {
-
     Vector<PairQ2> temp = new Vector<PairQ2>();
-    Vector<PairQ2> t = new Vector<PairQ2>();
     for(int i=0; i<10; i++) {
       tmp.enterProfitSlidingWindow(a[i], i, (float)(0.45+i*7.6), ts[i].getTime());
     }
+
     for(int i=0; i<10; i++) {
       tmp.enterTaxiSlidingWindow(medallion_hack_license[i], a[i], i);
     }
-    
+
     for(int i=9; i>=0; i--) {
-        temp.add(new PairQ2(a[i],(float)(0.45+i*7.6),1));
+      temp.add(new PairQ2(a[i],(float)(0.45+i*7.6),1));
     }
+
     assertTrue(tmp.getMaxTenCopy().equals(temp));
   }
 
   @Test
   public void testTenMaxProfitability3() {
-  Vector<PairQ2> temp = new Vector<PairQ2>();
+    Vector<PairQ2> temp = new Vector<PairQ2>();
     for(int i=0; i<10; i++) {
       tmp.enterProfitSlidingWindow(a[i], i, 100.45f, ts[9-i].getTime());
     }
+
     for(int i=0; i<10; i++) {
-        temp.add(null);
-      }
+      temp.add(null);
+    }
+
     assertTrue(tmp.getMaxTenCopy().equals(temp));
   }
 
@@ -138,8 +107,9 @@ public class TenMaxProfitabilityTest {
     }
 
     for(int i=0; i<10; i++) {
-        temp.add(null);
-      }
+      temp.add(null);
+    }
+
     assertTrue(tmp.getMaxTenCopy().equals(temp));
   }
 
@@ -153,15 +123,15 @@ public class TenMaxProfitabilityTest {
     for(int i=10; i<20; i++) {
       tmp.enterProfitSlidingWindow(a[i-10], i, 100.465f, ts[29-i].getTime());
     }
+
     for(int i=0; i<10; i++) {
       tmp.enterTaxiSlidingWindow(medallion_hack_license[i], a[i], i+20);
-  }
-    
-    
+    }
+
     for(int i=9; i>=0; i--) {
       temp.add(new PairQ2(a[i],(100.45f+100.465f)/2,1));
     }
-    
+
     assertTrue(tmp.getMaxTenCopy().equals(temp));
   }
 
@@ -181,6 +151,7 @@ public class TenMaxProfitabilityTest {
         taxi_count++;
         count++;
       }
+
       temp.add(new PairQ2(a[i],100.45f/(i+1), i+1));
     }
 
@@ -191,7 +162,6 @@ public class TenMaxProfitabilityTest {
   public void testTenMaxProfitability7() {
     int count = 0;
     Vector<PairQ2> temp = new Vector<PairQ2>();
-    Vector<PairQ2> t = new Vector<PairQ2>();
 
     for(int i=0; i<10; i++) {
       tmp.enterProfitSlidingWindow(a[i], i, 100.45f, ts[count].getTime());
@@ -203,11 +173,12 @@ public class TenMaxProfitabilityTest {
         tmp.enterTaxiSlidingWindow(medallion_hack_license[i], a[i], j);
         count++;
       }
+
       temp.add(new PairQ2(a[i],100.45f, 1));
     }
+
     Collections.reverse(temp);
-    
-    
     assertTrue(tmp.getMaxTenCopy().equals(temp));
   }
 }
+
