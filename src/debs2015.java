@@ -381,17 +381,14 @@ class Q1Process implements Runnable {
     try {
       Q1Elem lastevent, newevent=queue.take();
       long lastms = 0;
-      boolean ten_max_changed = false;
 
       while(newevent.time_in != 0) {
-        ten_max_changed = false;
         in_count++;
         if(in_count == 100000) {
           System.out.println("Query 1 throughput: "+(100000/(System.currentTimeMillis()-last_time)));
           in_count = 0;
           last_time = System.currentTimeMillis();
         }
-        maxfs.storeMaxTenCopy();
 
         // Check if events are leaving the sliding window and process them
         long currentms = newevent.dropoff_datetime.getTime();
@@ -401,11 +398,7 @@ class Q1Process implements Runnable {
 
           // Remove the elements from the start of the window
           while((currentms-lastms) >= Constants.WINDOW30_SIZE) {
-            if(!ten_max_changed) {
-              ten_max_changed = maxfs.decreaseFrequency(lastevent.route, lastevent.dropoff_datetime.getTime());
-            } else {
-              maxfs.decreaseFrequency(lastevent.route, lastevent.dropoff_datetime.getTime());
-            }
+            maxfs.decreaseFrequency(lastevent.route, lastevent.dropoff_datetime.getTime());
             sliding_window.removeFirst();
 
             if(sliding_window.size() != 0) {
@@ -418,24 +411,17 @@ class Q1Process implements Runnable {
         }
 
         // Insert the current element in the sliding window
-        if(!ten_max_changed){
-          ten_max_changed = maxfs.increaseFrequency(newevent.route, newevent.dropoff_datetime.getTime());
-        }
-        else{
-          maxfs.increaseFrequency(newevent.route, newevent.dropoff_datetime.getTime());
-        }
+        maxfs.increaseFrequency(newevent.route, newevent.dropoff_datetime.getTime());
         sliding_window.addLast(newevent);
 
-        if(ten_max_changed){
-          if(!maxfs.isSameMaxTenKey()) {
-            print_stream.print(newevent.pickup_datetime.toString());
-            print_stream.print(",");
-            print_stream.print(newevent.dropoff_datetime.toString());
-            print_stream.print(",");
-            maxfs.printMaxTen(print_stream);
-            print_stream.print(System.currentTimeMillis() - newevent.time_in);
-            print_stream.print("\n");
-          }
+        if(!maxfs.isSameMaxTenKey()) {
+          print_stream.print(newevent.pickup_datetime.toString());
+          print_stream.print(",");
+          print_stream.print(newevent.dropoff_datetime.toString());
+          print_stream.print(",");
+          maxfs.printMaxTen(print_stream);
+          print_stream.print(System.currentTimeMillis() - newevent.time_in);
+          print_stream.print("\n");
         }
 
         // Get the next event to process from the queue
