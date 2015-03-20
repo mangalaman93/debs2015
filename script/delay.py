@@ -23,4 +23,8 @@ with open(FILE2, 'r') as q2fd:
     q2delay = q2delay + int(row[-1])
 
 avg_delay = (q1delay+q2delay)/(q1rows+q2rows)
+avg_q1_delay = q1delay/q1rows
+avg_q2_delay = q2delay/q2rows
 print "average delay = {}".format(avg_delay)
+print "query 1 delay = {}".format(avg_q1_delay)
+print "query 2 delay = {}".format(avg_q2_delay)
