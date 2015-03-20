@@ -376,7 +376,8 @@ public class TenMaxProfitability {
     }
   }
 
-  public void printMaxTen(PrintStream print_stream) {
+  public String printMaxTen() {
+    String print_string = "";
     int num_printed = 0;
     int current_index = Constants.NUM_EMPTY_BUCKETS-1;
     last_10th_pft_val = 0.0f;
@@ -389,9 +390,7 @@ public class TenMaxProfitability {
           continue;
         }
 
-        print_stream.print((s.area.x+1) + "." + (s.area.y+1) + "," +
-            elem.num_empty_taxis + "," +  elem.mprofit.getMedian() + "," +
-            elem.profitability + ",");
+        print_string = print_string + String.valueOf(s.area.x+1) + "." + String.valueOf(s.area.y+1) + "," + String.valueOf(elem.num_empty_taxis) + "," +  String.valueOf(elem.mprofit.getMedian()) + "," + String.valueOf(elem.profitability) + ",";
         last_10th_pft_val = elem.profitability;
         num_printed++;
       }
@@ -403,9 +402,11 @@ public class TenMaxProfitability {
 
     while(num_printed < 10) {
       last_10th_pft_val = 0.0f;
-      print_stream.print("NULL,");
+      print_string = print_string + "NULL,";
       num_printed++;
     }
+
+    return print_string;
   }
 
   public boolean isSameMaxTenKey() {

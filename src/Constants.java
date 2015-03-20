@@ -8,6 +8,10 @@ public class Constants {
   public static final int QUEUE1_CAPACITY = 10000;
   public static final int QUEUE2_CAPACITY = 10000;
 
+  // capacity of queue between printing process and Q* processes
+  public static final int QUEUE1_OUTPUT_CAPACITY = 10000;
+  public static final int QUEUE2_OUTPUT_CAPACITY = 10000;
+
   // Q1 constants
   public static final int FREQ_ARRAY_SIZE = 500;
   // should be some power of 2

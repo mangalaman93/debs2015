@@ -75,48 +75,40 @@ public class TenMaxFrequencyTest {
   @Test
   public void testGetMaxTen1() throws Exception{
     tmf.increaseFrequency(r[0], ts[0]);
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream ps = new PrintStream(baos);
-    tmf.printMaxTen(ps);
+    String s = tmf.printMaxTen();
     assertTrue(!tmf.isSameMaxTenKey());
-    assertEquals("4.3,2.2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,", baos.toString());
+    assertEquals("4.3,2.2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,", s);
   }
 
   @Test
-  public void tesGetMaxTen2() {
+  public void testGetMaxTen2() {
     for(int i=0; i<6; i++){
       tmf.increaseFrequency(r[i], ts[i] + i*1000);
     }
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream ps = new PrintStream(baos);
-    tmf.printMaxTen(ps);
+    String s = tmf.printMaxTen();
     assertTrue(!tmf.isSameMaxTenKey());
-    assertEquals("4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,1.2,2.1,4.3,2.2,NULL,NULL,NULL,NULL,", baos.toString());
+    assertEquals("4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,1.2,2.1,4.3,2.2,NULL,NULL,NULL,NULL,", s);
   }
 
   @Test
-  public void tesGetMaxTen3() {
+  public void testGetMaxTen3() {
     for(int i=0; i<11; i++){
       tmf.increaseFrequency(r[i], ts[i] + i*1000);
     }
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream ps = new PrintStream(baos);
-    tmf.printMaxTen(ps);
+    String s = tmf.printMaxTen();
     assertTrue(!tmf.isSameMaxTenKey());
-    assertEquals("1.2,2.2,2.1,5.6,3.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,1.2,2.1,", baos.toString());
+    assertEquals("1.2,2.2,2.1,5.6,3.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,1.2,2.1,", s);
   }
 
   @Test
-  public void tesGetMaxTen4() {
+  public void testGetMaxTen4() {
     for(int i=0; i<8; i++){
       tmf.increaseFrequency(r[i], ts[i] + i*1000);
     }
     tmf.increaseFrequency(r[0], ts[8] + 8*1000);
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream ps = new PrintStream(baos);
-    tmf.printMaxTen(ps);
+    String s = tmf.printMaxTen();
     assertTrue(!tmf.isSameMaxTenKey());
-    assertEquals("4.3,2.2,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,1.2,2.1,NULL,NULL,", baos.toString());
+    assertEquals("4.3,2.2,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,1.2,2.1,NULL,NULL,", s);
   }
 
   @Test
@@ -125,11 +117,9 @@ public class TenMaxFrequencyTest {
       tmf.increaseFrequency(r[i], ts[i] + i*1000);
     }
     tmf.increaseFrequency(r[0], ts[11] + 11*1000);
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream ps = new PrintStream(baos);
-    tmf.printMaxTen(ps);
+    String s = tmf.printMaxTen();
     assertTrue(!tmf.isSameMaxTenKey());
-    assertEquals("4.3,2.2,1.2,2.2,2.1,5.6,3.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,", baos.toString());
+    assertEquals("4.3,2.2,1.2,2.2,2.1,5.6,3.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,", s);
   }
 
   @Test
@@ -138,11 +128,9 @@ public class TenMaxFrequencyTest {
       tmf.increaseFrequency(r[i], ts[i] + i*1000);
     }
     tmf.decreaseFrequency(r[0], ts[8] + 8*1000);
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream ps = new PrintStream(baos);
-    tmf.printMaxTen(ps);
+    String s = tmf.printMaxTen();
     assertTrue(!tmf.isSameMaxTenKey());
-    assertEquals("2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,1.2,2.1,NULL,NULL,NULL,", baos.toString());
+    assertEquals("2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,1.2,2.1,NULL,NULL,NULL,", s);
   }
 
   @Test
@@ -155,10 +143,8 @@ public class TenMaxFrequencyTest {
     tmf.storeMaxTenCopy();
     tmf.decreaseFrequency(r[0], ts[11] + 11*1000);
     assertTrue(tmf.isSameMaxTenKey());
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream ps = new PrintStream(baos);
-    tmf.printMaxTen(ps);
-    assertEquals("1.2,2.2,2.1,5.6,3.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,1.2,2.1,", baos.toString());
+    String s = tmf.printMaxTen();
+    assertEquals("1.2,2.2,2.1,5.6,3.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,1.2,2.1,", s);
   }
 
   @Test
@@ -167,12 +153,10 @@ public class TenMaxFrequencyTest {
       tmf.increaseFrequency(r[i], ts[i] + i*1000);
     }
     tmf.increaseFrequency(r[1], ts[11] + 11*1000);
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream ps = new PrintStream(baos);
-    tmf.printMaxTen(ps);
+    String s = tmf.printMaxTen();
 
     assertTrue(!tmf.isSameMaxTenKey());
-    assertEquals("1.2,2.1,1.2,2.2,2.1,5.6,3.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,", baos.toString());
+    assertEquals("1.2,2.1,1.2,2.2,2.1,5.6,3.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,3.1,", s);
   }
 
   @Test
@@ -181,12 +165,10 @@ public class TenMaxFrequencyTest {
       tmf.increaseFrequency(r[i], ts[i] + i*1000);
     }
     tmf.increaseFrequency(r[2], ts[11] + 11*1000);
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream ps = new PrintStream(baos);
-    tmf.printMaxTen(ps);
+    String s = tmf.printMaxTen();
 
     assertTrue(!tmf.isSameMaxTenKey());
-    assertEquals("1.2,3.1,1.2,2.2,2.1,5.6,3.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,2.1,", baos.toString());
+    assertEquals("1.2,3.1,1.2,2.2,2.1,5.6,3.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,1.2,2.1,", s);
   }
 
   @Test
@@ -195,11 +177,9 @@ public class TenMaxFrequencyTest {
       tmf.increaseFrequency(r[i], ts[i] + i*1000);
     }
     tmf.decreaseFrequency(r[8], ts[14] + 14*1000);
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream ps = new PrintStream(baos);
-    tmf.printMaxTen(ps);
+    String s = tmf.printMaxTen();
 
     assertTrue(!tmf.isSameMaxTenKey());
-    assertEquals("2.1,1.1,3.3,3.1,4.3,5.6,1.2,2.2,2.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,", baos.toString());
+    assertEquals("2.1,1.1,3.3,3.1,4.3,5.6,1.2,2.2,2.1,5.6,2.1,4.4,5.6,3.1,4.4,2.2,2.1,3.3,1.1,4.3,", s);
   }
 }

@@ -126,7 +126,8 @@ public class TenMaxFrequency {
     }
   }
 
-  public void printMaxTen(PrintStream print_stream) {
+  public String printMaxTen() {
+    String print_string = "";
     int temp_frequency = max_frequency;
     int temp_route_count = route_count.get(temp_frequency);
     int ts = (int)(long)(latest_ts.get(temp_frequency)) & Constants.MAX_NUM_TS_MINUS_1;
@@ -153,7 +154,7 @@ public class TenMaxFrequency {
           iter = freq_array.get(temp_frequency).get(ts).keySet().iterator();
           while(iter.hasNext()) {
             PairQ1 p = freq_array.get(temp_frequency).get(ts).get(iter.next());
-            print_stream.print(Integer.toString(p.route.fromArea.x + 1) + "." + Integer.toString(p.route.fromArea.y + 1) + "," + Integer.toString(p.route.toArea.x + 1) + "." + Integer.toString(p.route.toArea.y + 1) + ",");
+            print_string = print_string + Integer.toString(p.route.fromArea.x + 1) + "." + Integer.toString(p.route.fromArea.y + 1) + "," + Integer.toString(p.route.toArea.x + 1) + "." + Integer.toString(p.route.toArea.y + 1) + ",";
             temp_route_count = temp_route_count - 1;
             count = count + 1;
             if(count >= 10) {
@@ -172,10 +173,10 @@ public class TenMaxFrequency {
     tenth_frequency = temp_frequency;
 
     while(count < 10) {
-      print_stream.print("NULL");
-      print_stream.print(",");
+      print_string = print_string + "NULL" + ",";
       count = count + 1;
     }
+    return print_string;
   }
 
   public void storeMaxTenCopy() {

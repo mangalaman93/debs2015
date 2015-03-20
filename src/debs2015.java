@@ -362,15 +362,15 @@ class IoProcessQ2 implements Runnable {
  */
 class Q1Process implements Runnable {
   private BlockingQueue<Q1Elem> queue;
+  private BlockingQueue<String> output_queue;
   private TenMaxFrequency maxfs;
   private LinkedList<Q1Elem> sliding_window;
-  private PrintStream print_stream;
 
-  public Q1Process(BlockingQueue<Q1Elem> queue, OutputStream print_stream) {
+  public Q1Process(BlockingQueue<Q1Elem> queue, BlockingQueue<String> output_queue) {
     this.queue = queue;
+    this.output_queue = output_queue;
     this.maxfs = new TenMaxFrequency();
     this.sliding_window = new LinkedList<Q1Elem>();
-    this.print_stream = new PrintStream(print_stream);
   }
 
   @Override
@@ -428,13 +428,10 @@ class Q1Process implements Runnable {
 
         if(ten_max_changed){
           if(!maxfs.isSameMaxTenKey()) {
-            print_stream.print(newevent.pickup_datetime.toString());
-            print_stream.print(",");
-            print_stream.print(newevent.dropoff_datetime.toString());
-            print_stream.print(",");
-            maxfs.printMaxTen(print_stream);
-            print_stream.print(System.currentTimeMillis() - newevent.time_in);
-            print_stream.print("\n");
+            String s = newevent.pickup_datetime.toString() + "," + newevent.dropoff_datetime.toString() + ",";
+            s = s + maxfs.printMaxTen();
+            s = s + String.valueOf(System.currentTimeMillis() - newevent.time_in) + "\n";
+            output_queue.put(s);
           }
         }
 
@@ -443,6 +440,14 @@ class Q1Process implements Runnable {
       }
     } catch(InterruptedException e) {
       System.out.println("Error in Q1Process!");
+      System.out.println(e.getMessage());
+      e.printStackTrace();
+    }
+    String s = "\0";
+    try{
+      output_queue.put(s);
+    }
+    catch (Exception e) {
       System.out.println(e.getMessage());
       e.printStackTrace();
     }
@@ -458,17 +463,18 @@ class Q1Process implements Runnable {
 
 class Q2Process implements Runnable {
   private BlockingQueue<Q2Elem> queue;
+  private BlockingQueue<String> output_queue;
   private TenMaxProfitability maxpft;
   private LinkedList<Q2Elem> swindow30;
   private LinkedList<Q2Elem> swindow15;
   private PrintStream print_stream;
 
-  public Q2Process(BlockingQueue<Q2Elem> queue2, OutputStream print_stream) {
+  public Q2Process(BlockingQueue<Q2Elem> queue2, BlockingQueue<String> output_queue) {
     this.queue = queue2;
+    this.output_queue = output_queue;
     this.maxpft = new TenMaxProfitability();
     this.swindow30 = new LinkedList<Q2Elem>();
     this.swindow15 = new LinkedList<Q2Elem>();
-    this.print_stream = new PrintStream(print_stream);
   }
 
   @Override
@@ -536,13 +542,10 @@ class Q2Process implements Runnable {
         swindow30.addLast(newevent);
 
         if(!maxpft.isSameMaxTenKey()) {
-          print_stream.print(newevent.pickup_datetime.toString());
-          print_stream.print(",");
-          print_stream.print(newevent.dropoff_datetime.toString());
-          print_stream.print(",");
-          maxpft.printMaxTen(print_stream);
-          print_stream.print(System.currentTimeMillis() - newevent.time_in);
-          print_stream.print("\n");
+          String s = newevent.pickup_datetime.toString() + "," + newevent.dropoff_datetime.toString() + ",";
+          s = s + maxpft.printMaxTen();
+          s = s + String.valueOf(System.currentTimeMillis() - newevent.time_in) + "\n";
+          output_queue.put(s);
         }
 
         //Get the next event to process from the queue
@@ -553,12 +556,52 @@ class Q2Process implements Runnable {
       System.out.println(e.getMessage());
       e.printStackTrace();
     }
+    String s = "\0";
+    try{
+      output_queue.put(s);
+    }
+    catch (Exception e) {
+      System.out.println(e.getMessage());
+      e.printStackTrace();
+    }
+  }
+}
+
+/* PrintProcess: Task to perform
+ *  *dequeue string from queue (use take)
+ *  *print string
+ */
+class PrintProcess implements Runnable {
+  private BlockingQueue<String> queue;
+  private PrintStream print_stream;
+
+  public PrintProcess(BlockingQueue<String> queue, OutputStream print_stream) {
+    this.queue = queue;
+    this.print_stream = new PrintStream(print_stream);
+  }
+
+  @Override
+  public void run() {
+    try {
+      String s = queue.take();
+
+      while(!s.equals("\0")) {
+        print_stream.print(s);
+        s = queue.take();
+      }
+    } catch(Exception e) {
+      System.out.println("Error in PrintProcess!");
+      System.out.println(e.getMessage());
+      e.printStackTrace();
+    }
   }
 }
 
 public class debs2015 {
   private static BlockingQueue<Q1Elem> queue_for_Q1;
   private static BlockingQueue<Q2Elem> queue_for_Q2;
+  private static BlockingQueue<String> output_queue_for_Q1;
+  private static BlockingQueue<String> output_queue_for_Q2;
 
   public static void main(String[] args) throws FileNotFoundException {
     String test_file;
@@ -593,8 +636,14 @@ public class debs2015 {
     }
 
     // Initializing queues
-    if(running_q1) queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, false);
-    if(running_q2) queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(Constants.QUEUE2_CAPACITY, false);
+    if(running_q1) {
+      queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, false);
+      output_queue_for_Q1 = new ArrayBlockingQueue<String>(Constants.QUEUE1_OUTPUT_CAPACITY,false);
+    }
+    if(running_q2) {
+      queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(Constants.QUEUE2_CAPACITY, false);
+      output_queue_for_Q2 = new ArrayBlockingQueue<String>(Constants.QUEUE2_OUTPUT_CAPACITY,false);
+    }
 
     // start threads
     if(two_io_process || (!(running_q1 && running_q2))) {
@@ -608,11 +657,19 @@ public class debs2015 {
     }
 
     PrintStream q1out = new PrintStream(new FileOutputStream(Constants.Q1_FILE, false));
-    Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, q1out));
-    if(running_q1) threadForQ1Process.start();
+    Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, output_queue_for_Q1));
+    Thread threadForQ1Print = new Thread(new PrintProcess(output_queue_for_Q1, q1out));
+    if(running_q1) {
+      threadForQ1Process.start();
+      threadForQ1Print.start();
+    }
 
     PrintStream q2out = new PrintStream(new FileOutputStream(Constants.Q2_FILE, false));
-    Thread threadForQ2Process = new Thread(new Q2Process(queue_for_Q2, q2out));
-    if(running_q2) threadForQ2Process.start();
+    Thread threadForQ2Process = new Thread(new Q2Process(queue_for_Q2, output_queue_for_Q2));
+    Thread threadForQ2Print = new Thread(new PrintProcess(output_queue_for_Q2, q2out));
+    if(running_q2) {
+      threadForQ2Process.start();
+      threadForQ2Print.start();
+    }
   }
 }
