@@ -153,15 +153,7 @@ public class TenMaxFrequency {
           iter = freq_array.get(temp_frequency).get(ts).keySet().iterator();
           while(iter.hasNext()) {
             PairQ1 p = freq_array.get(temp_frequency).get(ts).get(iter.next());
-            print_stream.print(p.route.fromArea.x + 1);
-            print_stream.print(".");
-            print_stream.print(p.route.fromArea.y + 1);
-            print_stream.print(",");
-            print_stream.print(p.route.toArea.x + 1);
-            print_stream.print(".");
-            print_stream.print(p.route.toArea.y + 1);
-            print_stream.print(",");
-
+            print_stream.print(Integer.toString(p.route.fromArea.x + 1) + "." + Integer.toString(p.route.fromArea.y + 1) + "," + Integer.toString(p.route.toArea.x + 1) + "." + Integer.toString(p.route.toArea.y + 1) + ",");
             temp_route_count = temp_route_count - 1;
             count = count + 1;
             if(count >= 10) {
