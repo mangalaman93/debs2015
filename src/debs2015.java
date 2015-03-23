@@ -2,14 +2,13 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
-import java.util.Date;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
+import java.nio.file.*;
+import java.nio.charset.StandardCharsets;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.text.SimpleDateFormat;
 import java.sql.Timestamp;
 
 class Q1Elem {
@@ -57,8 +56,8 @@ class IoProcess implements Runnable {
   @Override
   public void run() {
     try {
-      BufferedReader inputstream = new BufferedReader(new FileReader(inputfile));
-      SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      BufferedReader inputstream = Files.newBufferedReader(FileSystems.getDefault().getPath(inputfile),StandardCharsets.UTF_8);
+      // SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
       float pickup_longitude, pickup_latitude, dropoff_longitude, dropoff_latitude;
       Area from, to;
       String line;
@@ -73,14 +72,16 @@ class IoProcess implements Runnable {
           q2event.medallion_hack_license = st.nextToken()+st.nextToken();
 
           // pickup datetime
-          Date pdate = datefmt.parse(st.nextToken());
-          q1event.pickup_datetime = new java.sql.Timestamp(pdate.getTime());
-          q2event.pickup_datetime = new java.sql.Timestamp(pdate.getTime());
+          long pdate = Constants.parseDate(st.nextToken());
+          // Date pdate = datefmt.parse(st.nextToken());
+          q1event.pickup_datetime = new java.sql.Timestamp(pdate);
+          q2event.pickup_datetime = new java.sql.Timestamp(pdate);
 
           // dropoff datetime
-          pdate = datefmt.parse(st.nextToken());
-          q1event.dropoff_datetime = new java.sql.Timestamp(pdate.getTime());
-          q2event.dropoff_datetime = new java.sql.Timestamp(pdate.getTime());
+          pdate = Constants.parseDate(st.nextToken());
+          // pdate = datefmt.parse(st.nextToken());
+          q1event.dropoff_datetime = new java.sql.Timestamp(pdate);
+          q2event.dropoff_datetime = new java.sql.Timestamp(pdate);
 
           // trip time in secs
           st.nextToken();
@@ -194,8 +195,9 @@ class IoProcessQ1 implements Runnable {
   @Override
   public void run() {
     try {
-      BufferedReader inputstream = new BufferedReader(new FileReader(inputfile));
-      SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      BufferedReader inputstream = Files.newBufferedReader(FileSystems.getDefault().getPath(inputfile),StandardCharsets.UTF_8);
+      // BufferedReader inputstream = new BufferedReader(new FileReader(inputfile));
+      // SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
       Area from, to;
       String line;
 
@@ -210,9 +212,11 @@ class IoProcessQ1 implements Runnable {
           st.nextToken();
 
           // pickup datetime
-          q1event.pickup_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
+          q1event.pickup_datetime = new java.sql.Timestamp(Constants.parseDate(st.nextToken()));
+          // q1event.pickup_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
           // dropoff datetime
-          q1event.dropoff_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
+          q1event.dropoff_datetime = new java.sql.Timestamp(Constants.parseDate(st.nextToken()));
+          //q1event.dropoff_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
 
           // trip time in secs
           st.nextToken();
@@ -279,8 +283,8 @@ class IoProcessQ2 implements Runnable {
   @Override
   public void run() {
     try {
-      BufferedReader inputstream = new BufferedReader(new FileReader(inputfile));
-      SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      BufferedReader inputstream = Files.newBufferedReader(FileSystems.getDefault().getPath(inputfile),StandardCharsets.UTF_8);
+      // SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
       String line;
 
       while((line = inputstream.readLine()) != null) {
@@ -292,9 +296,11 @@ class IoProcessQ2 implements Runnable {
           q2event.medallion_hack_license = st.nextToken()+st.nextToken();
 
           // pickup datetime
-          q2event.pickup_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
+          q2event.pickup_datetime = new java.sql.Timestamp(Constants.parseDate(st.nextToken()));
+          // q2event.pickup_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
           // dropoff datetime
-          q2event.dropoff_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
+          q2event.dropoff_datetime = new java.sql.Timestamp(Constants.parseDate(st.nextToken()));
+          // q2event.dropoff_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
 
           // trip time in secs
           st.nextToken();
@@ -467,7 +473,7 @@ class Q2Process implements Runnable {
   private TenMaxProfitability maxpft;
   private LinkedList<Q2Elem> swindow30;
   private LinkedList<Q2Elem> swindow15;
-  private PrintStream print_stream;
+  // private PrintStream print_stream;
 
   public Q2Process(BlockingQueue<Q2Elem> queue2, BlockingQueue<String> output_queue) {
     this.queue = queue2;
