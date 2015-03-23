@@ -51,7 +51,7 @@ public class Source implements StatelessOperator {
 		//time control stuff
 		int c = 0;
 		long init = System.currentTimeMillis();
-		
+		System.out.println("SRC + START " + System.currentTimeMillis());
 		while(true){
 			c++;
 
@@ -70,7 +70,7 @@ public class Source implements StatelessOperator {
 					} catch(InterruptedException ex) {
 					    Thread.currentThread().interrupt();
 					}
-					System.out.println("SRC + DONE");
+					System.out.println("SRC + DONE " + System.currentTimeMillis());
 					return;
 				}
 			} 
@@ -227,7 +227,7 @@ public class Source implements StatelessOperator {
 		else if(opId == 13){
 			filePath = "file:///houses15-19.csv";
 		}
-		filePath = "file:///Users/arunmathew/Documents/debs2015/out/sorted_data.csv";
+		filePath = "file:///mnt/data/sorted_data.csv";
 		URL url;
 		try {
 			url = new URL(filePath);

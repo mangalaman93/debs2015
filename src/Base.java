@@ -22,8 +22,8 @@ public class Base implements QueryComposer {
 		srcFields.add("dropoff_longitude");
 		srcFields.add("dropoff_latitude");
 		
-//		Connectable src = QueryBuilder.newStatelessSource(new Source(), 0, srcFields);
-//		Connectable q1 = QueryBuilder.newStatelessOperator(new Q1Process(), 2, srcFields);
+		Connectable src = QueryBuilder.newStatelessSource(new Source(), 0, srcFields);
+		Connectable q1 = QueryBuilder.newStatelessOperator(new Q1Process(), 2, srcFields);
 
 		List<String> src2Fields = new ArrayList<String>();
 		src2Fields.add("medallion");
@@ -49,8 +49,8 @@ public class Base implements QueryComposer {
 		Connectable snk = QueryBuilder.newStatelessSink(new Sink(), 5, snkFields);
 
 		//Connect operators
-//		src.connectTo(q1, true, 0);
-//		q1.connectTo(snk, true, 0);
+		src.connectTo(q1, true, 0);
+		q1.connectTo(snk, true, 0);
 		src2.connectTo(q2, true, 0);
 		q2.connectTo(snk, true, 0);
 		
