@@ -611,7 +611,6 @@ public class debs2015 {
 
   public static void main(String[] args) throws FileNotFoundException {
     String test_file;
-    boolean two_io_process = true;
     boolean running_q1 = true;
     boolean running_q2 = true;
     int shift = 0;
@@ -627,11 +626,11 @@ public class debs2015 {
       }
     }
 
-    if(args.length > (0+shift)) {
-      if(args[0+shift].equals("1")) {
-        two_io_process = false;
-      }
-    }
+    // if(args.length > (0+shift)) {
+    //   if(args[0+shift].equals("1")) {
+    //     Constants.TWO_IO_PROCESS = false;
+    //   }
+    // }
 
     if(args.length > (1+shift)) {
       if(args[1+shift].equals("1")) {
@@ -652,7 +651,7 @@ public class debs2015 {
     }
 
     // start threads
-    if(two_io_process || (!(running_q1 && running_q2))) {
+    if(Constants.TWO_IO_PROCESS || (!(running_q1 && running_q2))) {
       Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, test_file));
       Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, test_file));
       if(running_q1) threadForIoProcessQ1.start();

@@ -4,6 +4,9 @@ public class Constants {
   public static final int HM_INIT_SIZE = 100;
   public static final float HM_LOAD_FACTOR = 0.75f;
 
+  // two IO processes
+  public static final boolean TWO_IO_PROCESS = true;
+
   // capacity of queue between IO process and Q* processes
   public static final int QUEUE1_CAPACITY = 10000;
   public static final int QUEUE2_CAPACITY = 10000;
