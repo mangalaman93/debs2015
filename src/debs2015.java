@@ -437,6 +437,7 @@ class Q1Process implements Runnable {
             String s = newevent.pickup_datetime.toString() + "," + newevent.dropoff_datetime.toString() + ",";
             s = s + maxfs.printMaxTen();
             s = s + String.valueOf(System.currentTimeMillis() - newevent.time_in) + "\n";
+            System.err.println("Q1," + String.valueOf(System.currentTimeMillis() - newevent.time_in));
             output_queue.put(s);
           }
         }
@@ -551,6 +552,7 @@ class Q2Process implements Runnable {
           String s = newevent.pickup_datetime.toString() + "," + newevent.dropoff_datetime.toString() + ",";
           s = s + maxpft.printMaxTen();
           s = s + String.valueOf(System.currentTimeMillis() - newevent.time_in) + "\n";
+          System.err.println("Q2," + String.valueOf(System.currentTimeMillis() - newevent.time_in));
           output_queue.put(s);
         }
 
@@ -592,7 +594,7 @@ class PrintProcess implements Runnable {
       String s = queue.take();
 
       while(!s.equals("\0")) {
-        print_stream.print(s);
+        System.out.print(s);
         s = queue.take();
       }
     } catch(Exception e) {
