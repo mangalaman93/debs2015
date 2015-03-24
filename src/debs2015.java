@@ -436,8 +436,9 @@ class Q1Process implements Runnable {
           if(!maxfs.isSameMaxTenKey()) {
             String s = "Q1,"+ newevent.pickup_datetime.toString() + "," + newevent.dropoff_datetime.toString() + ",";
             s = s + maxfs.printMaxTen();
-            s = s + String.valueOf(System.currentTimeMillis() - newevent.time_in) + "\n";
-            System.err.println("Q1," + String.valueOf(System.currentTimeMillis() - newevent.time_in));
+            long delay = System.currentTimeMillis() - newevent.time_in;
+            s = s + String.valueOf(delay) + "\n";
+            System.err.println("Q1," + String.valueOf(delay));
             output_queue.put(s);
           }
         }
@@ -551,8 +552,9 @@ class Q2Process implements Runnable {
         if(!maxpft.isSameMaxTenKey()) {
           String s = "Q2,"+ newevent.pickup_datetime.toString() + "," + newevent.dropoff_datetime.toString() + ",";
           s = s + maxpft.printMaxTen();
-          s = s + String.valueOf(System.currentTimeMillis() - newevent.time_in) + "\n";
-          System.err.println("Q2," + String.valueOf(System.currentTimeMillis() - newevent.time_in));
+          long delay = System.currentTimeMillis() - newevent.time_in;
+          s = s + String.valueOf(delay) + "\n";
+          System.err.println("Q2," + String.valueOf(delay));
           output_queue.put(s);
         }
 
