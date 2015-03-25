@@ -29,6 +29,7 @@ public class Constants {
   public final static int NUM_EMPTY_BUCKETS = 2000;
   public final static float BUCKET_SIZE = (float) MAX_PFT_SIZE/ (float) NUM_EMPTY_BUCKETS;
   public final static float INV_BUCKET_SIZE = (float) NUM_EMPTY_BUCKETS / (float) MAX_PFT_SIZE;
+  public final static float QUERY2_MAX_INDEX = MAX_PFT_SIZE*INV_BUCKET_SIZE;
 
   // window sizes
   public final static int WINDOW30_SIZE = 1800000;

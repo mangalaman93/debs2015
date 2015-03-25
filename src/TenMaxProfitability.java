@@ -294,8 +294,8 @@ public class TenMaxProfitability {
 
         // Add the updated area
         int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
-        if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
-          new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
+        if(new_index > (Constants.QUERY2_MAX_INDEX -1)) {
+          new_index = (int) (Constants.QUERY2_MAX_INDEX -1);
         }
 
         elem.aindex = new_index;
@@ -320,8 +320,8 @@ public class TenMaxProfitability {
 
       // Add the area
       int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
-      if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
-        new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
+      if(new_index > (Constants.QUERY2_MAX_INDEX -1)) {
+        new_index = (int) (Constants.QUERY2_MAX_INDEX -1);
       }
       elem.aindex = new_index;
       sorted_ptb_list.get(new_index).add(elem);
@@ -376,8 +376,8 @@ public class TenMaxProfitability {
 
         // Add the updated data
         int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
-        if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
-          new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
+        if(new_index > (Constants.QUERY2_MAX_INDEX -1)) {
+          new_index = (int) (Constants.QUERY2_MAX_INDEX -1);
         }
 
         elem.aindex = new_index;
@@ -430,8 +430,8 @@ public class TenMaxProfitability {
 
       // Add the updated data
       int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
-      if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
-        new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
+      if(new_index > (Constants.QUERY2_MAX_INDEX -1)) {
+        new_index = (int) (Constants.QUERY2_MAX_INDEX -1);
       }
       elem.aindex = new_index;
       sorted_ptb_list.get(new_index).add(elem);
@@ -447,8 +447,8 @@ public class TenMaxProfitability {
 
       // Add this area
       int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
-      if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
-        new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
+      if(new_index > (Constants.QUERY2_MAX_INDEX -1)) {
+        new_index = (int) (Constants.QUERY2_MAX_INDEX -1);
       }
       sorted_ptb_list.get(new_index).contains(elem);
       sorted_ptb_list.get(new_index).add(elem);
