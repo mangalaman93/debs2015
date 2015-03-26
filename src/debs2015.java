@@ -389,6 +389,7 @@ class Q1Process implements Runnable {
           in_count = 0;
           last_time = System.currentTimeMillis();
         }
+        maxfs.storeMaxTenCopy();
 
         // Check if events are leaving the sliding window and process them
         long currentms = newevent.dropoff_datetime.getTime();

@@ -55,15 +55,17 @@ public class TenMaxFrequency {
 	PQ_elem[] heap;
 	private HashMap<Integer,Integer> heap_index;
 	int size;
-	private boolean has_top_10_changed;
-	private PQ_elem last_entry;
+	private Route[] top_10_routes;
 	
 	TenMaxFrequency() {
 		heap = new PQ_elem[PQ_SIZE];
 		for(int i=0; i<PQ_SIZE; i++) heap[i] = null;
 		heap_index = new HashMap<Integer,Integer>();
 		size = 0;
-		has_top_10_changed = false;
+		top_10_routes = new Route[10];
+		for(int i=0;i<10;i++) {
+			top_10_routes[i] = null;
+		}
 	}
 	
 	private void swap(int index_1, int index_2) {
@@ -80,6 +82,7 @@ public class TenMaxFrequency {
 		while(parent>=0 && heap[parent].compareTo(heap[index]) < 0) {
 			swap(index,parent);
 			index = parent;
+			if(index==0) break;
 			parent = (index-1)/2;
 		}
 	}
@@ -207,8 +210,42 @@ public class TenMaxFrequency {
 			numPrinted++;
 		}
 	}
+
+	public void storeMaxTenCopy() {
+		Comparator<Integer> comparator = new customComparator();
+		PriorityQueue<Integer> queue = new PriorityQueue<Integer>(12, comparator);
+		if(size>0) queue.add(0);
+		int numPrinted = 0;
+		while(queue.size()>0 && numPrinted<10) {
+			int top_index = queue.poll().intValue();
+			top_10_routes[numPrinted] = heap[top_index].r;
+			if(top_index*2+1 < size) queue.add(top_index*2+1);
+			if(top_index*2+2 < size) queue.add(top_index*2+2);
+			numPrinted++;
+		}
+		while(numPrinted<10) {
+			top_10_routes[numPrinted] = null;
+			numPrinted++;
+		}
+	}
 	
 	public boolean isSameMaxTenKey() {
-		return has_top_10_changed;
+		Comparator<Integer> comparator = new customComparator();
+		PriorityQueue<Integer> queue = new PriorityQueue<Integer>(12, comparator);
+		if(size>0) queue.add(0);
+		int numPrinted = 0;
+		while(queue.size()>0 && numPrinted<10) {
+			int top_index = queue.poll().intValue();
+			if(top_10_routes[numPrinted]==null || !top_10_routes[numPrinted].equals(heap[top_index].r)) {
+				return false;
+			}
+			if(top_index*2+1 < size) queue.add(top_index*2+1);
+			if(top_index*2+2 < size) queue.add(top_index*2+2);
+			numPrinted++;
+		}
+		if(numPrinted<10 && top_10_routes[numPrinted]!=null) {
+			return false;
+		}
+		return true;
 	}
 }
