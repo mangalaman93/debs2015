@@ -40,7 +40,7 @@ public class Source2 implements StatelessOperator {
 	// data is now a field, so that it is accessible from outside processData()
 	DataTuple data;
 	
-	int bufferSize = 5000000;
+	int bufferSize = 100000;
 	
 	@Override
 	public void processData(DataTuple arg0) {
@@ -62,7 +62,8 @@ public class Source2 implements StatelessOperator {
 				DataTuple toSend = readNext();
 				if(toSend != null){
 					toSend.getPayload().instrumentation_ts = System.currentTimeMillis();
-					api.send(toSend);
+					//api.send(toSend);
+					api.send_toStreamId_toAll(toSend, 0);
 				} else {
 					c--;
 					try {

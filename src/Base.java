@@ -22,9 +22,6 @@ public class Base implements QueryComposer {
 		srcFields.add("dropoff_longitude");
 		srcFields.add("dropoff_latitude");
 		
-		Connectable src = QueryBuilder.newStatelessSource(new Source(), 0, srcFields);
-		Connectable q1 = QueryBuilder.newStatelessOperator(new Q1Process(), 2, srcFields);
-
 		List<String> src2Fields = new ArrayList<String>();
 		src2Fields.add("medallion");
 		src2Fields.add("hack_license");
@@ -37,7 +34,10 @@ public class Base implements QueryComposer {
 		src2Fields.add("fare_amount");
 		src2Fields.add("tip_amount");
 
+		//Connectable src = QueryBuilder.newStatelessSource(new Source(), 1, srcFields);
+
 		Connectable src2 = QueryBuilder.newStatelessSource(new Source2(), 1, src2Fields);
+		Connectable q1 = QueryBuilder.newStatelessOperator(new Q1Process(), 2, src2Fields);
 		Connectable q2 = QueryBuilder.newStatelessOperator(new Q2Process(), 3, src2Fields);
 		
 		List<String> snkFields = new ArrayList<String>();
@@ -46,13 +46,13 @@ public class Base implements QueryComposer {
 		snkFields.add("top_ten");
 		snkFields.add("delay");
 
-		Connectable snk = QueryBuilder.newStatelessSink(new Sink(), 5, snkFields);
+		Connectable snk = QueryBuilder.newStatelessSink(new Sink(), 4, snkFields);
 
 		//Connect operators
-		src.connectTo(q1, true, 0);
-		q1.connectTo(snk, true, 0);
-		src2.connectTo(q2, true, 0);
-		q2.connectTo(snk, true, 0);
+		src2.connectTo(q2, true);
+		src2.connectTo(q1, true);
+		q1.connectTo(snk, true);
+		q2.connectTo(snk, true);
 		
 		return QueryBuilder.build();
 	}
