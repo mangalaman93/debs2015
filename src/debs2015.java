@@ -369,12 +369,14 @@ class IoProcessQ2 implements Runnable {
 class Q1Process implements Runnable {
   private BlockingQueue<Q1Elem> queue;
   private BlockingQueue<String> output_queue;
+  private BlockingQueue<Long> delay_queue;
   private TenMaxFrequency maxfs;
   private LinkedList<Q1Elem> sliding_window;
 
-  public Q1Process(BlockingQueue<Q1Elem> queue, BlockingQueue<String> output_queue) {
+  public Q1Process(BlockingQueue<Q1Elem> queue, BlockingQueue<String> output_queue, BlockingQueue<Long> delay_queue) {
     this.queue = queue;
     this.output_queue = output_queue;
+    this.delay_queue = delay_queue;
     this.maxfs = new TenMaxFrequency();
     this.sliding_window = new LinkedList<Q1Elem>();
   }
@@ -397,7 +399,7 @@ class Q1Process implements Runnable {
           in_count = 0;
           last_time = System.currentTimeMillis();
         }
-        maxfs.storeMaxTenCopy();
+        //maxfs.storeMaxTenCopy();
 
         // Check if events are leaving the sliding window and process them
         long currentms = newevent.dropoff_datetime.getTime();
@@ -433,14 +435,15 @@ class Q1Process implements Runnable {
         sliding_window.addLast(newevent);
 
         if(ten_max_changed){
-          if(!maxfs.isSameMaxTenKey()) {
-            String s = "Q1,"+ newevent.pickup_datetime.toString() + "," + newevent.dropoff_datetime.toString() + ",";
-            s = s + maxfs.printMaxTen();
-            long delay = System.currentTimeMillis() - newevent.time_in;
-            s = s + String.valueOf(delay) + "\n";
-            System.err.println("Q1," + String.valueOf(delay));
-            output_queue.put(s);
-          }
+          //if(!maxfs.isSameMaxTenKey()) {
+          String s = newevent.pickup_datetime.toString() + "," + newevent.dropoff_datetime.toString() + ",";
+          s = s + maxfs.printMaxTen();
+          // long delay = System.currentTimeMillis() - ;
+          // s = s + String.valueOf(delay) + "\n";
+          // System.err.println("Q1," + String.valueOf(delay));
+          output_queue.put(s);
+          delay_queue.put(newevent.time_in);
+          //}
         }
 
         // Get the next event to process from the queue
@@ -453,7 +456,9 @@ class Q1Process implements Runnable {
     }
     String s = "\0";
     try{
+      System.out.println("Query 1 done");
       output_queue.put(s);
+      delay_queue.put((long)0);
     }
     catch (Exception e) {
       System.out.println(e.getMessage());
@@ -472,14 +477,16 @@ class Q1Process implements Runnable {
 class Q2Process implements Runnable {
   private BlockingQueue<Q2Elem> queue;
   private BlockingQueue<String> output_queue;
+  private BlockingQueue<Long> delay_queue;
   private TenMaxProfitability maxpft;
   private LinkedList<Q2Elem> swindow30;
   private LinkedList<Q2Elem> swindow15;
   // private PrintStream print_stream;
 
-  public Q2Process(BlockingQueue<Q2Elem> queue2, BlockingQueue<String> output_queue) {
+  public Q2Process(BlockingQueue<Q2Elem> queue2, BlockingQueue<String> output_queue, BlockingQueue<Long> delay_queue) {
     this.queue = queue2;
     this.output_queue = output_queue;
+    this.delay_queue = delay_queue;
     this.maxpft = new TenMaxProfitability();
     this.swindow30 = new LinkedList<Q2Elem>();
     this.swindow15 = new LinkedList<Q2Elem>();
@@ -550,12 +557,13 @@ class Q2Process implements Runnable {
         swindow30.addLast(newevent);
 
         if(!maxpft.isSameMaxTenKey()) {
-          String s = "Q2,"+ newevent.pickup_datetime.toString() + "," + newevent.dropoff_datetime.toString() + ",";
+          String s = newevent.pickup_datetime.toString() + "," + newevent.dropoff_datetime.toString() + ",";
           s = s + maxpft.printMaxTen();
-          long delay = System.currentTimeMillis() - newevent.time_in;
-          s = s + String.valueOf(delay) + "\n";
-          System.err.println("Q2," + String.valueOf(delay));
+          // long delay = System.currentTimeMillis() - newevent.time_in;
+          // s = s + String.valueOf(delay) + "\n";
+          // System.err.println("Q2," + String.valueOf(delay));
           output_queue.put(s);
+          delay_queue.put(newevent.time_in);
         }
 
         //Get the next event to process from the queue
@@ -569,6 +577,7 @@ class Q2Process implements Runnable {
     String s = "\0";
     try{
       output_queue.put(s);
+      delay_queue.put((long)0);
     }
     catch (Exception e) {
       System.out.println(e.getMessage());
@@ -583,21 +592,33 @@ class Q2Process implements Runnable {
  */
 class PrintProcess implements Runnable {
   private BlockingQueue<String> queue;
+  private BlockingQueue<Long> delay_queue;
   private PrintStream print_stream;
+  private String query;
 
-  public PrintProcess(BlockingQueue<String> queue, OutputStream print_stream) {
+  public PrintProcess(BlockingQueue<String> queue, BlockingQueue<Long> delay_queue, OutputStream print_stream, String query) {
     this.queue = queue;
+    this.delay_queue = delay_queue;
     this.print_stream = new PrintStream(print_stream);
+    this.query = query;
   }
 
   @Override
   public void run() {
     try {
       String s = queue.take();
-
+      long time_in = delay_queue.take();
+      String prev_string = "";
       while(!s.equals("\0")) {
-        System.out.print(s);
+        if(!s.equals(prev_string)){
+          long delay = System.currentTimeMillis() - time_in;
+          s = s + String.valueOf(delay) + "\n";
+          System.err.println(query + "," + String.valueOf(delay));
+          System.out.print(s);
+          prev_string = s;
+        }
         s = queue.take();
+        time_in = delay_queue.take();
       }
     } catch(Exception e) {
       System.out.println("Error in PrintProcess!");
@@ -612,6 +633,8 @@ public class debs2015 {
   private static BlockingQueue<Q2Elem> queue_for_Q2;
   private static BlockingQueue<String> output_queue_for_Q1;
   private static BlockingQueue<String> output_queue_for_Q2;
+  private static BlockingQueue<Long> delay_queue_for_Q1;
+  private static BlockingQueue<Long> delay_queue_for_Q2;
 
   public static void main(String[] args) throws FileNotFoundException {
     String test_file;
@@ -648,10 +671,12 @@ public class debs2015 {
     if(running_q1) {
       queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, false);
       output_queue_for_Q1 = new ArrayBlockingQueue<String>(Constants.QUEUE1_OUTPUT_CAPACITY,false);
+      delay_queue_for_Q1 = new ArrayBlockingQueue<Long>(Constants.QUEUE1_OUTPUT_CAPACITY,false);
     }
     if(running_q2) {
       queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(Constants.QUEUE2_CAPACITY, false);
       output_queue_for_Q2 = new ArrayBlockingQueue<String>(Constants.QUEUE2_OUTPUT_CAPACITY,false);
+      delay_queue_for_Q2 = new ArrayBlockingQueue<Long>(Constants.QUEUE2_OUTPUT_CAPACITY,false);
     }
 
     // start threads
@@ -666,16 +691,16 @@ public class debs2015 {
     }
 
     PrintStream q1out = new PrintStream(new FileOutputStream(Constants.Q1_FILE, false));
-    Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, output_queue_for_Q1));
-    Thread threadForQ1Print = new Thread(new PrintProcess(output_queue_for_Q1, q1out));
+    Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, output_queue_for_Q1, delay_queue_for_Q1));
+    Thread threadForQ1Print = new Thread(new PrintProcess(output_queue_for_Q1, delay_queue_for_Q1, q1out, "Q1"));
     if(running_q1) {
       threadForQ1Process.start();
       threadForQ1Print.start();
     }
 
     PrintStream q2out = new PrintStream(new FileOutputStream(Constants.Q2_FILE, false));
-    Thread threadForQ2Process = new Thread(new Q2Process(queue_for_Q2, output_queue_for_Q2));
-    Thread threadForQ2Print = new Thread(new PrintProcess(output_queue_for_Q2, q2out));
+    Thread threadForQ2Process = new Thread(new Q2Process(queue_for_Q2, output_queue_for_Q2, delay_queue_for_Q2));
+    Thread threadForQ2Print = new Thread(new PrintProcess(output_queue_for_Q2, delay_queue_for_Q2, q2out, "Q2"));
     if(running_q2) {
       threadForQ2Process.start();
       threadForQ2Print.start();
