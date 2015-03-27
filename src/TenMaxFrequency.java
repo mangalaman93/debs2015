@@ -56,7 +56,7 @@ public class TenMaxFrequency {
 	private HashMap<Integer,Integer> heap_index;
 	int size;
 	private Route[] top_10_routes;
-	private int 10th_freq;
+	private int last_freq;
 	private boolean has_top_10_changed;
 	
 	TenMaxFrequency() {
@@ -68,7 +68,7 @@ public class TenMaxFrequency {
 		for(int i=0;i<10;i++) {
 			top_10_routes[i] = null;
 		}
-		10th_freq = 0;
+		last_freq = 0;
 		has_top_10_changed = false;
 	}
 	
@@ -183,7 +183,7 @@ public class TenMaxFrequency {
 	}
 	
 	public void  decreaseFrequency(Route r, long ts) {
-		if(!has_top_10_changed && heap[getHeapIndexForRoute(r)].freq>=10th_freq) {
+		if(!has_top_10_changed && heap[getHeapIndexForRoute(r)].freq>=last_freq) {
 			has_top_10_changed = true;
 		}
 		update(r,-1,ts);	
@@ -197,7 +197,7 @@ public class TenMaxFrequency {
 		else {
 			update(r,1,ts);
 		}
-		if(!has_top_10_changed && heap[getHeapIndexForRoute(r)].freq>=10th_freq) {
+		if(!has_top_10_changed && heap[getHeapIndexForRoute(r)].freq>=last_freq) {
                         has_top_10_changed = true;
                 }
 	}
@@ -212,6 +212,7 @@ public class TenMaxFrequency {
 			int top_index = queue.poll().intValue();
 			ret_string += (heap[top_index].r.fromArea.x+1) + "." + (heap[top_index].r.fromArea.y+1) 
 					+ "," + (heap[top_index].r.toArea.x+1) + "." + (heap[top_index].r.toArea.y+1) + ",";
+			last_freq = heap[top_index].freq;
 			//print_stream.print((heap[top_index].r.fromArea.x+1) + "." + (heap[top_index].r.fromArea.y+1) + ",");
 			//print_stream.print((heap[top_index].r.toArea.x+1) + "." + (heap[top_index].r.toArea.y+1) + ",");
 			if(top_index*2+1 < size) queue.add(top_index*2+1);
@@ -220,6 +221,7 @@ public class TenMaxFrequency {
 		}
 		while(numPrinted<10) {
 			ret_string += "NULL,";
+			last_freq = 0;
 			//print_stream.print("NULL,");
 			numPrinted++;
 		}

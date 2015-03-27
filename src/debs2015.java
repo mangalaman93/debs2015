@@ -2,14 +2,13 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
-import java.util.Date;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
+import java.nio.file.*;
+import java.nio.charset.StandardCharsets;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.text.SimpleDateFormat;
 import java.sql.Timestamp;
 
 class Q1Elem {
@@ -57,8 +56,8 @@ class IoProcess implements Runnable {
   @Override
   public void run() {
     try {
-      BufferedReader inputstream = new BufferedReader(new FileReader(inputfile));
-      SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      BufferedReader inputstream = Files.newBufferedReader(FileSystems.getDefault().getPath(inputfile),StandardCharsets.UTF_8);
+      // SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
       float pickup_longitude, pickup_latitude, dropoff_longitude, dropoff_latitude;
       Area from, to;
       String line;
@@ -73,14 +72,16 @@ class IoProcess implements Runnable {
           q2event.medallion_hack_license = st.nextToken()+st.nextToken();
 
           // pickup datetime
-          Date pdate = datefmt.parse(st.nextToken());
-          q1event.pickup_datetime = new java.sql.Timestamp(pdate.getTime());
-          q2event.pickup_datetime = new java.sql.Timestamp(pdate.getTime());
+          long pdate = Constants.parseDate(st.nextToken());
+          // Date pdate = datefmt.parse(st.nextToken());
+          q1event.pickup_datetime = new java.sql.Timestamp(pdate);
+          q2event.pickup_datetime = new java.sql.Timestamp(pdate);
 
           // dropoff datetime
-          pdate = datefmt.parse(st.nextToken());
-          q1event.dropoff_datetime = new java.sql.Timestamp(pdate.getTime());
-          q2event.dropoff_datetime = new java.sql.Timestamp(pdate.getTime());
+          pdate = Constants.parseDate(st.nextToken());
+          // pdate = datefmt.parse(st.nextToken());
+          q1event.dropoff_datetime = new java.sql.Timestamp(pdate);
+          q2event.dropoff_datetime = new java.sql.Timestamp(pdate);
 
           // trip time in secs
           st.nextToken();
@@ -194,8 +195,9 @@ class IoProcessQ1 implements Runnable {
   @Override
   public void run() {
     try {
-      BufferedReader inputstream = new BufferedReader(new FileReader(inputfile));
-      SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      BufferedReader inputstream = Files.newBufferedReader(FileSystems.getDefault().getPath(inputfile),StandardCharsets.UTF_8);
+      // BufferedReader inputstream = new BufferedReader(new FileReader(inputfile));
+      // SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
       Area from, to;
       String line;
 
@@ -210,9 +212,11 @@ class IoProcessQ1 implements Runnable {
           st.nextToken();
 
           // pickup datetime
-          q1event.pickup_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
+          q1event.pickup_datetime = new java.sql.Timestamp(Constants.parseDate(st.nextToken()));
+          // q1event.pickup_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
           // dropoff datetime
-          q1event.dropoff_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
+          q1event.dropoff_datetime = new java.sql.Timestamp(Constants.parseDate(st.nextToken()));
+          //q1event.dropoff_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
 
           // trip time in secs
           st.nextToken();
@@ -279,8 +283,8 @@ class IoProcessQ2 implements Runnable {
   @Override
   public void run() {
     try {
-      BufferedReader inputstream = new BufferedReader(new FileReader(inputfile));
-      SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      BufferedReader inputstream = Files.newBufferedReader(FileSystems.getDefault().getPath(inputfile),StandardCharsets.UTF_8);
+      // SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
       String line;
 
       while((line = inputstream.readLine()) != null) {
@@ -292,9 +296,11 @@ class IoProcessQ2 implements Runnable {
           q2event.medallion_hack_license = st.nextToken()+st.nextToken();
 
           // pickup datetime
-          q2event.pickup_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
+          q2event.pickup_datetime = new java.sql.Timestamp(Constants.parseDate(st.nextToken()));
+          // q2event.pickup_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
           // dropoff datetime
-          q2event.dropoff_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
+          q2event.dropoff_datetime = new java.sql.Timestamp(Constants.parseDate(st.nextToken()));
+          // q2event.dropoff_datetime = new java.sql.Timestamp(datefmt.parse(st.nextToken()).getTime());
 
           // trip time in secs
           st.nextToken();
@@ -362,15 +368,17 @@ class IoProcessQ2 implements Runnable {
  */
 class Q1Process implements Runnable {
   private BlockingQueue<Q1Elem> queue;
+  private BlockingQueue<String> output_queue;
+  private BlockingQueue<Long> delay_queue;
   private TenMaxFrequency maxfs;
   private LinkedList<Q1Elem> sliding_window;
-  private PrintStream print_stream;
 
-  public Q1Process(BlockingQueue<Q1Elem> queue, OutputStream print_stream) {
+  public Q1Process(BlockingQueue<Q1Elem> queue, BlockingQueue<String> output_queue, BlockingQueue<Long> delay_queue) {
     this.queue = queue;
+    this.output_queue = output_queue;
+    this.delay_queue = delay_queue;
     this.maxfs = new TenMaxFrequency();
     this.sliding_window = new LinkedList<Q1Elem>();
-    this.print_stream = new PrintStream(print_stream);
   }
 
   @Override
@@ -381,15 +389,17 @@ class Q1Process implements Runnable {
     try {
       Q1Elem lastevent, newevent=queue.take();
       long lastms = 0;
+      boolean ten_max_changed = false;
 
       while(newevent.time_in != 0) {
+        ten_max_changed = false;
         in_count++;
         if(in_count == 100000) {
           System.out.println("Query 1 throughput: "+(100000/(System.currentTimeMillis()-last_time)));
           in_count = 0;
           last_time = System.currentTimeMillis();
         }
-        maxfs.storeMaxTenCopy();
+        //maxfs.storeMaxTenCopy();
 
         // Check if events are leaving the sliding window and process them
         long currentms = newevent.dropoff_datetime.getTime();
@@ -399,7 +409,11 @@ class Q1Process implements Runnable {
 
           // Remove the elements from the start of the window
           while((currentms-lastms) >= Constants.WINDOW30_SIZE) {
-            maxfs.decreaseFrequency(lastevent.route, lastevent.dropoff_datetime.getTime());
+            if(!ten_max_changed) {
+              ten_max_changed = maxfs.decreaseFrequency(lastevent.route, lastevent.dropoff_datetime.getTime());
+            } else {
+              maxfs.decreaseFrequency(lastevent.route, lastevent.dropoff_datetime.getTime());
+            }
             sliding_window.removeFirst();
 
             if(sliding_window.size() != 0) {
@@ -412,17 +426,24 @@ class Q1Process implements Runnable {
         }
 
         // Insert the current element in the sliding window
-        maxfs.increaseFrequency(newevent.route, newevent.dropoff_datetime.getTime());
+        if(!ten_max_changed){
+          ten_max_changed = maxfs.increaseFrequency(newevent.route, newevent.dropoff_datetime.getTime());
+        }
+        else{
+          maxfs.increaseFrequency(newevent.route, newevent.dropoff_datetime.getTime());
+        }
         sliding_window.addLast(newevent);
 
-        if(!maxfs.isSameMaxTenKey()) {
-          print_stream.print(newevent.pickup_datetime.toString());
-          print_stream.print(",");
-          print_stream.print(newevent.dropoff_datetime.toString());
-          print_stream.print(",");
-          maxfs.printMaxTen(print_stream);
-          print_stream.print(System.currentTimeMillis() - newevent.time_in);
-          print_stream.print("\n");
+        if(ten_max_changed){
+          //if(!maxfs.isSameMaxTenKey()) {
+          String s = newevent.pickup_datetime.toString() + "," + newevent.dropoff_datetime.toString() + ",";
+          s = s + maxfs.printMaxTen();
+          // long delay = System.currentTimeMillis() - ;
+          // s = s + String.valueOf(delay) + "\n";
+          // System.err.println("Q1," + String.valueOf(delay));
+          output_queue.put(s);
+          delay_queue.put(newevent.time_in);
+          //}
         }
 
         // Get the next event to process from the queue
@@ -430,6 +451,16 @@ class Q1Process implements Runnable {
       }
     } catch(InterruptedException e) {
       System.out.println("Error in Q1Process!");
+      System.out.println(e.getMessage());
+      e.printStackTrace();
+    }
+    String s = "\0";
+    try{
+      System.out.println("Query 1 done");
+      output_queue.put(s);
+      delay_queue.put((long)0);
+    }
+    catch (Exception e) {
       System.out.println(e.getMessage());
       e.printStackTrace();
     }
@@ -445,17 +476,20 @@ class Q1Process implements Runnable {
 
 class Q2Process implements Runnable {
   private BlockingQueue<Q2Elem> queue;
+  private BlockingQueue<String> output_queue;
+  private BlockingQueue<Long> delay_queue;
   private TenMaxProfitability maxpft;
   private LinkedList<Q2Elem> swindow30;
   private LinkedList<Q2Elem> swindow15;
-  private PrintStream print_stream;
+  // private PrintStream print_stream;
 
-  public Q2Process(BlockingQueue<Q2Elem> queue2, OutputStream print_stream) {
+  public Q2Process(BlockingQueue<Q2Elem> queue2, BlockingQueue<String> output_queue, BlockingQueue<Long> delay_queue) {
     this.queue = queue2;
+    this.output_queue = output_queue;
+    this.delay_queue = delay_queue;
     this.maxpft = new TenMaxProfitability();
     this.swindow30 = new LinkedList<Q2Elem>();
     this.swindow15 = new LinkedList<Q2Elem>();
-    this.print_stream = new PrintStream(print_stream);
   }
 
   @Override
@@ -523,13 +557,13 @@ class Q2Process implements Runnable {
         swindow30.addLast(newevent);
 
         if(!maxpft.isSameMaxTenKey()) {
-          print_stream.print(newevent.pickup_datetime.toString());
-          print_stream.print(",");
-          print_stream.print(newevent.dropoff_datetime.toString());
-          print_stream.print(",");
-          maxpft.printMaxTen(print_stream);
-          print_stream.print(System.currentTimeMillis() - newevent.time_in);
-          print_stream.print("\n");
+          String s = newevent.pickup_datetime.toString() + "," + newevent.dropoff_datetime.toString() + ",";
+          s = s + maxpft.printMaxTen();
+          // long delay = System.currentTimeMillis() - newevent.time_in;
+          // s = s + String.valueOf(delay) + "\n";
+          // System.err.println("Q2," + String.valueOf(delay));
+          output_queue.put(s);
+          delay_queue.put(newevent.time_in);
         }
 
         //Get the next event to process from the queue
@@ -540,18 +574,72 @@ class Q2Process implements Runnable {
       System.out.println(e.getMessage());
       e.printStackTrace();
     }
+    String s = "\0";
+    try{
+      output_queue.put(s);
+      delay_queue.put((long)0);
+    }
+    catch (Exception e) {
+      System.out.println(e.getMessage());
+      e.printStackTrace();
+    }
+  }
+}
+
+/* PrintProcess: Task to perform
+ *  *dequeue string from queue (use take)
+ *  *print string
+ */
+class PrintProcess implements Runnable {
+  private BlockingQueue<String> queue;
+  private BlockingQueue<Long> delay_queue;
+  private PrintStream print_stream;
+  private String query;
+
+  public PrintProcess(BlockingQueue<String> queue, BlockingQueue<Long> delay_queue, OutputStream print_stream, String query) {
+    this.queue = queue;
+    this.delay_queue = delay_queue;
+    this.print_stream = new PrintStream(print_stream);
+    this.query = query;
+  }
+
+  @Override
+  public void run() {
+    try {
+      String s = queue.take();
+      long time_in = delay_queue.take();
+      String prev_string = "";
+      while(!s.equals("\0")) {
+        if(!s.equals(prev_string)){
+          long delay = System.currentTimeMillis() - time_in;
+          s = s + String.valueOf(delay) + "\n";
+          System.err.println(query + "," + String.valueOf(delay));
+          System.out.print(s);
+          prev_string = s;
+        }
+        s = queue.take();
+        time_in = delay_queue.take();
+      }
+    } catch(Exception e) {
+      System.out.println("Error in PrintProcess!");
+      System.out.println(e.getMessage());
+      e.printStackTrace();
+    }
   }
 }
 
 public class debs2015 {
   private static BlockingQueue<Q1Elem> queue_for_Q1;
   private static BlockingQueue<Q2Elem> queue_for_Q2;
+  private static BlockingQueue<String> output_queue_for_Q1;
+  private static BlockingQueue<String> output_queue_for_Q2;
+  private static BlockingQueue<Long> delay_queue_for_Q1;
+  private static BlockingQueue<Long> delay_queue_for_Q2;
 
   public static void main(String[] args) throws FileNotFoundException {
     String test_file;
-    boolean two_io_process = true;
     boolean running_q1 = true;
-    boolean running_q2 = true;
+    boolean running_q2 = false;
     int shift = 0;
 
     if(args.length == 0) {
@@ -565,11 +653,11 @@ public class debs2015 {
       }
     }
 
-    if(args.length > (0+shift)) {
-      if(args[0+shift].equals("1")) {
-        two_io_process = false;
-      }
-    }
+    // if(args.length > (0+shift)) {
+    //   if(args[0+shift].equals("1")) {
+    //     Constants.TWO_IO_PROCESS = false;
+    //   }
+    // }
 
     if(args.length > (1+shift)) {
       if(args[1+shift].equals("1")) {
@@ -580,11 +668,19 @@ public class debs2015 {
     }
 
     // Initializing queues
-    if(running_q1) queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, false);
-    if(running_q2) queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(Constants.QUEUE2_CAPACITY, false);
+    if(running_q1) {
+      queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, false);
+      output_queue_for_Q1 = new ArrayBlockingQueue<String>(Constants.QUEUE1_OUTPUT_CAPACITY,false);
+      delay_queue_for_Q1 = new ArrayBlockingQueue<Long>(Constants.QUEUE1_OUTPUT_CAPACITY,false);
+    }
+    if(running_q2) {
+      queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(Constants.QUEUE2_CAPACITY, false);
+      output_queue_for_Q2 = new ArrayBlockingQueue<String>(Constants.QUEUE2_OUTPUT_CAPACITY,false);
+      delay_queue_for_Q2 = new ArrayBlockingQueue<Long>(Constants.QUEUE2_OUTPUT_CAPACITY,false);
+    }
 
     // start threads
-    if(two_io_process || (!(running_q1 && running_q2))) {
+    if(Constants.TWO_IO_PROCESS || (!(running_q1 && running_q2))) {
       Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, test_file));
       Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, test_file));
       if(running_q1) threadForIoProcessQ1.start();
@@ -595,11 +691,19 @@ public class debs2015 {
     }
 
     PrintStream q1out = new PrintStream(new FileOutputStream(Constants.Q1_FILE, false));
-    Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, q1out));
-    if(running_q1) threadForQ1Process.start();
+    Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, output_queue_for_Q1, delay_queue_for_Q1));
+    Thread threadForQ1Print = new Thread(new PrintProcess(output_queue_for_Q1, delay_queue_for_Q1, q1out, "Q1"));
+    if(running_q1) {
+      threadForQ1Process.start();
+      threadForQ1Print.start();
+    }
 
     PrintStream q2out = new PrintStream(new FileOutputStream(Constants.Q2_FILE, false));
-    Thread threadForQ2Process = new Thread(new Q2Process(queue_for_Q2, q2out));
-    if(running_q2) threadForQ2Process.start();
+    Thread threadForQ2Process = new Thread(new Q2Process(queue_for_Q2, output_queue_for_Q2, delay_queue_for_Q2));
+    Thread threadForQ2Print = new Thread(new PrintProcess(output_queue_for_Q2, delay_queue_for_Q2, q2out, "Q2"));
+    if(running_q2) {
+      threadForQ2Process.start();
+      threadForQ2Print.start();
+    }
   }
 }
