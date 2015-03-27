@@ -64,9 +64,13 @@ class IoProcess implements Runnable {
 
       while((line = inputstream.readLine()) != null) {
         try {
-          StringTokenizer st = new StringTokenizer(line, ",");
           Q1Elem q1event = new Q1Elem();
           Q2Elem q2event = new Q2Elem();
+          // putting current time
+          q1event.time_in = System.currentTimeMillis();
+          q2event.time_in = System.currentTimeMillis();
+
+          StringTokenizer st = new StringTokenizer(line, ",");
 
           // medallion+hack license
           q2event.medallion_hack_license = st.nextToken()+st.nextToken();
@@ -142,10 +146,6 @@ class IoProcess implements Runnable {
           // total amount
           st.nextToken();
 
-          // putting current time
-          q1event.time_in = System.currentTimeMillis();
-          q2event.time_in = System.currentTimeMillis();
-
           // Put events into queues for Q1 and Q2
           queue_q1.put(q1event);
           q2event.id = id++;
@@ -203,8 +203,11 @@ class IoProcessQ1 implements Runnable {
 
       while((line = inputstream.readLine()) != null) {
         try {
-          StringTokenizer st = new StringTokenizer(line, ",");
           Q1Elem q1event = new Q1Elem();
+          // current time
+          q1event.time_in = System.currentTimeMillis();
+
+          StringTokenizer st = new StringTokenizer(line, ",");
 
           // medallion
           st.nextToken();
@@ -235,9 +238,6 @@ class IoProcessQ1 implements Runnable {
             continue;
           }
           q1event.route = new Route(from, to);
-
-          // current time
-          q1event.time_in = System.currentTimeMillis();
 
           // Put events into queues for Q1
           queue_q1.put(q1event);
@@ -289,8 +289,10 @@ class IoProcessQ2 implements Runnable {
 
       while((line = inputstream.readLine()) != null) {
         try {
-          StringTokenizer st = new StringTokenizer(line, ",");
           Q2Elem q2event = new Q2Elem();
+          // current time
+          q2event.time_in = System.currentTimeMillis();
+          StringTokenizer st = new StringTokenizer(line, ",");
 
           // medallion+hack license
           q2event.medallion_hack_license = st.nextToken()+st.nextToken();
@@ -334,9 +336,6 @@ class IoProcessQ2 implements Runnable {
           st.nextToken();
           // tip amount
           q2event.total_fare += Float.parseFloat(st.nextToken());
-
-          // current time
-          q2event.time_in = System.currentTimeMillis();
 
           // Put events into queues for Q2
           q2event.id = id++;
