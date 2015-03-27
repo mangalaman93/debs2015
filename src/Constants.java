@@ -1,22 +1,22 @@
 // parameters and constants
 public class Constants {
   // tuning parameter for HashMap
-  public static final int HM_INIT_SIZE = 100;
+  public static final int HM_INIT_SIZE = 10000;
   public static final float HM_LOAD_FACTOR = 0.75f;
 
   // two IO processes
   public static final boolean TWO_IO_PROCESS = true;
 
   // capacity of queue between IO process and Q* processes
-  public static final int QUEUE1_CAPACITY = 10000;
-  public static final int QUEUE2_CAPACITY = 10000;
+  public static final int QUEUE1_CAPACITY = 50000;
+  public static final int QUEUE2_CAPACITY = 50000;
 
   // capacity of queue between printing process and Q* processes
-  public static final int QUEUE1_OUTPUT_CAPACITY = 10000;
-  public static final int QUEUE2_OUTPUT_CAPACITY = 10000;
+  public static final int QUEUE1_OUTPUT_CAPACITY = 50000;
+  public static final int QUEUE2_OUTPUT_CAPACITY = 50000;
 
   // Q1 constants
-  public static final int FREQ_ARRAY_SIZE = 500;
+  public static final int FREQ_ARRAY_SIZE = 150;
   // should be some power of 2
   public static final int MAX_NUM_TS = 2048;
   public static final int MAX_NUM_TS_MINUS_1 = MAX_NUM_TS-1;

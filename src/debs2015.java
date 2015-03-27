@@ -382,7 +382,7 @@ class Q1Process implements Runnable {
 
   @Override
   public void run() {
-    int in_count = 0;
+    // int in_count = 0;
     long last_time = System.currentTimeMillis();
 
     try {
@@ -392,12 +392,12 @@ class Q1Process implements Runnable {
 
       while(newevent.time_in != 0) {
         ten_max_changed = false;
-        in_count++;
-        if(in_count == 100000) {
-          System.out.println("Query 1 throughput: "+(100000/(System.currentTimeMillis()-last_time)));
-          in_count = 0;
-          last_time = System.currentTimeMillis();
-        }
+        // in_count++;
+        // if(in_count == 100000) {
+        //   System.out.println("Query 1 throughput: "+(100000/(System.currentTimeMillis()-last_time)));
+        //   in_count = 0;
+        //   last_time = System.currentTimeMillis();
+        // }
         //maxfs.storeMaxTenCopy();
 
         // Check if events are leaving the sliding window and process them
@@ -493,19 +493,19 @@ class Q2Process implements Runnable {
 
   @Override
   public void run() {
-    int in_count = 0;
+    // int in_count = 0;
     long last_time = System.currentTimeMillis();
     try {
       Q2Elem lastevent, newevent = queue.take();
       long lastms;
 
       while(newevent.time_in != 0) {
-        in_count++;
-        if(in_count == 100000) {
-          System.out.println("Query 2 throughput: "+(100000/(System.currentTimeMillis()-last_time)));
-          in_count = 0;
-          last_time = System.currentTimeMillis();
-        }
+        // in_count++;
+        // if(in_count == 100000) {
+        //   System.out.println("Query 2 throughput: "+(100000/(System.currentTimeMillis()-last_time)));
+        //   in_count = 0;
+        //   last_time = System.currentTimeMillis();
+        // }
 
         // Check if events are leaving the sliding window and process them
         long currentms = newevent.dropoff_datetime.getTime();
