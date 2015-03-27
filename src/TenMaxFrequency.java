@@ -56,6 +56,8 @@ public class TenMaxFrequency {
 	private HashMap<Integer,Integer> heap_index;
 	int size;
 	private Route[] top_10_routes;
+	private int 10th_freq;
+	private boolean has_top_10_changed;
 	
 	TenMaxFrequency() {
 		heap = new PQ_elem[PQ_SIZE];
@@ -66,6 +68,8 @@ public class TenMaxFrequency {
 		for(int i=0;i<10;i++) {
 			top_10_routes[i] = null;
 		}
+		10th_freq = 0;
+		has_top_10_changed = false;
 	}
 	
 	private void swap(int index_1, int index_2) {
@@ -179,7 +183,10 @@ public class TenMaxFrequency {
 	}
 	
 	public void  decreaseFrequency(Route r, long ts) {
-		update(r,-1,ts);
+		if(!has_top_10_changed && heap[getHeapIndexForRoute(r)].freq>=10th_freq) {
+			has_top_10_changed = true;
+		}
+		update(r,-1,ts);	
 	}
 	
 	
@@ -190,27 +197,41 @@ public class TenMaxFrequency {
 		else {
 			update(r,1,ts);
 		}
+		if(!has_top_10_changed && heap[getHeapIndexForRoute(r)].freq>=10th_freq) {
+                        has_top_10_changed = true;
+                }
 	}
 	
-	public void printMaxTen(PrintStream print_stream) {
+	public String printMaxTen(PrintStream print_stream) {
+		String ret_string = "";
 		Comparator<Integer> comparator = new customComparator();
 		PriorityQueue<Integer> queue = new PriorityQueue<Integer>(12, comparator);
 		if(size>0) queue.add(0);
 		int numPrinted = 0;
 		while(queue.size()>0 && numPrinted<10) {
 			int top_index = queue.poll().intValue();
-			print_stream.print((heap[top_index].r.fromArea.x+1) + "." + (heap[top_index].r.fromArea.y+1) + ",");
-			print_stream.print((heap[top_index].r.toArea.x+1) + "." + (heap[top_index].r.toArea.y+1) + ",");
+			ret_string += (heap[top_index].r.fromArea.x+1) + "." + (heap[top_index].r.fromArea.y+1) 
+					+ "," + (heap[top_index].r.toArea.x+1) + "." + (heap[top_index].r.toArea.y+1) + ",";
+			//print_stream.print((heap[top_index].r.fromArea.x+1) + "." + (heap[top_index].r.fromArea.y+1) + ",");
+			//print_stream.print((heap[top_index].r.toArea.x+1) + "." + (heap[top_index].r.toArea.y+1) + ",");
 			if(top_index*2+1 < size) queue.add(top_index*2+1);
 			if(top_index*2+2 < size) queue.add(top_index*2+2);
 			numPrinted++;
 		}
 		while(numPrinted<10) {
-			print_stream.print("NULL,");
+			ret_string += "NULL,";
+			//print_stream.print("NULL,");
 			numPrinted++;
 		}
+		has_top_10_changed = false;
+		return ret_string;
 	}
 
+	public boolean isSameMaxTenKey() {
+		return !has_top_10_changed;
+	}
+
+	/*
 	public void storeMaxTenCopy() {
 		Comparator<Integer> comparator = new customComparator();
 		PriorityQueue<Integer> queue = new PriorityQueue<Integer>(12, comparator);
@@ -248,4 +269,5 @@ public class TenMaxFrequency {
 		}
 		return true;
 	}
+	*/
 }
