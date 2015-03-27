@@ -202,7 +202,7 @@ public class TenMaxFrequency {
                 }
 	}
 	
-	public String printMaxTen(PrintStream print_stream) {
+	public String printMaxTen() {
 		String ret_string = "";
 		Comparator<Integer> comparator = new customComparator();
 		PriorityQueue<Integer> queue = new PriorityQueue<Integer>(12, comparator);

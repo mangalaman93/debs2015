@@ -161,7 +161,9 @@ public class TenMaxProfitability {
   // the array DS
   private List<Set<SetElem>> sorted_ptb_list;
 
-  private float last_10th_pft_val;
+  private Area last_10th_area;
+  private float last_10th_ptb;
+  private long last_10th_ts;
   private boolean has_top_10_changed;
 
   public TenMaxProfitability() {
@@ -171,7 +173,9 @@ public class TenMaxProfitability {
     for(int i=0; i<Constants.NUM_EMPTY_BUCKETS; i++) {
       sorted_ptb_list.add(i, new TreeSet<SetElem>(Collections.reverseOrder()));
     }
-    last_10th_pft_val = 0.0f;
+    last_10th_area = null;
+    last_10th_ptb = 0.0f;
+    last_10th_ts = -1;
     has_top_10_changed = false;
   }
 
@@ -236,9 +240,20 @@ public class TenMaxProfitability {
       int old_index = elem.aindex;
       sorted_ptb_list.get(old_index).remove(elem);
 
-      if(!has_top_10_changed && elem.num_empty_taxis>0 &&
-          elem.profitability>=last_10th_pft_val) {
-        has_top_10_changed = true;
+      // Check if top 10 changed
+      if(!has_top_10_changed && elem.num_empty_taxis>0) {
+        if(last_10th_area==null) {
+          has_top_10_changed = true;
+        }
+        else if(elem.area.equals(last_10th_area)) {
+          has_top_10_changed = true;
+        }
+        else if(elem.profitability>last_10th_ptb) {
+          has_top_10_changed = true;
+        }
+        else if(elem.profitability==last_10th_ptb && elem.ts>last_10th_ts) {
+          has_top_10_changed = true;
+        }
       }
 
       // Update the area
@@ -251,15 +266,24 @@ public class TenMaxProfitability {
         area_elem_map.remove(a);
       } else {
         elem.resetProfitability();
-        if(!has_top_10_changed && elem.num_empty_taxis>0 &&
-            elem.profitability>last_10th_pft_val) {
-          has_top_10_changed = true;
+
+        // Check if top 10 changed
+        if(!has_top_10_changed && elem.num_empty_taxis>0) {
+          if(last_10th_area==null) {
+            has_top_10_changed = true;
+          }
+          else if(elem.profitability>last_10th_ptb) {
+            has_top_10_changed = true;
+          }
+          else if(elem.profitability==last_10th_ptb && elem.ts>last_10th_ts) {
+            has_top_10_changed = true;
+          }
         }
 
         // Add the updated area
         int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
-        if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
-          new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
+        if(new_index > (Constants.QUERY2_MAX_INDEX -1)) {
+          new_index = (int) (Constants.QUERY2_MAX_INDEX -1);
         }
 
         elem.aindex = new_index;
@@ -273,14 +297,19 @@ public class TenMaxProfitability {
       elem.num_empty_taxis = diffTaxiNumber;
       elem.ts = ts;
       elem.resetProfitability();
-      if(!has_top_10_changed && elem.profitability>=last_10th_pft_val) {
+
+      // Check if top 10 changed
+      if(!has_top_10_changed && elem.profitability>=last_10th_ptb) {
+        has_top_10_changed = true;
+      }
+      if(!has_top_10_changed && last_10th_area==null) {
         has_top_10_changed = true;
       }
 
       // Add the area
       int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
-      if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
-        new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
+      if(new_index > (Constants.QUERY2_MAX_INDEX -1)) {
+        new_index = (int) (Constants.QUERY2_MAX_INDEX -1);
       }
       elem.aindex = new_index;
       sorted_ptb_list.get(new_index).add(elem);
@@ -296,9 +325,20 @@ public class TenMaxProfitability {
       int old_index = elem.aindex;
       sorted_ptb_list.get(old_index).remove(elem);
 
-      if(!has_top_10_changed && elem.num_empty_taxis>0 &&
-          elem.profitability>=last_10th_pft_val) {
-        has_top_10_changed = true;
+      // Check if top 10 changed
+      if(!has_top_10_changed && elem.num_empty_taxis>0) {
+        if(last_10th_area==null) {
+          has_top_10_changed = true;
+        }
+        else if(elem.area.equals(last_10th_area)) {
+          has_top_10_changed = true;
+        }
+        else if(elem.profitability>last_10th_ptb) {
+          has_top_10_changed = true;
+        }
+        else if(elem.profitability==last_10th_ptb && elem.ts>last_10th_ts) {
+          has_top_10_changed = true;
+        }
       }
 
       // update the data
@@ -308,15 +348,24 @@ public class TenMaxProfitability {
         area_elem_map.remove(a);
       } else {
         elem.resetProfitability();
-        if(!has_top_10_changed && elem.num_empty_taxis>0 &&
-            elem.profitability>last_10th_pft_val) {
-          has_top_10_changed = true;
+
+        // Check if top 10 changed
+        if(!has_top_10_changed && elem.num_empty_taxis>0) {
+          if(last_10th_area==null) {
+            has_top_10_changed = true;
+          }
+          else if(elem.profitability>last_10th_ptb) {
+            has_top_10_changed = true;
+          }
+          else if(elem.profitability==last_10th_ptb && elem.ts>last_10th_ts) {
+            has_top_10_changed = true;
+          }
         }
 
         // Add the updated data
         int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
-        if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
-          new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
+        if(new_index > (Constants.QUERY2_MAX_INDEX -1)) {
+          new_index = (int) (Constants.QUERY2_MAX_INDEX -1);
         }
 
         elem.aindex = new_index;
@@ -333,9 +382,20 @@ public class TenMaxProfitability {
       int old_index = elem.aindex;
       sorted_ptb_list.get(old_index).remove(elem);
 
-      if(!has_top_10_changed && elem.num_empty_taxis>0 &&
-          elem.profitability>=last_10th_pft_val) {
-        has_top_10_changed = true;
+      // Check if top 10 changed
+      if(!has_top_10_changed && elem.num_empty_taxis>0) {
+        if(last_10th_area==null) {
+          has_top_10_changed = true;
+        }
+        else if(elem.area.equals(last_10th_area)) {
+          has_top_10_changed = true;
+        }
+        else if(elem.profitability>last_10th_ptb) {
+          has_top_10_changed = true;
+        }
+        else if(elem.profitability==last_10th_ptb && elem.ts>last_10th_ts) {
+          has_top_10_changed = true;
+        }
       }
 
       // update the data
@@ -343,15 +403,23 @@ public class TenMaxProfitability {
       elem.ts = ts;
       elem.resetProfitability();
 
-      if(!has_top_10_changed && elem.num_empty_taxis>0 &&
-          elem.profitability>=last_10th_pft_val) {
-        has_top_10_changed = true;
+      // Check if top 10 changed
+      if(!has_top_10_changed && elem.num_empty_taxis>0) {
+        if(last_10th_area==null) {
+          has_top_10_changed = true;
+        }
+        else if(elem.profitability>last_10th_ptb) {
+          has_top_10_changed = true;
+        }
+        else if(elem.profitability==last_10th_ptb && elem.ts>last_10th_ts) {
+          has_top_10_changed = true;
+        }
       }
 
       // Add the updated data
       int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
-      if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
-        new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
+      if(new_index > (Constants.QUERY2_MAX_INDEX -1)) {
+        new_index = (int) (Constants.QUERY2_MAX_INDEX -1);
       }
       elem.aindex = new_index;
       sorted_ptb_list.get(new_index).add(elem);
@@ -367,8 +435,8 @@ public class TenMaxProfitability {
 
       // Add this area
       int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
-      if(new_index > (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1)) {
-        new_index = (int) (Constants.MAX_PFT_SIZE*Constants.INV_BUCKET_SIZE -1);
+      if(new_index > (Constants.QUERY2_MAX_INDEX -1)) {
+        new_index = (int) (Constants.QUERY2_MAX_INDEX -1);
       }
       sorted_ptb_list.get(new_index).contains(elem);
       sorted_ptb_list.get(new_index).add(elem);
@@ -376,10 +444,10 @@ public class TenMaxProfitability {
     }
   }
 
-  public void printMaxTen(PrintStream print_stream) {
+  public String printMaxTen() {
+    String print_string = "";
     int num_printed = 0;
     int current_index = Constants.NUM_EMPTY_BUCKETS-1;
-    last_10th_pft_val = 0.0f;
     while(num_printed<10 && current_index>=0) {
       Iterator<SetElem> i = sorted_ptb_list.get(current_index).iterator();
       while(i.hasNext() && num_printed<10) {
@@ -389,10 +457,10 @@ public class TenMaxProfitability {
           continue;
         }
 
-        print_stream.print((s.area.x+1) + "." + (s.area.y+1) + "," +
-            elem.num_empty_taxis + "," +  elem.mprofit.getMedian() + "," +
-            elem.profitability + ",");
-        last_10th_pft_val = elem.profitability;
+        print_string = print_string + String.valueOf(s.area.x+1) + "." + String.valueOf(s.area.y+1) + "," + String.valueOf(elem.num_empty_taxis) + "," +  String.valueOf(elem.mprofit.getMedian()) + "," + String.valueOf(elem.profitability) + ",";
+        last_10th_ptb = elem.profitability;
+        last_10th_area = elem.area;
+	last_10th_ts = elem.ts;
         num_printed++;
       }
 
@@ -402,10 +470,14 @@ public class TenMaxProfitability {
     has_top_10_changed = false;
 
     while(num_printed < 10) {
-      last_10th_pft_val = 0.0f;
-      print_stream.print("NULL,");
+      last_10th_ptb = 0.0f;
+      last_10th_area = null;
+      last_10th_ts = -1;
+      print_string = print_string + "NULL,";
       num_printed++;
     }
+
+    return print_string;
   }
 
   public boolean isSameMaxTenKey() {
