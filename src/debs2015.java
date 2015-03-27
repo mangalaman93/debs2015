@@ -395,7 +395,7 @@ class Q1Process implements Runnable {
         ten_max_changed = false;
         in_count++;
         if(in_count == 100000) {
-          System.err.println("Query 1 throughput: "+(100000/(System.currentTimeMillis()-last_time)));
+          //System.err.println("Query 1 throughput: "+(100000/(System.currentTimeMillis()-last_time)));
           in_count = 0;
           last_time = System.currentTimeMillis();
         }
@@ -604,7 +604,7 @@ class PrintProcess implements Runnable {
         if(!s.equals(prev_string)){
           long delay = System.currentTimeMillis() - time_in;
           s = s + String.valueOf(delay) + "\n";
-          //System.err.println(query + "," + String.valueOf(delay));
+          System.err.println(query + "," + String.valueOf(delay));
           System.out.print(s);
           prev_string = s;
         }
@@ -630,7 +630,7 @@ public class debs2015 {
   public static void main(String[] args) throws FileNotFoundException {
     String test_file;
     boolean running_q1 = true;
-    boolean running_q2 = false;
+    boolean running_q2 = true;
     int shift = 0;
 
     if(args.length == 0) {
