@@ -540,7 +540,7 @@ class Q2Process implements Runnable {
 
         // add the incoming event
         maxpft.enterProfitSlidingWindow(newevent.pickup_area,newevent.id,
-            newevent.total_fare, newevent.dropoff_datetime.getTime());
+            newevent.total_fare);
         maxpft.enterTaxiSlidingWindow(newevent.medallion_hack_license,
             newevent.dropoff_area, newevent.id);
 
@@ -607,6 +607,9 @@ class PrintProcess implements Runnable {
           System.err.println(query + "," + String.valueOf(delay));
           System.out.print(s);
           prev_string = s;
+        }
+        else {
+          System.out.println("HERE");
         }
         s = queue.take();
         time_in = delay_queue.take();

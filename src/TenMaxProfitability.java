@@ -19,12 +19,12 @@ public class TenMaxProfitability {
 		Mc mprofit;
 		int num_empty_taxi;
 		float ptb;
-		public long ts;
+		int id;
 		
 		PQ_elem(Area a) {
 			this.a = a;
 			this.key  = a.x*LENGTH+a.y;
-			this.ts = 0;
+			this.id = 0;
 			mprofit = new Mc();
 			num_empty_taxi = 0;
 			this.ptb = 0.0f;
@@ -60,10 +60,10 @@ public class TenMaxProfitability {
 			else if(num_empty_taxi < e.num_empty_taxi) {
 				return -1;
 			}
-			else if(ts > e.ts) {
+			else if(id > e.id) {
 				return 1;
 			}
-			else if(ts < e.ts) {
+			else if(id < e.id) {
 				return -1;
 			}
 			else {
@@ -83,22 +83,23 @@ public class TenMaxProfitability {
 				return 1;
 			}
 			else if(heap[i1].num_empty_taxi > heap[i2].num_empty_taxi) {
-				return 1;
-			}
-			else if(heap[i1].num_empty_taxi < heap[i2].num_empty_taxi) {
 				return -1;
 			}
-			else if(heap[i1].ts > heap[i2].ts) {
+			else if(heap[i1].num_empty_taxi < heap[i2].num_empty_taxi) {
+				return 1;
+			}
+			else if(heap[i1].id > heap[i2].id) {
 				return -1;
 			}
 			else {
-				return 1;
+				return -1;
 			}
 		}
 	}
 	
 	private final int LENGTH = 600;
 	private final int NUMBER_OF_AREAS = LENGTH*LENGTH;
+	private final float PRECISION_ERROR_CORRECTION = 0.000001f;
 
 	PQ_elem[] heap;
 	int[] heap_index;
@@ -171,22 +172,29 @@ public class TenMaxProfitability {
 		TaxiInfo taxi = grid_present.get(medallion_hack_license);
 		if(taxi!=null && !a.equals(taxi.area)) {
 			int curr_index = getHeapIndexForRoute(a);
-			if(!has_top_10_changed && heap[curr_index].ptb > last_ptb_val) {
+			if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && heap[curr_index].ptb >= last_ptb_val) {
 				has_top_10_changed = true;
 			}
 			heap[curr_index].num_empty_taxi = heap[curr_index].num_empty_taxi + 1;
+			heap[curr_index].id = id;
 			heap[curr_index].resetProfitability();
+			if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && heap[curr_index].ptb >= last_ptb_val) {
+				has_top_10_changed = true;
+			}
 			if(heap[curr_index].num_empty_taxi==1) percolateUp(curr_index);
 			else percolateDown(curr_index);
 
 			curr_index = getHeapIndexForRoute(taxi.area);
-			heap[curr_index].num_empty_taxi = heap[curr_index].num_empty_taxi - 1;
-			heap[curr_index].resetProfitability();
-			if(heap[curr_index].num_empty_taxi==0) percolateDown(curr_index);
-			else percolateUp(curr_index);
-			if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && heap[curr_index].ptb > last_ptb_val) {
+			if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && heap[curr_index].ptb >= last_ptb_val) {
 				has_top_10_changed = true;
 			}
+			heap[curr_index].num_empty_taxi = heap[curr_index].num_empty_taxi - 1;
+			heap[curr_index].resetProfitability();
+			if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && heap[curr_index].ptb >= last_ptb_val) {
+				has_top_10_changed = true;
+			}
+			if(heap[curr_index].num_empty_taxi==0) percolateDown(curr_index);
+			else percolateUp(curr_index);
 			taxi.area = a;
       		taxi.id = id;
 		}
@@ -195,11 +203,15 @@ public class TenMaxProfitability {
 		}
 		else if(taxi==null) {
 	    	int curr_index = getHeapIndexForRoute(a);
-	    	if(!has_top_10_changed && heap[curr_index].ptb > last_ptb_val) {
+	    	if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && heap[curr_index].ptb >= last_ptb_val) {
 				has_top_10_changed = true;
 			}
 			heap[curr_index].num_empty_taxi = heap[curr_index].num_empty_taxi + 1;
+			heap[curr_index].id = id;
 			heap[curr_index].resetProfitability();
+			if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && heap[curr_index].ptb >= last_ptb_val) {
+				has_top_10_changed = true;
+			}
 			if(heap[curr_index].num_empty_taxi==1) percolateUp(curr_index);
 			else percolateDown(curr_index);
 	    	grid_present.put(medallion_hack_license, new TaxiInfo(a, id));
@@ -210,13 +222,16 @@ public class TenMaxProfitability {
 		TaxiInfo taxi = grid_present.get(medallion_hack_license);
 	    if(taxi != null && id == taxi.id) {
 	    	int curr_index = getHeapIndexForRoute(taxi.area);
-			heap[curr_index].num_empty_taxi = heap[curr_index].num_empty_taxi - 1;
-			heap[curr_index].resetProfitability();
-			if(heap[curr_index].num_empty_taxi==0) percolateDown(curr_index);
-			else percolateUp(curr_index);
-			if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && heap[curr_index].ptb > last_ptb_val) {
+	    	if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && heap[curr_index].ptb >= last_ptb_val) {
 				has_top_10_changed = true;
 			}
+			heap[curr_index].num_empty_taxi = heap[curr_index].num_empty_taxi - 1;
+			heap[curr_index].resetProfitability();
+			if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && heap[curr_index].ptb >= last_ptb_val) {
+				has_top_10_changed = true;
+			}
+			if(heap[curr_index].num_empty_taxi==0) percolateDown(curr_index);
+			else percolateUp(curr_index);
 	    	grid_present.remove(medallion_hack_license);
 	    }
 	}
@@ -236,19 +251,20 @@ public class TenMaxProfitability {
 		else {
 			percolateDown(curr_index);
 		}
-		if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && old_ptb_val > last_ptb_val) {
+		curr_index = getHeapIndexForRoute(a);
+		if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && old_ptb_val >= last_ptb_val) {
 			has_top_10_changed = true;
 		}
-		if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && new_ptb_val > last_ptb_val) {
+		if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && new_ptb_val >= last_ptb_val) {
 			has_top_10_changed = true;
 		}
 	}
 
-	public void enterProfitSlidingWindow(Area a, int id, float profit, long ts) {
+	public void enterProfitSlidingWindow(Area a, int id, float profit) {
 		int curr_index = getHeapIndexForRoute(a);
 		float old_ptb_val = heap[curr_index].ptb;
 		heap[curr_index].mprofit.insert(id,profit);
-		heap[curr_index].ts = ts;
+		heap[curr_index].id = id;
 		heap[curr_index].resetProfitability();
 		float new_ptb_val = heap[curr_index].ptb;
 		if(heap[curr_index].num_empty_taxi == 0) {
@@ -260,10 +276,11 @@ public class TenMaxProfitability {
 		else {
 			percolateDown(curr_index);
 		}
-		if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && old_ptb_val > last_ptb_val) {
+		curr_index = getHeapIndexForRoute(a);
+		if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && old_ptb_val >= last_ptb_val) {
 			has_top_10_changed = true;
 		}
-		if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && new_ptb_val > last_ptb_val) {
+		if(!has_top_10_changed && heap[curr_index].num_empty_taxi>0 && new_ptb_val >= last_ptb_val) {
 			has_top_10_changed = true;
 		}
 	}
@@ -278,7 +295,7 @@ public class TenMaxProfitability {
 			int top_index = queue.poll().intValue();
 			ret_string += (heap[top_index].a.x+1) + "." + (heap[top_index].a.y+1) + ","
 					+ heap[top_index].num_empty_taxi + "," + heap[top_index].mprofit.getMedian() + "," + heap[top_index].ptb + ",";
-			last_ptb_val = heap[top_index].ptb-0.0001f;
+			last_ptb_val = heap[top_index].ptb - PRECISION_ERROR_CORRECTION;
 			if(heap[top_index*2+1].num_empty_taxi>0) queue.add(top_index*2+1);
 			if(heap[top_index*2+2].num_empty_taxi>0) queue.add(top_index*2+2);
 			numPrinted++;
