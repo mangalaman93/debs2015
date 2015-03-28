@@ -6,19 +6,12 @@ public class Area {
   public Area(int x, int y) {
     this.x = x;
     this.y = y;
-    Integer temp = (this.x << 16) + this.y;
-    this.hash = temp.hashCode();
+    
+    /* An Elegant Pairing Function by Matthew Szudzik, Wolfram Research, Inc. */
+    this.hash = x >= y ? x * x + x + y : x + y * y;
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if(!(obj instanceof Area))
-      return false;
-
-    if(obj == this)
-      return true;
-
-    Area a = (Area) obj;
+  public boolean equals(Area a) {
     if(a.x == this.x && a.y == this.y)
       return true;
 
