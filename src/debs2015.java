@@ -3,6 +3,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.nio.file.*;
@@ -182,11 +183,11 @@ class IoProcess implements Runnable {
  *  *create and share kernel queues
  */
 class IoProcessQ1 implements Runnable {
-  private BlockingQueue<Q1Elem> queue_q1;
+  private MyQueue<Q1Elem> queue_q1;
   private Geo geoq1;
   private String inputfile;
 
-  public IoProcessQ1(BlockingQueue<Q1Elem> queue1, String ifile) {
+  public IoProcessQ1(MyQueue<Q1Elem> queue1, String ifile) {
     this.queue_q1 = queue1;
     this.geoq1 = new Geo(-74.913585f, 41.474937f, 500, 500, 300, 300);
     this.inputfile = ifile;
@@ -240,7 +241,10 @@ class IoProcessQ1 implements Runnable {
           q1event.route = new Route(from, to);
 
           // Put events into queues for Q1
-          queue_q1.put(q1event);
+//          queue_q1.put(q1event);
+          while (!queue_q1.offer(q1event)) {
+            Thread.yield();
+          }
         } catch(Exception e) {
           // System.out.println("Error parsing for query 1. Skipping..." + line);
           // System.out.println(e.getMessage());
@@ -251,7 +255,10 @@ class IoProcessQ1 implements Runnable {
       // Add sentinel
       Q1Elem q1event = new Q1Elem();
       q1event.time_in = 0;
-      queue_q1.put(q1event);
+//      queue_q1.put(q1event);
+      while (!queue_q1.offer(q1event)) {
+        Thread.yield();
+      }
       inputstream.close();
     } catch(Exception e) {
       System.out.println("Error in IoProcess!");
@@ -268,12 +275,12 @@ class IoProcessQ1 implements Runnable {
  *  *create and share kernel queues
  */
 class IoProcessQ2 implements Runnable {
-  private BlockingQueue<Q2Elem> queue_q2;
+  private MyQueue<Q2Elem> queue_q2;
   private Geo geoq2;
   private String inputfile;
   private int id;
 
-  public IoProcessQ2(BlockingQueue<Q2Elem> queue2, String ifile) {
+  public IoProcessQ2(MyQueue<Q2Elem> queue2, String ifile) {
     this.queue_q2 = queue2;
     this.geoq2 = new Geo(-74.913585f, 41.474937f, 250, 250, 600, 600);
     this.inputfile = ifile;
@@ -339,7 +346,10 @@ class IoProcessQ2 implements Runnable {
 
           // Put events into queues for Q2
           q2event.id = id++;
-          queue_q2.put(q2event);
+//          queue_q2.put(q2event);
+          while (!queue_q2.offer(q2event)) {
+            Thread.yield();
+          }
         } catch(Exception e) {
           // System.out.println("Error parsing for query 2. Skipping..." + line);
           // System.out.println(e.getMessage());
@@ -350,7 +360,10 @@ class IoProcessQ2 implements Runnable {
       // Add sentinel
       Q2Elem q2event = new Q2Elem();
       q2event.time_in = 0;
-      queue_q2.put(q2event);
+//      queue_q2.put(q2event);
+      while (!queue_q2.offer(q2event)) {
+        Thread.yield();
+      }
       inputstream.close();
     } catch(Exception e) {
       System.out.println("Error in IoProcess!");
@@ -366,13 +379,13 @@ class IoProcessQ2 implements Runnable {
  *  *output if list of 10 most frequent routes change
  */
 class Q1Process implements Runnable {
-  private BlockingQueue<Q1Elem> queue;
+  private MyQueue<Q1Elem> queue;
   private BlockingQueue<String> output_queue;
   private BlockingQueue<Long> delay_queue;
   private TenMaxFrequency maxfs;
   private LinkedList<Q1Elem> sliding_window;
 
-  public Q1Process(BlockingQueue<Q1Elem> queue, BlockingQueue<String> output_queue, BlockingQueue<Long> delay_queue) {
+  public Q1Process(MyQueue<Q1Elem> queue, BlockingQueue<String> output_queue, BlockingQueue<Long> delay_queue) {
     this.queue = queue;
     this.output_queue = output_queue;
     this.delay_queue = delay_queue;
@@ -386,7 +399,10 @@ class Q1Process implements Runnable {
     long last_time = System.currentTimeMillis();
 
     try {
-      Q1Elem lastevent, newevent=queue.take();
+      Q1Elem lastevent, newevent;
+      while (null == (newevent = queue.poll())) {
+        Thread.yield();
+      }
       long lastms = 0;
       boolean ten_max_changed = false;
 
@@ -446,7 +462,10 @@ class Q1Process implements Runnable {
         }
 
         // Get the next event to process from the queue
-        newevent = queue.take();
+//        newevent = queue.take();
+        while (null == (newevent = queue.poll())) {
+          Thread.yield();
+        }
       }
     } catch(InterruptedException e) {
       System.out.println("Error in Q1Process!");
@@ -474,7 +493,7 @@ class Q1Process implements Runnable {
  */
 
 class Q2Process implements Runnable {
-  private BlockingQueue<Q2Elem> queue;
+  private MyQueue<Q2Elem> queue;
   private BlockingQueue<String> output_queue;
   private BlockingQueue<Long> delay_queue;
   private TenMaxProfitability maxpft;
@@ -482,7 +501,7 @@ class Q2Process implements Runnable {
   private LinkedList<Q2Elem> swindow15;
   // private PrintStream print_stream;
 
-  public Q2Process(BlockingQueue<Q2Elem> queue2, BlockingQueue<String> output_queue, BlockingQueue<Long> delay_queue) {
+  public Q2Process(MyQueue<Q2Elem> queue2, BlockingQueue<String> output_queue, BlockingQueue<Long> delay_queue) {
     this.queue = queue2;
     this.output_queue = output_queue;
     this.delay_queue = delay_queue;
@@ -496,7 +515,10 @@ class Q2Process implements Runnable {
     // int in_count = 0;
     long last_time = System.currentTimeMillis();
     try {
-      Q2Elem lastevent, newevent = queue.take();
+      Q2Elem lastevent, newevent;
+      while (null == (newevent = queue.poll())) {
+        Thread.yield();
+      }
       long lastms;
 
       while(newevent.time_in != 0) {
@@ -566,7 +588,10 @@ class Q2Process implements Runnable {
         }
 
         //Get the next event to process from the queue
-        newevent = queue.take();
+//        newevent = queue.take();
+        while (null == (newevent = queue.poll())) {
+          Thread.yield();
+        }
       }
     } catch(Exception e) {
       System.out.println("Error in Q2Process!");
@@ -628,14 +653,17 @@ class PrintProcess implements Runnable {
 }
 
 public class debs2015 {
-  private static BlockingQueue<Q1Elem> queue_for_Q1;
-  private static BlockingQueue<Q2Elem> queue_for_Q2;
+  private static MyQueue<Q1Elem> queue_for_Q1;
+  private static MyQueue<Q2Elem> queue_for_Q2;
   private static BlockingQueue<String> output_queue_for_Q1;
   private static BlockingQueue<String> output_queue_for_Q2;
   private static BlockingQueue<Long> delay_queue_for_Q1;
   private static BlockingQueue<Long> delay_queue_for_Q2;
 
   public static void main(String[] args) throws FileNotFoundException {
+    System.setOut(new PrintStream("/dev/null"));
+    System.setErr(new PrintStream("temp.csv"));
+
     String test_file;
     boolean running_q1 = true;
     boolean running_q2 = true;
@@ -668,26 +696,26 @@ public class debs2015 {
 
     // Initializing queues
     if(running_q1) {
-      queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, false);
+      queue_for_Q1 = new MyQueue<Q1Elem>(Constants.QUEUE1_CAPACITY);
       output_queue_for_Q1 = new ArrayBlockingQueue<String>(Constants.QUEUE1_OUTPUT_CAPACITY,false);
       delay_queue_for_Q1 = new ArrayBlockingQueue<Long>(Constants.QUEUE1_OUTPUT_CAPACITY,false);
     }
     if(running_q2) {
-      queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(Constants.QUEUE2_CAPACITY, false);
+      queue_for_Q2 = new MyQueue<Q2Elem>(Constants.QUEUE2_CAPACITY);
       output_queue_for_Q2 = new ArrayBlockingQueue<String>(Constants.QUEUE2_OUTPUT_CAPACITY,false);
       delay_queue_for_Q2 = new ArrayBlockingQueue<Long>(Constants.QUEUE2_OUTPUT_CAPACITY,false);
     }
 
     // start threads
-    if(Constants.TWO_IO_PROCESS || (!(running_q1 && running_q2))) {
+    if(Constants.TWO_IO_PROCESS){ // || (!(running_q1 && running_q2))) {
       Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, test_file));
       Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, test_file));
       if(running_q1) threadForIoProcessQ1.start();
       if(running_q2) threadForIoProcessQ2.start();
-    } else {
-      Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1, queue_for_Q2, test_file));
-      threadForIoProcess.start();
-    }
+    }// else {
+//      Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1, queue_for_Q2, test_file));
+//      threadForIoProcess.start();
+//    }
 
     PrintStream q1out = new PrintStream(new FileOutputStream(Constants.Q1_FILE, false));
     Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, output_queue_for_Q1, delay_queue_for_Q1));
