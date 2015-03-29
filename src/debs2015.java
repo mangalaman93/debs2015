@@ -622,7 +622,7 @@ class IoProcessQ2 implements Runnable {
     this.inputfile = ifile;
     id = 0;
   }
-  
+
   @Override
   public void run() {
     FileReader reader;
@@ -1220,15 +1220,15 @@ public class debs2015 {
     }
 
     // start threads
-    //    if(Constants.TWO_IO_PROCESS || (!(running_q1 && running_q2))) {
-    //      Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, test_file));
-    //      Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, test_file));
-    //      if(running_q1) threadForIoProcessQ1.start();
-    //      if(running_q2) threadForIoProcessQ2.start();
-    //    } else {
-    Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1, queue_for_Q2, test_file));
-    threadForIoProcess.start();
-    //    }
+    if(Constants.TWO_IO_PROCESS || (!(running_q1 && running_q2))) {
+      Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, test_file));
+      Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, test_file));
+      if(running_q1) threadForIoProcessQ1.start();
+      if(running_q2) threadForIoProcessQ2.start();
+    } else {
+      Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1, queue_for_Q2, test_file));
+      threadForIoProcess.start();
+    }
 
     PrintStream q1out = new PrintStream(new FileOutputStream(Constants.Q1_FILE, false));
     Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, output_queue_for_Q1, delay_queue_for_Q1));
