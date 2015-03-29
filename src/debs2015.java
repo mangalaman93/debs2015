@@ -147,9 +147,17 @@ class IoProcess implements Runnable {
           st.nextToken();
 
           // Put events into queues for Q1 and Q2
-          queue_q1.put(q1event);
+//          queue_q1.put(q1event);
           q2event.id = id++;
-          queue_q2.put(q2event);
+//          queue_q2.put(q2event);
+
+          while (!queue_q1.offer(q1event)) {
+            Thread.sleep(6);
+          }
+
+          while (!queue_q2.offer(q2event)) {
+            Thread.yield();
+          }
         } catch(Exception e) {
           // System.out.println("Error in parsing. Skipping..." + line);
           // System.out.println(e.getMessage());
