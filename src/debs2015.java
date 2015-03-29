@@ -20,10 +20,15 @@ class Q1Elem {
 
   public void print() {
     System.out.print(pickup_datetime);
+    System.out.print("-");
     System.out.print(dropoff_datetime);
+    System.out.print("-");
     System.out.print(route.fromArea.x);
+    System.out.print("-");
     System.out.print(route.fromArea.y);
+    System.out.print("-");
     System.out.print(route.toArea.x);
+    System.out.print("-");
     System.out.println(route.toArea.y);
   }
 }
@@ -40,12 +45,19 @@ class Q2Elem {
 
   public void print() {
     System.out.print(medallion_hack_license);
+    System.out.print("-");
     System.out.print(pickup_datetime);
+    System.out.print("-");
     System.out.print(dropoff_datetime);
+    System.out.print("-");
     System.out.print(pickup_area.x);
+    System.out.print("-");
     System.out.print(pickup_area.y);
+    System.out.print("-");
     System.out.print(dropoff_area.x);
+    System.out.print("-");
     System.out.print(dropoff_area.y);
+    System.out.print("-");
     System.out.println(id);
   }
 }
@@ -107,12 +119,16 @@ class IoProcess implements Runnable {
             if(endbuffer-startbuffer != 0) {
               System.arraycopy(buffer, startbuffer, buffer, 0, endbuffer-startbuffer);
             }
-            startbuffer = endbuffer - startbuffer;
-            int n = reader.read(buffer, startbuffer, Constants.BUFFER_SIZE);
-            if(n == -1 && startbuffer == 0) {  // EOF
+            int n = reader.read(buffer, endbuffer-startbuffer, Constants.BUFFER_SIZE);
+            if(n == -1 && startbuffer == endbuffer) {  // EOF
               break;
             }
-            endbuffer = n + startbuffer;
+            if(n != -1) {
+              endbuffer = n + endbuffer - startbuffer;
+            } else {
+              endbuffer = endbuffer - startbuffer;
+            }
+            startbuffer = 0;
           }
 
           // medallion
