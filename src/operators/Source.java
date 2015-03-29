@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import uk.ac.imperial.lsds.seep.comm.serialization.DataTuple;
 import uk.ac.imperial.lsds.seep.comm.serialization.messages.TuplePayload;
@@ -37,6 +39,9 @@ public class Source implements StatelessOperator {
 	private BufferedReader reader = null;
 	private int blockSize = Integer.parseInt(System.getProperty("source.blocksize"));
 	private List<DataTuple> block = new ArrayList<DataTuple>();
+	private BlockingQueue<String> queue;
+	private BlockingQueue<DataTuple> tuple_queue;
+	private DataParser1 dp = null;
 	
 	// data is now a field, so that it is accessible from outside processData()
 	DataTuple data;
@@ -48,7 +53,8 @@ public class Source implements StatelessOperator {
 		//tuple schema stuff
 		Map<String, Integer> mapper = api.getDataMapper();
 		data = new DataTuple(mapper, new TuplePayload());
-		
+		dp.setData(data);
+
 		//time control stuff
 		int c = 0;
 		long init = System.currentTimeMillis();
@@ -60,7 +66,8 @@ public class Source implements StatelessOperator {
 			 * READ FROM DISK
 			 */
 			try {
-				DataTuple toSend = readNext();
+				DataTuple toSend = tuple_queue.take();
+				//DataTuple toSend = readNext();
 				if(toSend != null){
 					//toSend.getPayload().instrumentation_ts = System.currentTimeMillis();
 					api.send(toSend);
@@ -128,7 +135,8 @@ public class Source implements StatelessOperator {
 			return null;
 		}
 		
-		String line = reader.readLine();
+		String line = queue.take();
+		//String line = reader.readLine();
 		long ts = System.currentTimeMillis();
 //		System.out.println(line);
 		if (line == null)
@@ -261,10 +269,13 @@ public class Source implements StatelessOperator {
 	}
 
 	public void setUp(URL url) throws IOException {
-		this.reader = new BufferedReader(new InputStreamReader(url.openStream()));
-		if (blockSize > 0) {
-			this.block = new ArrayList<DataTuple>(blockSize);
-		}
+		queue = new ArrayBlockingQueue<String>(blockSize, false);
+		Thread threadForReading = new Thread(new DiskReader1(queue));
+		threadForReading.start();
+		//this.reader = new BufferedReader(new InputStreamReader(url.openStream()));
+		//if (blockSize > 0) {
+		//	this.block = new ArrayList<DataTuple>(blockSize);
+		//}
 		
 		Map<String, Integer> mapper = api.getDataMapper();
 		this.dataTupleStructure = new DataTuple(mapper, new TuplePayload());
@@ -296,3 +307,164 @@ public class Source implements StatelessOperator {
 		}
 	}
 }
+
+class DiskReader1 implements Runnable {
+
+	private BlockingQueue<String> ip_queue;
+	private BufferedReader reader = null;
+	String filePath = "file://"+System.getProperty("source.path");
+	public DiskReader1(BlockingQueue<String> queue) {
+		this.ip_queue = queue;
+		URL url;
+		try {   
+			url = new URL(filePath);
+			this.reader = new BufferedReader(new InputStreamReader(url.openStream()));
+
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+	@Override
+	public void run() {
+		while (true)
+			try {   
+				ip_queue.put(reader.readLine());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+	}
+
+}
+
+class DataParser1 implements Runnable {
+
+	public final static String[] KEYS = "medallion,hack_license,pickup_datetime,dropoff_datetime,trip_time_in_secs,trip_distance,pickup_longitude,pickup_latitude,dropoff_longitude,dropoff_latitude,payment_type,fare_amount,surcharge,mta_tax,tip_amount,tolls_amount,total_amount".split(",");
+	public final static String[] TYPES = "String,String,String,String,Integer,Float,Float,Float,Float,Float,String,Float,Float,Float,Float,Float,Float".split(",");
+	public final static Boolean[] REQUIRED = {true,true,true,true,false,false,true,true,true,true,false,true,false,false,true,false,false};
+	public final static int outputFieldCount = 10;
+
+	private BlockingQueue<String> ip_queue;
+	private BlockingQueue<DataTuple> op_queue;
+	private DataTuple data;
+	public DataParser1(BlockingQueue<String> ip_queue, BlockingQueue<DataTuple> op_queue) {
+		this.ip_queue = ip_queue;
+		this.op_queue = op_queue;
+		this.data = null;
+	}
+	public void setData(DataTuple data) {
+		this.data = data;
+	}
+	@Override
+	public void run() {
+		while (data == null) {
+			try {
+			    Thread.sleep(1000);
+			} catch(InterruptedException ex) {
+			    Thread.currentThread().interrupt();
+			}
+		}
+		while (true) {
+
+			String line = null;
+			try {
+				line = ip_queue.take();
+				if (line == null)
+					op_queue.put(null);
+			} catch(InterruptedException ex) {
+			    Thread.currentThread().interrupt();
+			}
+
+			Object[] values = new Object[outputFieldCount];
+			String[] fields = line.split(",");
+
+			int i = 0, j=0;
+			int len = line.length();
+			int max = len - 1;
+			int floating = 0;
+			int sign = 1;
+
+			Long longVal = 0L;
+			Float floatVal = 0f;
+
+			for (int c = 0; c < len; c++) {
+				char ch = line.charAt(c);
+				if (ch == ',') {
+					if (!REQUIRED[i]) {
+						i++;
+						continue;
+					}
+					switch (TYPES[i]) {
+					//					case "Integer":
+					//						values[j] = new Integer(((int)longVal)	); break;
+					case "Long":
+						values[j] = sign * new Long(longVal); break;
+					case "Float":
+						values[j] = sign * new Float(longVal + floatVal / floating); break;
+					case "String":
+						values[j] = fields[i]; break;
+					}
+
+					longVal = 0L;
+					floatVal = 0f;
+					floating = 0;
+					sign = 1;
+					i++;
+					j++;
+
+					continue;
+				}
+				if (!REQUIRED[i] || TYPES[i].compareTo("String") == 0) continue;
+				if (ch == '.') {
+					floating = 1;
+					continue;
+				}
+				if (ch == '-') {
+					sign = -1;
+					continue;
+				}
+
+				if (floating > 0) {
+					floatVal *= 10;
+					floatVal += (ch - '0');
+					floating *= 10;
+				}
+				else {
+					longVal *= 10;
+					longVal += (ch - '0');
+				}
+
+				if (c == max) {
+					switch (TYPES[i]) {
+					//					case "Integer":
+					//						values[j] = new Integer(((int)longVal)	); break;
+					case "Long":
+						values[j] = sign * new Long(longVal); break;
+					case "Float":
+						values[j] = sign * new Float(longVal + floatVal / floating); break;
+					case "String":
+						values[j] = fields[i]; break;
+					}
+					DataTuple output = data.newTuple(values);
+					try {
+						op_queue.put(output);
+					} catch(InterruptedException ex) {
+					    Thread.currentThread().interrupt();
+					}
+				}
+			}
+			DataTuple output = data.newTuple(values);
+			try {
+				op_queue.put(output);
+			} catch(InterruptedException ex) {
+			    Thread.currentThread().interrupt();
+			}
+		}
+	}
+
+}
+

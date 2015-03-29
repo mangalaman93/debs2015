@@ -34,7 +34,7 @@ public class Base implements QueryComposer {
 		src2Fields.add("fare_amount");
 		src2Fields.add("tip_amount");
 
-		//Connectable src = QueryBuilder.newStatelessSource(new Source(), 1, srcFields);
+		//Connectable src = QueryBuilder.newStatelessSource(new Source(), 5, srcFields);
 
 		Connectable src2 = QueryBuilder.newStatelessSource(new Source2(), 1, src2Fields);
 		Connectable q1 = QueryBuilder.newStatelessOperator(new Q1Process(), 2, src2Fields);
