@@ -1,5 +1,6 @@
 package operators;
 
+import uk.ac.imperial.lsds.seep.GLOBALS;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -34,7 +35,7 @@ public class Source implements StatelessOperator {
 	public final static Boolean[] REQUIRED = {false,false,true,true,false,false,true,true,true,true,false,false,false,false,false,false,false};
 	public final static int outputFieldCount = 6;
 	private BufferedReader reader = null;
-	private int blockSize = -1;
+	private int blockSize = Integer.parseInt(System.getProperty("source.blocksize"));
 	private List<DataTuple> block = new ArrayList<DataTuple>();
 	
 	// data is now a field, so that it is accessible from outside processData()
@@ -61,16 +62,18 @@ public class Source implements StatelessOperator {
 			try {
 				DataTuple toSend = readNext();
 				if(toSend != null){
-					toSend.getPayload().instrumentation_ts = System.currentTimeMillis();
+					//toSend.getPayload().instrumentation_ts = System.currentTimeMillis();
 					api.send(toSend);
 				} else {
+					System.out.println("SRC + DONE " + System.currentTimeMillis());
+					for (int x=0; x< Integer.parseInt(System.getProperty("operator.batchLimit", GLOBALS.valueFor("batchLimit"))); x++)
+						api.send_toStreamId_toAll(data.getNoopDataTuple(), 0);
 					c--;
 					try {
 					    Thread.sleep(1000);
 					} catch(InterruptedException ex) {
 					    Thread.currentThread().interrupt();
 					}
-					System.out.println("SRC + DONE " + System.currentTimeMillis());
 					return;
 				}
 			} 
@@ -126,6 +129,7 @@ public class Source implements StatelessOperator {
 		}
 		
 		String line = reader.readLine();
+		long ts = System.currentTimeMillis();
 //		System.out.println(line);
 		if (line == null)
 			return null;
@@ -201,10 +205,12 @@ public class Source implements StatelessOperator {
 						values[j] = fields[i]; break;
 				}
 				DataTuple output = data.newTuple(values);
+				output.getPayload().instrumentation_ts = ts;
 				return output;
 			}
 		}
 		DataTuple output = data.newTuple(values);
+		output.getPayload().instrumentation_ts = ts;
 		return output;
 	}
 
@@ -227,7 +233,7 @@ public class Source implements StatelessOperator {
 		else if(opId == 13){
 			filePath = "file:///houses15-19.csv";
 		}
-		filePath = "file:///mnt/data/sorted_data.csv";
+		filePath = "file://"+System.getProperty("source.path");
 		URL url;
 		try {
 			url = new URL(filePath);

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import uk.ac.imperial.lsds.seep.GLOBALS;
 import uk.ac.imperial.lsds.seep.comm.serialization.DataTuple;
 import uk.ac.imperial.lsds.seep.comm.serialization.messages.TuplePayload;
 import uk.ac.imperial.lsds.seep.operator.StatelessOperator;
@@ -34,7 +35,7 @@ public class Source2 implements StatelessOperator {
 	public final static Boolean[] REQUIRED = {true,true,true,true,false,false,true,true,true,true,false,true,false,false,true,false,false};
 	public final static int outputFieldCount = 10;
 	private BufferedReader reader = null;
-	private int blockSize = -1;
+	private int blockSize = Integer.parseInt(System.getProperty("source.blocksize"));
 	private List<DataTuple> block = new ArrayList<DataTuple>();
 	
 	// data is now a field, so that it is accessible from outside processData()
@@ -61,17 +62,20 @@ public class Source2 implements StatelessOperator {
 			try {
 				DataTuple toSend = readNext();
 				if(toSend != null){
-					toSend.getPayload().instrumentation_ts = System.currentTimeMillis();
+					//toSend.getPayload().instrumentation_ts = System.currentTimeMillis();
 					//api.send(toSend);
 					api.send_toStreamId_toAll(toSend, 0);
 				} else {
+					System.out.println("SRC + DONE "+System.currentTimeMillis());
+					data.getPayload().instrumentation_ts = 0;
+					for (int x=0; x< Integer.parseInt(System.getProperty("operator.batchLimit", GLOBALS.valueFor("batchLimit"))); x++)
+						api.send_toStreamId_toAll(data, 0);
 					c--;
 					try {
 					    Thread.sleep(1000);
 					} catch(InterruptedException ex) {
 					    Thread.currentThread().interrupt();
 					}
-					System.out.println("SRC + DONE "+System.currentTimeMillis());
 					return;
 				}
 			} 
@@ -228,7 +232,7 @@ public class Source2 implements StatelessOperator {
 		else if(opId == 13){
 			filePath = "file:///houses15-19.csv";
 		}
-		filePath = "file:///mnt/data/sorted_data.csv";
+		filePath = "file://"+System.getProperty("source.path");
 		URL url;
 		try {
 			url = new URL(filePath);
