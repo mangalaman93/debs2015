@@ -5,6 +5,7 @@ import java.util.StringTokenizer;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.nio.file.*;
 import java.nio.charset.StandardCharsets;
 import java.io.OutputStream;
@@ -16,6 +17,15 @@ class Q1Elem {
   public Timestamp dropoff_datetime;
   public Route route;
   public long time_in;
+
+  public void print() {
+    System.out.print(pickup_datetime);
+    System.out.print(dropoff_datetime);
+    System.out.print(route.fromArea.x);
+    System.out.print(route.fromArea.y);
+    System.out.print(route.toArea.x);
+    System.out.println(route.toArea.y);
+  }
 }
 
 class Q2Elem {
@@ -27,6 +37,17 @@ class Q2Elem {
   public float total_fare;
   public long time_in;
   public int id;
+
+  public void print() {
+    System.out.print(medallion_hack_license);
+    System.out.print(pickup_datetime);
+    System.out.print(dropoff_datetime);
+    System.out.print(pickup_area.x);
+    System.out.print(pickup_area.y);
+    System.out.print(dropoff_area.x);
+    System.out.print(dropoff_area.y);
+    System.out.println(id);
+  }
 }
 
 /* IoProcessor: Task to perform-
@@ -55,46 +76,184 @@ class IoProcess implements Runnable {
 
   @Override
   public void run() {
-    try {
-      BufferedReader inputstream = Files.newBufferedReader(FileSystems.getDefault().getPath(inputfile),StandardCharsets.UTF_8);
-      // SimpleDateFormat datefmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-      float pickup_longitude, pickup_latitude, dropoff_longitude, dropoff_latitude;
-      Area from, to;
-      String line;
+    FileReader reader;
+    float pickup_longitude, pickup_latitude, dropoff_longitude, dropoff_latitude;
+    Area from, to;
 
-      while((line = inputstream.readLine()) != null) {
+    char buffer[] = new char[Constants.BUFFER_SIZE + Constants.MAX_LINE_SIZE];
+    int startbuffer = -1;
+    int endbuffer = 0;
+    int oldstart = 0;
+
+    try {
+      reader = new FileReader(inputfile);
+
+      while(true) {
         try {
+          // skipping the line in case
+          while(startbuffer != -1 && buffer[startbuffer] != '\n') {
+            startbuffer++;
+          }
+          startbuffer++;
+
+          // init
           Q1Elem q1event = new Q1Elem();
           Q2Elem q2event = new Q2Elem();
-          // putting current time
           q1event.time_in = System.currentTimeMillis();
           q2event.time_in = System.currentTimeMillis();
 
-          StringTokenizer st = new StringTokenizer(line, ",");
+          // ensure enough char for one trip
+          if(endbuffer-startbuffer < Constants.MAX_LINE_SIZE) {
+            if(endbuffer-startbuffer != 0) {
+              System.arraycopy(buffer, startbuffer, buffer, 0, endbuffer-startbuffer);
+            }
+            startbuffer = endbuffer - startbuffer;
+            int n = reader.read(buffer, startbuffer, Constants.BUFFER_SIZE);
+            if(n == -1 && startbuffer == 0) {  // EOF
+              break;
+            }
+            endbuffer = n + startbuffer;
+          }
 
-          // medallion+hack license
-          q2event.medallion_hack_license = st.nextToken()+st.nextToken();
+          // medallion
+          oldstart = startbuffer;
+          while(buffer[startbuffer] != ',') {
+            if(buffer[startbuffer] == '\n') {
+              oldstart = startbuffer;
+              break;
+            }
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            continue;
+          } else {
+            startbuffer++;
+          }
+
+          // hack license
+          while(buffer[startbuffer] != ',') {
+            if(buffer[startbuffer] == '\n') {
+              oldstart = startbuffer;
+              break;
+            }
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            continue;
+          } else {
+            q2event.medallion_hack_license = String.copyValueOf(buffer, oldstart, startbuffer-oldstart);
+            startbuffer++;
+          }
 
           // pickup datetime
-          long pdate = Constants.parseDate(st.nextToken());
-          // Date pdate = datefmt.parse(st.nextToken());
-          q1event.pickup_datetime = new java.sql.Timestamp(pdate);
-          q2event.pickup_datetime = new java.sql.Timestamp(pdate);
+          oldstart = startbuffer;
+          while(buffer[startbuffer] != ',') {
+            if(buffer[startbuffer] == '\n') {
+              oldstart = startbuffer;
+              break;
+            }
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            continue;
+          } else {
+            long pdate = Constants.parseDate(buffer, oldstart, startbuffer);
+            q1event.pickup_datetime = new java.sql.Timestamp(pdate);
+            q2event.pickup_datetime = new java.sql.Timestamp(pdate);
+            startbuffer++;
+          }
 
           // dropoff datetime
-          pdate = Constants.parseDate(st.nextToken());
-          // pdate = datefmt.parse(st.nextToken());
-          q1event.dropoff_datetime = new java.sql.Timestamp(pdate);
-          q2event.dropoff_datetime = new java.sql.Timestamp(pdate);
+          oldstart = startbuffer;
+          while(buffer[startbuffer] != ',') {
+            if(buffer[startbuffer] == '\n') {
+              oldstart = startbuffer;
+              break;
+            }
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            continue;
+          } else {
+            long pdate = Constants.parseDate(buffer, oldstart, startbuffer);
+            q1event.dropoff_datetime = new java.sql.Timestamp(pdate);
+            q2event.dropoff_datetime = new java.sql.Timestamp(pdate);
+            startbuffer++;
+          }
 
           // trip time in secs
-          st.nextToken();
+          oldstart = startbuffer;
+          while(buffer[startbuffer] != ',') {
+            if(buffer[startbuffer] == '\n') {
+              oldstart = startbuffer;
+              break;
+            }
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            continue;
+          } else {
+            startbuffer++;
+          }
+
           // trip distance
-          st.nextToken();
+          oldstart = startbuffer;
+          while(buffer[startbuffer] != ',') {
+            if(buffer[startbuffer] == '\n') {
+              oldstart = startbuffer;
+              break;
+            }
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            break;
+          } else {
+            startbuffer++;
+          }
+
           // pickup longitude
-          pickup_longitude = Float.parseFloat(st.nextToken());
+          oldstart = startbuffer;
+          while(buffer[startbuffer] != ',') {
+            if(buffer[startbuffer] == '\n') {
+              oldstart = startbuffer;
+              break;
+            }
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            continue;
+          } else {
+            StringBuilder temp = new StringBuilder();
+            temp.append(buffer, oldstart, startbuffer-oldstart);
+            pickup_longitude = Float.parseFloat(temp.toString());
+            startbuffer++;
+          }
+
           // pickup latitude
-          pickup_latitude = Float.parseFloat(st.nextToken());
+          oldstart = startbuffer;
+          while(buffer[startbuffer] != ',') {
+            if(buffer[startbuffer] == '\n') {
+              oldstart = startbuffer;
+              break;
+            }
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            continue;
+          } else {
+            StringBuilder temp = new StringBuilder();
+            temp.append(buffer, oldstart, startbuffer-oldstart);
+            pickup_latitude = Float.parseFloat(temp.toString());
+            startbuffer++;
+          }
 
           // geo q1
           from = geoq1.translate(pickup_longitude, pickup_latitude);
@@ -109,9 +268,42 @@ class IoProcess implements Runnable {
           }
 
           // dropoff longitude
-          dropoff_longitude = Float.parseFloat(st.nextToken());
+          oldstart = startbuffer;
+          while(buffer[startbuffer] != ',') {
+            if(buffer[startbuffer] == '\n') {
+              oldstart = startbuffer;
+              break;
+            }
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            continue;
+          } else {
+            StringBuilder temp = new StringBuilder();
+            temp.append(buffer, oldstart, startbuffer-oldstart);
+            dropoff_longitude = Float.parseFloat(temp.toString());
+            startbuffer++;
+          }
+
           // dropoff latitude
-          dropoff_latitude = Float.parseFloat(st.nextToken());
+          oldstart = startbuffer;
+          while(buffer[startbuffer] != ',') {
+            if(buffer[startbuffer] == '\n') {
+              oldstart = startbuffer;
+              break;
+            }
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            continue;
+          } else {
+            StringBuilder temp = new StringBuilder();
+            temp.append(buffer, oldstart, startbuffer-oldstart);
+            dropoff_latitude = Float.parseFloat(temp.toString());
+            startbuffer++;
+          }
 
           // geo q1
           to = geoq1.translate(dropoff_longitude, dropoff_latitude);
@@ -127,46 +319,140 @@ class IoProcess implements Runnable {
           }
 
           // payment type
-          st.nextToken();
+          oldstart = startbuffer;
+          while(buffer[startbuffer] != ',') {
+            if(buffer[startbuffer] == '\n') {
+              oldstart = startbuffer;
+              break;
+            }
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            continue;
+          } else {
+            startbuffer++;
+          }
+
           // fare amount
-          q2event.total_fare = Float.parseFloat(st.nextToken());
+          oldstart = startbuffer;
+          while(buffer[startbuffer] != ',') {
+            if(buffer[startbuffer] == '\n') {
+              oldstart = startbuffer;
+              break;
+            }
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            continue;
+          } else {
+            StringBuilder temp = new StringBuilder();
+            temp.append(buffer, oldstart, startbuffer-oldstart);
+            q2event.total_fare = Float.parseFloat(temp.toString());
+            startbuffer++;
+          }
+
           // surcharge
-          st.nextToken();
+          oldstart = startbuffer;
+          while(buffer[startbuffer] != ',') {
+            if(buffer[startbuffer] == '\n') {
+              oldstart = startbuffer;
+              break;
+            }
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            continue;
+          } else {
+            startbuffer++;
+          }
+
           // mta tax
-          st.nextToken();
+          oldstart = startbuffer;
+          while(buffer[startbuffer] != ',') {
+            if(buffer[startbuffer] == '\n') {
+              oldstart = startbuffer;
+              break;
+            }
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            continue;
+          } else {
+            startbuffer++;
+          }
 
           // tip amount
-          q2event.total_fare += Float.parseFloat(st.nextToken());
+          oldstart = startbuffer;
+          while(buffer[startbuffer] != ',') {
+            if(buffer[startbuffer] == '\n') {
+              oldstart = startbuffer;
+              break;
+            }
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            continue;
+          } else {
+            StringBuilder temp = new StringBuilder();
+            temp.append(buffer, oldstart, startbuffer-oldstart);
+            q2event.total_fare += Float.parseFloat(temp.toString());
+            startbuffer++;
+          }
           if(q2event.total_fare < 0) {
             continue;
           }
 
           // tolls amount
-          st.nextToken();
+          oldstart = startbuffer;
+          while(buffer[startbuffer] != ',') {
+            if(buffer[startbuffer] == '\n') {
+              oldstart = startbuffer;
+              break;
+            }
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            continue;
+          } else {
+            startbuffer++;
+          }
+
           // total amount
-          st.nextToken();
+          oldstart = startbuffer;
+          while(buffer[startbuffer] != '\n') {
+            startbuffer++;
+          }
+          // if empty
+          if(oldstart == startbuffer) {
+            continue;
+          }
 
           // Put events into queues for Q1 and Q2
-          queue_q1.put(q1event);
+          q1event.print();
+          //        queue_q1.put(q1event);
           q2event.id = id++;
-          queue_q2.put(q2event);
-        } catch(Exception e) {
-          // System.out.println("Error in parsing. Skipping..." + line);
-          // System.out.println(e.getMessage());
-          // e.printStackTrace();
+          q2event.print();
+          //        queue_q2.put(q2event);
+        } catch (Exception e) {
         }
       }
 
       // Add sentinel in Q1
       Q1Elem q1event = new Q1Elem();
       q1event.time_in = 0;
-      queue_q1.put(q1event);
+      //      queue_q1.put(q1event);
 
       // sentinel in Q2
       Q2Elem q2event = new Q2Elem();
       q2event.time_in = 0;
-      queue_q2.put(q2event);
-      inputstream.close();
+      //      queue_q2.put(q2event);
+      reader.close();
     } catch(Exception e) {
       System.out.println("Error in IoProcess!");
       System.out.println(e.getMessage());
@@ -637,8 +923,8 @@ public class debs2015 {
 
   public static void main(String[] args) throws FileNotFoundException {
     String test_file;
-    boolean running_q1 = true;
-    boolean running_q2 = true;
+    boolean running_q1 = false;
+    boolean running_q2 = false;
     int shift = 0;
 
     if(args.length == 0) {
@@ -679,15 +965,15 @@ public class debs2015 {
     }
 
     // start threads
-    if(Constants.TWO_IO_PROCESS || (!(running_q1 && running_q2))) {
-      Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, test_file));
-      Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, test_file));
-      if(running_q1) threadForIoProcessQ1.start();
-      if(running_q2) threadForIoProcessQ2.start();
-    } else {
-      Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1, queue_for_Q2, test_file));
-      threadForIoProcess.start();
-    }
+    //    if(Constants.TWO_IO_PROCESS || (!(running_q1 && running_q2))) {
+    //      Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, test_file));
+    //      Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, test_file));
+    //      if(running_q1) threadForIoProcessQ1.start();
+    //      if(running_q2) threadForIoProcessQ2.start();
+    //    } else {
+    Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1, queue_for_Q2, test_file));
+    threadForIoProcess.start();
+    //    }
 
     PrintStream q1out = new PrintStream(new FileOutputStream(Constants.Q1_FILE, false));
     Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, output_queue_for_Q1, delay_queue_for_Q1));
