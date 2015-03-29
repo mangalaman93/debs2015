@@ -134,10 +134,6 @@ class IoProcess implements Runnable {
           // medallion
           oldstart = startbuffer;
           while(buffer[startbuffer] != ',') {
-            if(buffer[startbuffer] == '\n') {
-              oldstart = startbuffer;
-              break;
-            }
             startbuffer++;
           }
           // if empty
@@ -149,10 +145,6 @@ class IoProcess implements Runnable {
 
           // hack license
           while(buffer[startbuffer] != ',') {
-            if(buffer[startbuffer] == '\n') {
-              oldstart = startbuffer;
-              break;
-            }
             startbuffer++;
           }
           // if empty
@@ -166,10 +158,6 @@ class IoProcess implements Runnable {
           // pickup datetime
           oldstart = startbuffer;
           while(buffer[startbuffer] != ',') {
-            if(buffer[startbuffer] == '\n') {
-              oldstart = startbuffer;
-              break;
-            }
             startbuffer++;
           }
           // if empty
@@ -185,10 +173,6 @@ class IoProcess implements Runnable {
           // dropoff datetime
           oldstart = startbuffer;
           while(buffer[startbuffer] != ',') {
-            if(buffer[startbuffer] == '\n') {
-              oldstart = startbuffer;
-              break;
-            }
             startbuffer++;
           }
           // if empty
@@ -204,10 +188,6 @@ class IoProcess implements Runnable {
           // trip time in secs
           oldstart = startbuffer;
           while(buffer[startbuffer] != ',') {
-            if(buffer[startbuffer] == '\n') {
-              oldstart = startbuffer;
-              break;
-            }
             startbuffer++;
           }
           // if empty
@@ -220,10 +200,6 @@ class IoProcess implements Runnable {
           // trip distance
           oldstart = startbuffer;
           while(buffer[startbuffer] != ',') {
-            if(buffer[startbuffer] == '\n') {
-              oldstart = startbuffer;
-              break;
-            }
             startbuffer++;
           }
           // if empty
@@ -236,10 +212,6 @@ class IoProcess implements Runnable {
           // pickup longitude
           oldstart = startbuffer;
           while(buffer[startbuffer] != ',') {
-            if(buffer[startbuffer] == '\n') {
-              oldstart = startbuffer;
-              break;
-            }
             startbuffer++;
           }
           // if empty
@@ -255,10 +227,6 @@ class IoProcess implements Runnable {
           // pickup latitude
           oldstart = startbuffer;
           while(buffer[startbuffer] != ',') {
-            if(buffer[startbuffer] == '\n') {
-              oldstart = startbuffer;
-              break;
-            }
             startbuffer++;
           }
           // if empty
@@ -286,10 +254,6 @@ class IoProcess implements Runnable {
           // dropoff longitude
           oldstart = startbuffer;
           while(buffer[startbuffer] != ',') {
-            if(buffer[startbuffer] == '\n') {
-              oldstart = startbuffer;
-              break;
-            }
             startbuffer++;
           }
           // if empty
@@ -305,10 +269,6 @@ class IoProcess implements Runnable {
           // dropoff latitude
           oldstart = startbuffer;
           while(buffer[startbuffer] != ',') {
-            if(buffer[startbuffer] == '\n') {
-              oldstart = startbuffer;
-              break;
-            }
             startbuffer++;
           }
           // if empty
@@ -337,10 +297,6 @@ class IoProcess implements Runnable {
           // payment type
           oldstart = startbuffer;
           while(buffer[startbuffer] != ',') {
-            if(buffer[startbuffer] == '\n') {
-              oldstart = startbuffer;
-              break;
-            }
             startbuffer++;
           }
           // if empty
@@ -353,10 +309,6 @@ class IoProcess implements Runnable {
           // fare amount
           oldstart = startbuffer;
           while(buffer[startbuffer] != ',') {
-            if(buffer[startbuffer] == '\n') {
-              oldstart = startbuffer;
-              break;
-            }
             startbuffer++;
           }
           // if empty
@@ -372,10 +324,6 @@ class IoProcess implements Runnable {
           // surcharge
           oldstart = startbuffer;
           while(buffer[startbuffer] != ',') {
-            if(buffer[startbuffer] == '\n') {
-              oldstart = startbuffer;
-              break;
-            }
             startbuffer++;
           }
           // if empty
@@ -388,10 +336,6 @@ class IoProcess implements Runnable {
           // mta tax
           oldstart = startbuffer;
           while(buffer[startbuffer] != ',') {
-            if(buffer[startbuffer] == '\n') {
-              oldstart = startbuffer;
-              break;
-            }
             startbuffer++;
           }
           // if empty
@@ -404,10 +348,6 @@ class IoProcess implements Runnable {
           // tip amount
           oldstart = startbuffer;
           while(buffer[startbuffer] != ',') {
-            if(buffer[startbuffer] == '\n') {
-              oldstart = startbuffer;
-              break;
-            }
             startbuffer++;
           }
           // if empty
@@ -426,10 +366,6 @@ class IoProcess implements Runnable {
           // tolls amount
           oldstart = startbuffer;
           while(buffer[startbuffer] != ',') {
-            if(buffer[startbuffer] == '\n') {
-              oldstart = startbuffer;
-              break;
-            }
             startbuffer++;
           }
           // if empty
