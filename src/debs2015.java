@@ -17,20 +17,6 @@ class Q1Elem {
   public Timestamp dropoff_datetime;
   public Route route;
   public long time_in;
-
-  public void print() {
-    System.out.print(pickup_datetime);
-    System.out.print("-");
-    System.out.print(dropoff_datetime);
-    System.out.print("-");
-    System.out.print(route.fromArea.x);
-    System.out.print("-");
-    System.out.print(route.fromArea.y);
-    System.out.print("-");
-    System.out.print(route.toArea.x);
-    System.out.print("-");
-    System.out.println(route.toArea.y);
-  }
 }
 
 class Q2Elem {
@@ -42,24 +28,6 @@ class Q2Elem {
   public float total_fare;
   public long time_in;
   public int id;
-
-  public void print() {
-    System.out.print(medallion_hack_license);
-    System.out.print("-");
-    System.out.print(pickup_datetime);
-    System.out.print("-");
-    System.out.print(dropoff_datetime);
-    System.out.print("-");
-    System.out.print(pickup_area.x);
-    System.out.print("-");
-    System.out.print(pickup_area.y);
-    System.out.print("-");
-    System.out.print(dropoff_area.x);
-    System.out.print("-");
-    System.out.print(dropoff_area.y);
-    System.out.print("-");
-    System.out.println(id);
-  }
 }
 
 /* IoProcessor: Task to perform-
@@ -385,12 +353,10 @@ class IoProcess implements Runnable {
             continue;
           }
 
-          // Put events into queues for Q1 and Q2
-          q1event.print();
-          //        queue_q1.put(q1event);
+          // Put events into queues for Q1 and Q2          
+          queue_q1.put(q1event);
           q2event.id = id++;
-          q2event.print();
-          //        queue_q2.put(q2event);
+          queue_q2.put(q2event);
         } catch (Exception e) {
         }
       }
@@ -398,12 +364,12 @@ class IoProcess implements Runnable {
       // Add sentinel in Q1
       Q1Elem q1event = new Q1Elem();
       q1event.time_in = 0;
-      //      queue_q1.put(q1event);
+      queue_q1.put(q1event);
 
       // sentinel in Q2
       Q2Elem q2event = new Q2Elem();
       q2event.time_in = 0;
-      //      queue_q2.put(q2event);
+      queue_q2.put(q2event);
       reader.close();
     } catch(Exception e) {
       System.out.println("Error in IoProcess!");
@@ -875,8 +841,8 @@ public class debs2015 {
 
   public static void main(String[] args) throws FileNotFoundException {
     String test_file;
-    boolean running_q1 = false;
-    boolean running_q2 = false;
+    boolean running_q1 = true;
+    boolean running_q2 = true;
     int shift = 0;
 
     if(args.length == 0) {
