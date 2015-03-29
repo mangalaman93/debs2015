@@ -382,11 +382,11 @@ class IoProcess implements Runnable {
  *  *create and share kernel queues
  */
 class IoProcessQ1 implements Runnable {
-  private ArrayBlockingQueue<Q1Elem> queue_q1;
+  private ListBlockingQueue<Q1Elem> queue_q1;
   private Geo geoq1;
   private String inputfile;
 
-  public IoProcessQ1(ArrayBlockingQueue<Q1Elem> queue1, String ifile) {
+  public IoProcessQ1(ListBlockingQueue<Q1Elem> queue1, String ifile) {
     this.queue_q1 = queue1;
     this.geoq1 = new Geo(-74.913585f, 41.474937f, 500, 500, 300, 300);
     this.inputfile = ifile;
@@ -590,7 +590,7 @@ class IoProcessQ1 implements Runnable {
       // Add sentinel in Q1
       Q1Elem q1event = new Q1Elem();
       q1event.time_in = 0;
-      queue_q1.put(q1event);
+      queue_q1.putForce(q1event);
       reader.close();
     } catch(Exception e) {
       System.out.println("Error in IoProcess!");
@@ -607,12 +607,12 @@ class IoProcessQ1 implements Runnable {
  *  *create and share kernel queues
  */
 class IoProcessQ2 implements Runnable {
-  private ListBlockingQueue<Q2Elem> queue_q2;
+  private ArrayBlockingQueue<Q2Elem> queue_q2;
   private Geo geoq2;
   private String inputfile;
   private int id;
 
-  public IoProcessQ2(ListBlockingQueue<Q2Elem> queue2, String ifile) {
+  public IoProcessQ2(ArrayBlockingQueue<Q2Elem> queue2, String ifile) {
     this.queue_q2 = queue2;
     this.geoq2 = new Geo(-74.913585f, 41.474937f, 250, 250, 600, 600);
     this.inputfile = ifile;
@@ -886,7 +886,7 @@ class IoProcessQ2 implements Runnable {
       // sentinel in Q2
       Q2Elem q2event = new Q2Elem();
       q2event.time_in = 0;
-      queue_q2.putForce(q2event);
+      queue_q2.put(q2event);
       reader.close();
     } catch(Exception e) {
       System.out.println("Error in IoProcess!");
@@ -1145,8 +1145,8 @@ class PrintProcess implements Runnable {
 }
 
 public class debs2015 {
-  private static ArrayBlockingQueue<Q1Elem> queue_for_Q1;
-  private static ListBlockingQueue<Q2Elem> queue_for_Q2;
+  private static ListBlockingQueue<Q1Elem> queue_for_Q1;
+  private static ArrayBlockingQueue<Q2Elem> queue_for_Q2;
   private static BlockingQueue<String> output_queue_for_Q1;
   private static BlockingQueue<String> output_queue_for_Q2;
   private static BlockingQueue<Long> delay_queue_for_Q1;
@@ -1185,12 +1185,12 @@ public class debs2015 {
 
     // Initializing queues
     if(running_q1) {
-      queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, false);
+      queue_for_Q1 = new ListBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, 100);
       output_queue_for_Q1 = new ArrayBlockingQueue<String>(Constants.QUEUE1_OUTPUT_CAPACITY,false);
       delay_queue_for_Q1 = new ArrayBlockingQueue<Long>(Constants.QUEUE1_OUTPUT_CAPACITY,false);
     }
     if(running_q2) {
-      queue_for_Q2 = new ListBlockingQueue<Q2Elem>(Constants.QUEUE2_CAPACITY, 100);
+      queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(Constants.QUEUE2_CAPACITY, false);
       output_queue_for_Q2 = new ArrayBlockingQueue<String>(Constants.QUEUE2_OUTPUT_CAPACITY,false);
       delay_queue_for_Q2 = new ArrayBlockingQueue<Long>(Constants.QUEUE2_OUTPUT_CAPACITY,false);
     }
