@@ -1,13 +1,9 @@
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.LinkedList;
-import java.util.StringTokenizer;
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.nio.file.*;
-import java.nio.charset.StandardCharsets;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.sql.Timestamp;
@@ -386,11 +382,11 @@ class IoProcess implements Runnable {
  *  *create and share kernel queues
  */
 class IoProcessQ1 implements Runnable {
-  private BlockingQueue<Q1Elem> queue_q1;
+  private ListBlockingQueue<Q1Elem> queue_q1;
   private Geo geoq1;
   private String inputfile;
 
-  public IoProcessQ1(BlockingQueue<Q1Elem> queue1, String ifile) {
+  public IoProcessQ1(ListBlockingQueue<Q1Elem> queue1, String ifile) {
     this.queue_q1 = queue1;
     this.geoq1 = new Geo(-74.913585f, 41.474937f, 500, 500, 300, 300);
     this.inputfile = ifile;
@@ -594,7 +590,7 @@ class IoProcessQ1 implements Runnable {
       // Add sentinel in Q1
       Q1Elem q1event = new Q1Elem();
       q1event.time_in = 0;
-      queue_q1.put(q1event);
+      queue_q1.putForce(q1event);
       reader.close();
     } catch(Exception e) {
       System.out.println("Error in IoProcess!");
@@ -611,12 +607,12 @@ class IoProcessQ1 implements Runnable {
  *  *create and share kernel queues
  */
 class IoProcessQ2 implements Runnable {
-  private BlockingQueue<Q2Elem> queue_q2;
+  private ListBlockingQueue<Q2Elem> queue_q2;
   private Geo geoq2;
   private String inputfile;
   private int id;
 
-  public IoProcessQ2(BlockingQueue<Q2Elem> queue2, String ifile) {
+  public IoProcessQ2(ListBlockingQueue<Q2Elem> queue2, String ifile) {
     this.queue_q2 = queue2;
     this.geoq2 = new Geo(-74.913585f, 41.474937f, 250, 250, 600, 600);
     this.inputfile = ifile;
@@ -627,7 +623,6 @@ class IoProcessQ2 implements Runnable {
   public void run() {
     FileReader reader;
     float pickup_longitude, pickup_latitude, dropoff_longitude, dropoff_latitude;
-    Area from, to;
 
     char buffer[] = new char[Constants.BUFFER_SIZE + Constants.MAX_LINE_SIZE];
     int startbuffer = -1;
@@ -891,7 +886,7 @@ class IoProcessQ2 implements Runnable {
       // sentinel in Q2
       Q2Elem q2event = new Q2Elem();
       q2event.time_in = 0;
-      queue_q2.put(q2event);
+      queue_q2.putForce(q2event);
       reader.close();
     } catch(Exception e) {
       System.out.println("Error in IoProcess!");
@@ -923,9 +918,6 @@ class Q1Process implements Runnable {
 
   @Override
   public void run() {
-    // int in_count = 0;
-    long last_time = System.currentTimeMillis();
-
     try {
       Q1Elem lastevent, newevent=queue.take();
       long lastms = 0;
@@ -933,13 +925,6 @@ class Q1Process implements Runnable {
 
       while(newevent.time_in != 0) {
         ten_max_changed = false;
-        // in_count++;
-        // if(in_count == 100000) {
-        //   System.out.println("Query 1 throughput: "+(100000/(System.currentTimeMillis()-last_time)));
-        //   in_count = 0;
-        //   last_time = System.currentTimeMillis();
-        // }
-        //maxfs.storeMaxTenCopy();
 
         // Check if events are leaving the sliding window and process them
         long currentms = newevent.dropoff_datetime.getTime();
@@ -1034,20 +1019,11 @@ class Q2Process implements Runnable {
 
   @Override
   public void run() {
-    // int in_count = 0;
-    long last_time = System.currentTimeMillis();
     try {
       Q2Elem lastevent, newevent = queue.take();
       long lastms;
 
       while(newevent.time_in != 0) {
-        // in_count++;
-        // if(in_count == 100000) {
-        //   System.out.println("Query 2 throughput: "+(100000/(System.currentTimeMillis()-last_time)));
-        //   in_count = 0;
-        //   last_time = System.currentTimeMillis();
-        // }
-
         // Check if events are leaving the sliding window and process them
         long currentms = newevent.dropoff_datetime.getTime();
         if(swindow30.size() != 0) {
@@ -1169,8 +1145,8 @@ class PrintProcess implements Runnable {
 }
 
 public class debs2015 {
-  private static BlockingQueue<Q1Elem> queue_for_Q1;
-  private static BlockingQueue<Q2Elem> queue_for_Q2;
+  private static ListBlockingQueue<Q1Elem> queue_for_Q1;
+  private static ListBlockingQueue<Q2Elem> queue_for_Q2;
   private static BlockingQueue<String> output_queue_for_Q1;
   private static BlockingQueue<String> output_queue_for_Q2;
   private static BlockingQueue<Long> delay_queue_for_Q1;
@@ -1209,12 +1185,12 @@ public class debs2015 {
 
     // Initializing queues
     if(running_q1) {
-      queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, false);
+      queue_for_Q1 = new ListBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, 100);
       output_queue_for_Q1 = new ArrayBlockingQueue<String>(Constants.QUEUE1_OUTPUT_CAPACITY,false);
       delay_queue_for_Q1 = new ArrayBlockingQueue<Long>(Constants.QUEUE1_OUTPUT_CAPACITY,false);
     }
     if(running_q2) {
-      queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(Constants.QUEUE2_CAPACITY, false);
+      queue_for_Q2 = new ListBlockingQueue<Q2Elem>(Constants.QUEUE2_CAPACITY, 100);
       output_queue_for_Q2 = new ArrayBlockingQueue<String>(Constants.QUEUE2_OUTPUT_CAPACITY,false);
       delay_queue_for_Q2 = new ArrayBlockingQueue<Long>(Constants.QUEUE2_OUTPUT_CAPACITY,false);
     }
