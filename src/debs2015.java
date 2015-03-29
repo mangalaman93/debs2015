@@ -36,14 +36,14 @@ class Q2Elem {
  *  *create and share kernel queues
  */
 class IoProcess implements Runnable {
-  private BlockingQueue<Q1Elem> queue_q1;
+  private ListBlockingQueue<Q1Elem> queue_q1;
   private BlockingQueue<Q2Elem> queue_q2;
   private Geo geoq1;
   private Geo geoq2;
   private String inputfile;
   private int id;
 
-  public IoProcess(BlockingQueue<Q1Elem> queue1,
+  public IoProcess(ListBlockingQueue<Q1Elem> queue1,
       BlockingQueue<Q2Elem> queue2, String ifile) {
     this.queue_q1 = queue1;
     this.queue_q2 = queue2;
@@ -160,7 +160,7 @@ class IoProcess implements Runnable {
       // Add sentinel in Q1
       Q1Elem q1event = new Q1Elem();
       q1event.time_in = 0;
-      queue_q1.put(q1event);
+      queue_q1.putForce(q1event);
 
       // sentinel in Q2
       Q2Elem q2event = new Q2Elem();
@@ -182,11 +182,11 @@ class IoProcess implements Runnable {
  *  *create and share kernel queues
  */
 class IoProcessQ1 implements Runnable {
-  private BlockingQueue<Q1Elem> queue_q1;
+  private ListBlockingQueue<Q1Elem> queue_q1;
   private Geo geoq1;
   private String inputfile;
 
-  public IoProcessQ1(BlockingQueue<Q1Elem> queue1, String ifile) {
+  public IoProcessQ1(ListBlockingQueue<Q1Elem> queue1, String ifile) {
     this.queue_q1 = queue1;
     this.geoq1 = new Geo(-74.913585f, 41.474937f, 500, 500, 300, 300);
     this.inputfile = ifile;
@@ -251,7 +251,7 @@ class IoProcessQ1 implements Runnable {
       // Add sentinel
       Q1Elem q1event = new Q1Elem();
       q1event.time_in = 0;
-      queue_q1.put(q1event);
+      queue_q1.putForce(q1event);
       inputstream.close();
     } catch(Exception e) {
       System.out.println("Error in IoProcess!");
@@ -628,7 +628,7 @@ class PrintProcess implements Runnable {
 }
 
 public class debs2015 {
-  private static BlockingQueue<Q1Elem> queue_for_Q1;
+  private static ListBlockingQueue<Q1Elem> queue_for_Q1;
   private static BlockingQueue<Q2Elem> queue_for_Q2;
   private static BlockingQueue<String> output_queue_for_Q1;
   private static BlockingQueue<String> output_queue_for_Q2;
@@ -668,9 +668,9 @@ public class debs2015 {
 
     // Initializing queues
     if(running_q1) {
-      queue_for_Q1 = new ArrayBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, false);
-      output_queue_for_Q1 = new ArrayBlockingQueue<String>(Constants.QUEUE1_OUTPUT_CAPACITY,false);
-      delay_queue_for_Q1 = new ArrayBlockingQueue<Long>(Constants.QUEUE1_OUTPUT_CAPACITY,false);
+      queue_for_Q1 = new ListBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, 200);
+      output_queue_for_Q1 = new ArrayBlockingQueue<String>(Constants.QUEUE1_OUTPUT_CAPACITY, false);
+      delay_queue_for_Q1 = new ArrayBlockingQueue<Long>(Constants.QUEUE1_OUTPUT_CAPACITY, false);
     }
     if(running_q2) {
       queue_for_Q2 = new ArrayBlockingQueue<Q2Elem>(Constants.QUEUE2_CAPACITY, false);
