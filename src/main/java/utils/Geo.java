@@ -1,3 +1,5 @@
+package utils;
+
 public class Geo {
   float topLeftX;
   float topLeftY;
