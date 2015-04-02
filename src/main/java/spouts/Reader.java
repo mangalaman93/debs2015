@@ -33,10 +33,11 @@ public class Reader extends BaseRichSpout {
 
 		if(completed){
 	        try {
-	                Thread.sleep(1);
+	                Thread.sleep(1000);
 	        } catch (InterruptedException e) {
 	                //Do nothing
 	        }
+	        System.exit(0);
 	        return;
 	    }
 		

@@ -18,6 +18,9 @@ public class Q1Process extends BaseBasicBolt {
 
 	TenMaxFrequency maxfs;
   	LinkedList<Q1Elem> sliding_window;
+  	int in_count;
+  	long last_time;
+  	private final static int NUM = 5000;
 
 	@Override
 	public void cleanup() {
@@ -29,6 +32,8 @@ public class Q1Process extends BaseBasicBolt {
 		// System.out.println("STARTED");
 		this.maxfs = new TenMaxFrequency();
     	this.sliding_window = new LinkedList<Q1Elem>();
+    	this.in_count = 0;
+    	this.last_time = System.currentTimeMillis();
 	}
 
 	@Override
@@ -37,6 +42,13 @@ public class Q1Process extends BaseBasicBolt {
 		Q1Elem newevent = (Q1Elem) v;
 		Q1Elem lastevent = null;
 		long lastms = 0;
+		in_count++;
+
+		if(in_count == NUM) {
+          System.err.println("Query 1 throughput: "+(NUM/(System.currentTimeMillis()-last_time)));
+          in_count = 0;
+          last_time = System.currentTimeMillis();
+        }
 
 		// System.out.println(q1event.route.fromArea.x + "." + q1event.route.fromArea.y + 
 		// 	" " + q1event.route.toArea.x + "." + q1event.route.toArea.y);
