@@ -171,7 +171,7 @@ public class TenMaxProfitability {
     grid_present = new HashMap<String, TaxiInfo>();
     sorted_ptb_list = new ArrayList<Set<SetElem>>(Constants.NUM_EMPTY_BUCKETS);
     for(int i=0; i<Constants.NUM_EMPTY_BUCKETS; i++) {
-      sorted_ptb_list.add(i, new TreeSet<SetElem>(Collections.reverseOrder()));
+      sorted_ptb_list.add(i, new HashSet<SetElem>());
     }
     last_10th_area = null;
     last_10th_ptb = 0.0f;
@@ -449,6 +449,17 @@ public class TenMaxProfitability {
     int num_printed = 0;
     int current_index = Constants.NUM_EMPTY_BUCKETS-1;
     while(num_printed<10 && current_index>=0) {
+      if(sorted_ptb_list.get(current_index).size() == 0) {
+        current_index--;
+        continue;
+      }
+
+      if(sorted_ptb_list.get(current_index) instanceof HashSet<?>) {
+        Set<SetElem> tree = new TreeSet<SetElem>(Collections.reverseOrder());
+        tree.addAll(sorted_ptb_list.get(current_index));
+        sorted_ptb_list.set(current_index, tree);
+      }
+
       Iterator<SetElem> i = sorted_ptb_list.get(current_index).iterator();
       while(i.hasNext() && num_printed<10) {
         SetElem s = i.next();
@@ -460,7 +471,7 @@ public class TenMaxProfitability {
         print_string = print_string + String.valueOf(s.area.x+1) + "." + String.valueOf(s.area.y+1) + "," + String.valueOf(elem.num_empty_taxis) + "," +  String.valueOf(elem.mprofit.getMedian()) + "," + String.valueOf(elem.profitability) + ",";
         last_10th_ptb = elem.profitability;
         last_10th_area = elem.area;
-	last_10th_ts = elem.ts;
+	      last_10th_ts = elem.ts;
         num_printed++;
       }
 
@@ -493,6 +504,17 @@ public class TenMaxProfitability {
     int num_printed = 0;
     int current_index = Constants.NUM_EMPTY_BUCKETS-1;
     while(num_printed<10 && current_index>=0) {
+      if(sorted_ptb_list.get(current_index).size() == 0) {
+        current_index--;
+        continue;
+      }
+
+      if(sorted_ptb_list.get(current_index) instanceof HashSet<?>) {
+        Set<SetElem> tree = new TreeSet<SetElem>(Collections.reverseOrder());
+        tree.addAll(sorted_ptb_list.get(current_index));
+        sorted_ptb_list.set(current_index, tree);
+      }
+
       Iterator<SetElem> i = sorted_ptb_list.get(current_index).iterator();
       while(i.hasNext() && num_printed<10) {
         SetElem s = i.next();
