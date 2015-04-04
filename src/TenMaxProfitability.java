@@ -1,34 +1,4 @@
-import java.io.PrintStream;
 import java.util.*;
-
-/*
- * This class is used only for the unit tests
- */
-class PairQ2 {
-  Area a;
-  float pft;
-  int num_empty_taxi;
-
-  PairQ2(Area a, float pft, int num_empty_taxi) {
-    this.a = a;
-    this.pft = pft;
-    this.num_empty_taxi = num_empty_taxi;
-  }
-
-  public boolean equals(Object obj) {
-    PairQ2 e = (PairQ2) obj;
-
-    if(this == e) {
-      return true;
-    }
-
-    if(a.equals(e.a) && pft==e.pft && num_empty_taxi==e.num_empty_taxi) {
-      return true;
-    }
-
-    return false;
-  }
-}
 
 public class TenMaxProfitability {
   class TaxiInfo {
@@ -41,12 +11,6 @@ public class TenMaxProfitability {
     }
   }
 
-  /*
-   * The comparison operator written the opposite,
-   * i.e if actual s1<s2 means s1>s2.
-   * Done so that Treeset can print in descending order
-   * Also note that 2 setElems are equal if the area is same
-   */
   class SetElem implements Comparable<SetElem> {
     public Area area;
     public Mc mprofit;
@@ -102,15 +66,10 @@ public class TenMaxProfitability {
 
     @Override
     public boolean equals(Object obj) {
-      if(!(obj instanceof SetElem)) {
-        return false;
-      }
+      throw new UnsupportedOperationException();
+    }
 
-      if(obj == this) {
-        return true;
-      }
-
-      SetElem elem = (SetElem) obj;
+    public boolean equals(SetElem elem) {
       if(elem.area.equals(this.area)) {
         return true;
       }
@@ -168,11 +127,12 @@ public class TenMaxProfitability {
 
   public TenMaxProfitability() {
     area_elem_map = new SetElemMap(Constants.AREA_LIMIT, Constants.AREA_LIMIT);
-    grid_present = new HashMap<String, TaxiInfo>();
+    grid_present = new HashMap<String, TaxiInfo>(Constants.SIZE_GRID_PRESENT_HASH);
     sorted_ptb_list = new ArrayList<Set<SetElem>>(Constants.NUM_EMPTY_BUCKETS);
     for(int i=0; i<Constants.NUM_EMPTY_BUCKETS; i++) {
-      sorted_ptb_list.add(i, new HashSet<SetElem>());
+      sorted_ptb_list.add(i, new HashSet<SetElem>(Constants.SIZE_INIT_HASHSET));
     }
+
     last_10th_area = null;
     last_10th_ptb = 0.0f;
     last_10th_ts = -1;
@@ -241,17 +201,14 @@ public class TenMaxProfitability {
       sorted_ptb_list.get(old_index).remove(elem);
 
       // Check if top 10 changed
-      if(!has_top_10_changed && elem.num_empty_taxis>0) {
+      if(!has_top_10_changed && elem.num_empty_taxis > 0) {
         if(last_10th_area==null) {
           has_top_10_changed = true;
-        }
-        else if(elem.area.equals(last_10th_area)) {
+        } else if(elem.area.equals(last_10th_area)) {
           has_top_10_changed = true;
-        }
-        else if(elem.profitability>last_10th_ptb) {
+        } else if(elem.profitability>last_10th_ptb) {
           has_top_10_changed = true;
-        }
-        else if(elem.profitability==last_10th_ptb && elem.ts>last_10th_ts) {
+        } else if(elem.profitability==last_10th_ptb && elem.ts>last_10th_ts) {
           has_top_10_changed = true;
         }
       }
@@ -268,7 +225,7 @@ public class TenMaxProfitability {
         elem.resetProfitability();
 
         // Check if top 10 changed
-        if(!has_top_10_changed && elem.num_empty_taxis>0) {
+        if(!has_top_10_changed && elem.num_empty_taxis > 0) {
           if(last_10th_area==null) {
             has_top_10_changed = true;
           }
@@ -326,17 +283,14 @@ public class TenMaxProfitability {
       sorted_ptb_list.get(old_index).remove(elem);
 
       // Check if top 10 changed
-      if(!has_top_10_changed && elem.num_empty_taxis>0) {
+      if(!has_top_10_changed && elem.num_empty_taxis > 0) {
         if(last_10th_area==null) {
           has_top_10_changed = true;
-        }
-        else if(elem.area.equals(last_10th_area)) {
+        } else if(elem.area.equals(last_10th_area)) {
           has_top_10_changed = true;
-        }
-        else if(elem.profitability>last_10th_ptb) {
+        } else if(elem.profitability>last_10th_ptb) {
           has_top_10_changed = true;
-        }
-        else if(elem.profitability==last_10th_ptb && elem.ts>last_10th_ts) {
+        } else if(elem.profitability==last_10th_ptb && elem.ts>last_10th_ts) {
           has_top_10_changed = true;
         }
       }
@@ -350,7 +304,7 @@ public class TenMaxProfitability {
         elem.resetProfitability();
 
         // Check if top 10 changed
-        if(!has_top_10_changed && elem.num_empty_taxis>0) {
+        if(!has_top_10_changed && elem.num_empty_taxis > 0) {
           if(last_10th_area==null) {
             has_top_10_changed = true;
           }
@@ -383,17 +337,14 @@ public class TenMaxProfitability {
       sorted_ptb_list.get(old_index).remove(elem);
 
       // Check if top 10 changed
-      if(!has_top_10_changed && elem.num_empty_taxis>0) {
+      if(!has_top_10_changed && elem.num_empty_taxis > 0) {
         if(last_10th_area==null) {
           has_top_10_changed = true;
-        }
-        else if(elem.area.equals(last_10th_area)) {
+        } else if(elem.area.equals(last_10th_area)) {
           has_top_10_changed = true;
-        }
-        else if(elem.profitability>last_10th_ptb) {
+        } else if(elem.profitability>last_10th_ptb) {
           has_top_10_changed = true;
-        }
-        else if(elem.profitability==last_10th_ptb && elem.ts>last_10th_ts) {
+        } else if(elem.profitability==last_10th_ptb && elem.ts>last_10th_ts) {
           has_top_10_changed = true;
         }
       }
@@ -404,14 +355,12 @@ public class TenMaxProfitability {
       elem.resetProfitability();
 
       // Check if top 10 changed
-      if(!has_top_10_changed && elem.num_empty_taxis>0) {
+      if(!has_top_10_changed && elem.num_empty_taxis > 0) {
         if(last_10th_area==null) {
           has_top_10_changed = true;
-        }
-        else if(elem.profitability>last_10th_ptb) {
+        } else if(elem.profitability>last_10th_ptb) {
           has_top_10_changed = true;
-        }
-        else if(elem.profitability==last_10th_ptb && elem.ts>last_10th_ts) {
+        } else if(elem.profitability==last_10th_ptb && elem.ts>last_10th_ts) {
           has_top_10_changed = true;
         }
       }
@@ -493,49 +442,5 @@ public class TenMaxProfitability {
 
   public boolean isSameMaxTenKey() {
     return !has_top_10_changed;
-  }
-
-  /*
-   * This function is used only for the unit tests
-   */
-  public Vector<PairQ2> getMaxTenCopy() {
-    Vector<PairQ2> ret_val = new Vector<PairQ2>(10);
-
-    int num_printed = 0;
-    int current_index = Constants.NUM_EMPTY_BUCKETS-1;
-    while(num_printed<10 && current_index>=0) {
-      if(sorted_ptb_list.get(current_index).size() == 0) {
-        current_index--;
-        continue;
-      }
-
-      if(sorted_ptb_list.get(current_index) instanceof HashSet<?>) {
-        Set<SetElem> tree = new TreeSet<SetElem>(Collections.reverseOrder());
-        tree.addAll(sorted_ptb_list.get(current_index));
-        sorted_ptb_list.set(current_index, tree);
-      }
-
-      Iterator<SetElem> i = sorted_ptb_list.get(current_index).iterator();
-      while(i.hasNext() && num_printed<10) {
-        SetElem s = i.next();
-        SetElem elem = area_elem_map.get(s.area);
-        if(elem.num_empty_taxis == 0) {
-          continue;
-        }
-
-        ret_val.add(new PairQ2(s.area,elem.profitability,
-            elem.num_empty_taxis));
-        num_printed++;
-      }
-
-      current_index--;
-    }
-
-    while(num_printed < 10) {
-      ret_val.add(null);
-      num_printed++;
-    }
-
-    return ret_val;
   }
 }

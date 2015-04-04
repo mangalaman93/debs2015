@@ -1,12 +1,12 @@
-public class Route implements Comparable<Route>{
+public class Route implements Comparable<Route> {
   public Area fromArea;
   public Area toArea;
   public int hash;
 
-  public Route(int beginCellX, int beginCellY,
-      int endCellX, int endCellY) {
-    this.fromArea = new Area(beginCellX, beginCellY);
-    this.toArea   = new Area(endCellX, endCellY);
+  public Route(int begin_cellX, int begin_cellY,
+      int end_cellX, int end_cellY) {
+    this.fromArea = new Area(begin_cellX, begin_cellY);
+    this.toArea   = new Area(end_cellX, end_cellY);
     this.computeHash();
   }
 
@@ -17,20 +17,12 @@ public class Route implements Comparable<Route>{
   }
 
   private void computeHash() {
-    Integer temp = (((((this.fromArea.x << 8) + this.fromArea.y) << 8)
-        + this.toArea.x) << 8) + this.fromArea.y;
+    Integer temp = (((((this.fromArea.x << 8) | this.fromArea.y) << 8)
+        | this.toArea.x) << 8) | this.fromArea.y;
     this.hash = temp.hashCode();
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if(!(obj instanceof Route))
-      return false;
-
-    if(obj == this)
-      return true;
-
-    Route r = (Route) obj;
+  public boolean equals(Route r) {
     if(r.fromArea.equals(this.fromArea) && r.toArea.equals(this.toArea))
       return true;
 
@@ -42,31 +34,30 @@ public class Route implements Comparable<Route>{
     return hash;
   }
 
-  public int compareTo(Route anotherRoute) {
-    if(anotherRoute.fromArea.x < this.fromArea.x){
+  public int compareTo(Route route) {
+    if(route.fromArea.x < this.fromArea.x){
       return 1;
-    } else if(anotherRoute.fromArea.x > this.fromArea.x){
+    } else if(route.fromArea.x > this.fromArea.x){
       return -1;
-    } else{
-      if(anotherRoute.fromArea.y < this.fromArea.y){
-        return 1;
-      } else if(anotherRoute.fromArea.y > this.fromArea.y){
-        return -1;
-      } else{
-        if(anotherRoute.toArea.x < this.toArea.x){
-          return 1;
-        } else if(anotherRoute.toArea.x > this.toArea.x){
-          return -1;
-        } else{
-          if(anotherRoute.toArea.y < this.toArea.y){
-            return 1;
-          } else if(anotherRoute.toArea.y > this.toArea.y){
-            return -1;
-          } else{
-            return 0;
-          }
-        }
-      }
+    } else if(route.fromArea.y < this.fromArea.y){
+      return 1;
+    } else if(route.fromArea.y > this.fromArea.y){
+      return -1;
+    } else if(route.toArea.x < this.toArea.x){
+      return 1;
+    } else if(route.toArea.x > this.toArea.x){
+      return -1;
+    } else if(route.toArea.y < this.toArea.y){
+      return 1;
+    } else if(route.toArea.y > this.toArea.y){
+      return -1;
+    } else {
+      return 0;
     }
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    throw new UnsupportedOperationException();
   }
 }
