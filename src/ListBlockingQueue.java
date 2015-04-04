@@ -10,6 +10,7 @@ public class ListBlockingQueue<E> implements BlockingQueue<E> {
   private ArrayBlockingQueue<ArrayList<E>> bqueue;
   private int take_index;
   private int put_index;
+  private int take_size;
   private ArrayList<E> take_current;
   private ArrayList<E> put_current;
 
@@ -18,13 +19,15 @@ public class ListBlockingQueue<E> implements BlockingQueue<E> {
     blocksize = block_size;
     take_current = null;
     put_current = new ArrayList<E>(blocksize);
-    take_index = blocksize;
+    take_index = 0;
+    take_size = 0;
     put_index = 0;
   }
 
   public E take() throws InterruptedException {
-    if(take_index == blocksize) {
+    if(take_index == take_size) {
       take_current = bqueue.take();
+      take_size = take_current.size();
       take_index = 0;
     }
 

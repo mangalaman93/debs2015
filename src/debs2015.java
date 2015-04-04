@@ -36,15 +36,15 @@ class QOut {
  *  *create and share kernel queues
  */
 class IoProcess implements Runnable {
-  private BlockingQueue<Q1Elem> queue_q1;
-  private BlockingQueue<Q2Elem> queue_q2;
+  private ListBlockingQueue<Q1Elem> queue_q1;
+  private ListBlockingQueue<Q2Elem> queue_q2;
   private Geo geoq1;
   private Geo geoq2;
   private String inputfile;
   private int id;
 
-  public IoProcess(BlockingQueue<Q1Elem> queue1,
-      BlockingQueue<Q2Elem> queue2, String ifile) {
+  public IoProcess(ListBlockingQueue<Q1Elem> queue1,
+      ListBlockingQueue<Q2Elem> queue2, String ifile) {
     this.queue_q1 = queue1;
     this.queue_q2 = queue2;
     this.geoq1 = new Geo(-74.913585f, 41.474937f, 500, 500, 300, 300);
@@ -351,12 +351,12 @@ class IoProcess implements Runnable {
       // Add sentinel in Q1
       Q1Elem q1event = new Q1Elem();
       q1event.time_in = 0;
-      queue_q1.put(q1event);
+      queue_q1.putForce(q1event);
 
       // sentinel in Q2
       Q2Elem q2event = new Q2Elem();
       q2event.time_in = 0;
-      queue_q2.put(q2event);
+      queue_q2.putForce(q2event);
       reader.close();
     } catch(Exception e) {
       System.out.println("Error in IoProcess!");
@@ -873,12 +873,13 @@ class IoProcessQ2 implements Runnable {
  *  *output if list of 10 most frequent routes change
  */
 class Q1Process implements Runnable {
-  private BlockingQueue<Q1Elem> queue;
-  private BlockingQueue<QOut> output_queue;
+  private ListBlockingQueue<Q1Elem> queue;
+  private ListBlockingQueue<QOut> output_queue;
   private TenMaxFrequency maxfs;
   private LinkedList<Q1Elem> sliding_window;
 
-  public Q1Process(BlockingQueue<Q1Elem> queue, BlockingQueue<QOut> output_queue) {
+  public Q1Process(ListBlockingQueue<Q1Elem> queue,
+      ListBlockingQueue<QOut> output_queue) {
     this.queue = queue;
     this.output_queue = output_queue;
     this.maxfs = new TenMaxFrequency();
@@ -950,7 +951,7 @@ class Q1Process implements Runnable {
       out.data = "\0";
       out.time = 0;
       out.query = 1;
-      output_queue.put(out);
+      output_queue.putForce(out);
     } catch (Exception e) {
       System.out.println("Error in Q1Process!");
       System.out.println(e.getMessage());
@@ -967,14 +968,14 @@ class Q1Process implements Runnable {
  */
 
 class Q2Process implements Runnable {
-  private BlockingQueue<Q2Elem> queue;
-  private BlockingQueue<QOut> output_queue;
+  private ListBlockingQueue<Q2Elem> queue;
+  private ListBlockingQueue<QOut> output_queue;
   private TenMaxProfitability maxpft;
   private LinkedList<Q2Elem> swindow30;
   private LinkedList<Q2Elem> swindow15;
   // private PrintStream print_stream;
 
-  public Q2Process(BlockingQueue<Q2Elem> queue2, BlockingQueue<QOut> output_queue) {
+  public Q2Process(ListBlockingQueue<Q2Elem> queue2, ListBlockingQueue<QOut> output_queue) {
     this.queue = queue2;
     this.output_queue = output_queue;
     this.maxpft = new TenMaxProfitability();
@@ -1062,7 +1063,7 @@ class Q2Process implements Runnable {
       out.data = "\0";
       out.time = 0;
       out.query = 1;
-      output_queue.put(out);
+      output_queue.putForce(out);
     } catch (Exception e) {
       System.out.println("Error in Q1Process!");
       System.out.println(e.getMessage());
@@ -1076,10 +1077,10 @@ class Q2Process implements Runnable {
  *  *print string
  */
 class PrintProcess implements Runnable {
-  private BlockingQueue<QOut> queue;
+  private ListBlockingQueue<QOut> queue;
   private int numthreads;
 
-  public PrintProcess(BlockingQueue<QOut> queue, int num_process_threads) {
+  public PrintProcess(ListBlockingQueue<QOut> queue, int num_process_threads) {
     this.queue = queue;
     this.numthreads = num_process_threads;
   }
@@ -1134,7 +1135,7 @@ class PrintProcess implements Runnable {
 public class debs2015 {
   private static ListBlockingQueue<Q1Elem> queue_for_Q1;
   private static ListBlockingQueue<Q2Elem> queue_for_Q2;
-  private static BlockingQueue<QOut> output_queue;
+  private static ListBlockingQueue<QOut> output_queue;
 
   public static void main(String[] args) throws FileNotFoundException {
     String test_file;
@@ -1169,7 +1170,7 @@ public class debs2015 {
     }
 
     // Initializing queues
-    output_queue = new ArrayBlockingQueue<QOut>(Constants.QUEUE_OUTPUT_CAPACITY, false);
+    output_queue = new ListBlockingQueue<QOut>(Constants.QUEUE_OUTPUT_CAPACITY, Constants.BLOCK_SIZE);
     if(running_q1) {
       queue_for_Q1 = new ListBlockingQueue<Q1Elem>(Constants.QUEUE1_CAPACITY, Constants.BLOCK_SIZE);
     }
