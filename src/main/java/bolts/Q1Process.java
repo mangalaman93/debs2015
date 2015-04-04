@@ -21,7 +21,7 @@ public class Q1Process extends BaseBasicBolt {
   	LinkedList<Q1Elem> sliding_window;
   	int in_count;
   	long last_time;
-  	private final static int NUM = 3000;
+  	private final static int NUM = 100000;
 
 	@Override
 	public void cleanup() {
@@ -32,9 +32,9 @@ public class Q1Process extends BaseBasicBolt {
 	public void prepare(Map stormConf, TopologyContext context) {
 		// System.out.println("STARTED");
 		this.maxfs = new TenMaxFrequency();
-    	this.sliding_window = new LinkedList<Q1Elem>();
-    	this.in_count = 0;
-    	this.last_time = System.currentTimeMillis();
+    		this.sliding_window = new LinkedList<Q1Elem>();
+    		this.in_count = 0;
+    		this.last_time = System.currentTimeMillis();
 	}
 
 	@Override
@@ -43,10 +43,12 @@ public class Q1Process extends BaseBasicBolt {
 		Q1Elem newevent = (Q1Elem) v;
 		Q1Elem lastevent = null;
 		long lastms = 0;
+		boolean ten_max_changed = false;
+
 		in_count++;
 		//System.out.println("proc " + in_count);
 		if(in_count == NUM) {
-	          System.out.println("Query 1 throughput: "+(NUM/(System.currentTimeMillis()-last_time)));
+	          System.err.println("Query 1 throughput: "+(NUM/(System.currentTimeMillis()-last_time)));
         	  in_count = 0;
           	  last_time = System.currentTimeMillis();
         	}
@@ -63,8 +65,9 @@ public class Q1Process extends BaseBasicBolt {
 	          // Remove the elements from the start of the window
 	          while((currentms-lastms) >= Constants.WINDOW30_SIZE) {
 			//System.out.println("HERE123");
-	            maxfs.decreaseFrequency(lastevent.route, lastevent.dropoff_datetime.getTime());
-	            sliding_window.removeFirst();
+	            	if(!ten_max_changed) ten_max_changed = maxfs.decreaseFrequency(lastevent.route, lastevent.dropoff_datetime.getTime());
+	            	else maxfs.decreaseFrequency(lastevent.route, lastevent.dropoff_datetime.getTime());
+			sliding_window.removeFirst();
 
 	            if(sliding_window.size() != 0) {
 	              lastevent = sliding_window.getFirst();
@@ -74,10 +77,11 @@ public class Q1Process extends BaseBasicBolt {
 	            }
 	          }
 	        }
-	        maxfs.increaseFrequency(newevent.route, newevent.dropoff_datetime.getTime());
-        	sliding_window.addLast(newevent);
+	        if(!ten_max_changed) ten_max_changed = maxfs.increaseFrequency(newevent.route, newevent.dropoff_datetime.getTime());
+        	else maxfs.increaseFrequency(newevent.route, newevent.dropoff_datetime.getTime());
+		sliding_window.addLast(newevent);
 
-        	if(!maxfs.isSameMaxTenKey()){
+        	if(ten_max_changed){
 	        	String s = newevent.pickup_datetime.toString() + "," + newevent.dropoff_datetime.toString() + ",";
 	          	s = s + maxfs.printMaxTen();
 	          	collector.emit(new Values(s));

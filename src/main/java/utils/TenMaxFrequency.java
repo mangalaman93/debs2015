@@ -1,237 +1,403 @@
 package utils;
 
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.TreeMap;
 import java.io.PrintStream;
-import java.util.*;
+import utils.*;
 
 public class TenMaxFrequency {
-	
-	class PQ_elem implements Comparable<PQ_elem> {
-		Route r;
-		int key;
-		int freq;
-		public long ts;
-		
-		PQ_elem(Route r, int freq, long ts) {
-			this.r = r;
-			this.key  = (r.toArea.x*LENGTH+r.toArea.y)*NUMBER_OF_AREAS + (r.fromArea.x*LENGTH+r.fromArea.y);
-			this.freq = freq;
-			this.ts = ts;
-		}
+  class Freq implements Comparable<Freq> {
+    public int frequency;
+    public long ts;
 
-		@Override
-		public int compareTo(PQ_elem e) {
-			if(freq != e.freq) {
-				return freq-e.freq;
-			}
-			else if(ts > e.ts) {
-				return 1;
-			}
-			else {
-				return -1;
-			}
-		}
-	}
-	
-	// Reverse comparator class defined
-	class customComparator implements Comparator<Integer> {
-	    @Override
-	    public int compare(Integer i1, Integer i2) {
-			if(heap[i1].freq > heap[i2].freq) {
-				return -1;
-			}
-			else if(heap[i1].freq < heap[i2].freq) {
-				return 1;
-			}
-			else if(heap[i1].ts > heap[i2].ts) {
-				return -1;
-			}
-			else {
-				return 1;
-			}
-		}
-	}
-	
-	private final int LENGTH = 300;
-	private final int PQ_SIZE = 100000;
-	private final int NUMBER_OF_AREAS = LENGTH*LENGTH;
-	PQ_elem[] heap;
-	HashMap<Integer,Integer> heap_index;
-	int size;
-	Route[] top_10_routes;
-	int last_freq;
-	boolean has_top_10_changed;
-	
-	public TenMaxFrequency() {
-		heap = new PQ_elem[PQ_SIZE];
-		for(int i=0; i<PQ_SIZE; i++) heap[i] = null;
-		heap_index = new HashMap<Integer,Integer>();
-		size = 0;
-		top_10_routes = new Route[10];
-		for(int i=0;i<10;i++) {
-			top_10_routes[i] = null;
-		}
-		last_freq = 0;
-		has_top_10_changed = false;
-	}
-	
-	public void swap(int index_1, int index_2) {
-		PQ_elem elem_1 = heap[index_1];
-		PQ_elem elem_2 = heap[index_2];
-		heap_index.put(elem_1.key,index_2);
-		heap_index.put(elem_2.key,index_1);
-		heap[index_2] = elem_1;
-		heap[index_1] = elem_2;
-	}
-	
-	public void percolateUp(int index) {
-		int parent = (index-1)/2;
-		while(parent>=0 && heap[parent].compareTo(heap[index]) < 0) {
-			swap(index,parent);
-			index = parent;
-			if(index==0) break;
-			parent = (index-1)/2;
-		}
-	}
-	
-	public void percolateDown(int index) {
-		int left_child = index*2+1;
-		int right_child = index*2+2;
-		while(index<size) {
-			if(left_child<size && heap[index].compareTo(heap[left_child]) < 0) {
-				swap(index,left_child);
-				index = left_child;
-				left_child = index*2+1;
-			}
-			else if(right_child<size && heap[index].compareTo(heap[right_child]) < 0) {
-				swap(index,right_child);
-				index = right_child;
-				right_child = index*2+2;
-			}
-			else {
-				break;
-			}
-		}
-	}
-	
-	public int getHeapIndexForRoute(Route r) {
-		return heap_index.get( (r.toArea.x*LENGTH+r.toArea.y)*NUMBER_OF_AREAS + (r.fromArea.x*LENGTH+r.fromArea.y) );
-	}
-	
-	public void setHeapIndexForRoute(Route r, int index) {
-		if(index==-1) {
-			heap_index.remove( (r.toArea.x*LENGTH+r.toArea.y)*NUMBER_OF_AREAS + (r.fromArea.x*LENGTH+r.fromArea.y) );
-		}
-		else {
-			heap_index.put( (r.toArea.x*LENGTH+r.toArea.y)*NUMBER_OF_AREAS + (r.fromArea.x*LENGTH+r.fromArea.y), index );
-		}
-	}
-	
-	public boolean contains(Route r) {
-		return heap_index.containsKey( (r.toArea.x*LENGTH+r.toArea.y)*NUMBER_OF_AREAS + (r.fromArea.x*LENGTH+r.fromArea.y) );
-	}
+    public Freq(int f, long ts) {
+      this.frequency = f;
+      this.ts = ts;
+    }
 
-	public void add(Route r, int freq, long ts) {
-		setHeapIndexForRoute(r,size);
-		heap[size] = new PQ_elem(r,freq,ts);
-		size++;
-		percolateUp(size-1);
-	}
-	
-	public void remove(Route r) {
-		if(!contains(r)) {
-			return;
-		}
-		int index = getHeapIndexForRoute(r);
-		if(index == size-1) {
-			setHeapIndexForRoute(r,-1);
-			heap[size-1] = null;
-			size--;
-			return;
-		}
-		else {
-			setHeapIndexForRoute(r,-1);
-			heap[index] = heap[size-1];
-			size--;
-			setHeapIndexForRoute(heap[index].r,index);
-			int parent = (index-1)/2;
-			if(parent>=0 && heap[parent].compareTo(heap[index]) < 0) {
-				percolateUp(index);
-			}
-			else {
-				percolateDown(index);
-			}
-		}
-	}
-	
-	public void update(Route r, int diff_freq, long ts) {
-		if(diff_freq<0) {
-			int index = getHeapIndexForRoute(r);
-			heap[index].freq = heap[index].freq + diff_freq;
-			if(heap[index].freq == 0) {
-				remove(r);
-			}
-			else if(heap[index].freq > 0) {
-				percolateDown(index);
-			}
-			else {
-				System.out.println("ERROR : freq can't be less than 0");
-			}
-		}
-		else if(diff_freq>0) {
-			int index = getHeapIndexForRoute(r);
-			heap[index].freq = heap[index].freq + diff_freq;
-			percolateUp(index);
-		}
-	}
-	
-	public void  decreaseFrequency(Route r, long ts) {
-		if(!has_top_10_changed && heap[getHeapIndexForRoute(r)].freq>=last_freq) {
-			has_top_10_changed = true;
-		}
-		update(r,-1,ts);	
-	}
-	
-	
-	public void increaseFrequency(Route r, long ts) {
-		if(!contains(r)) {
-			add(r,1,ts);
-		}
-		else {
-			update(r,1,ts);
-		}
-		if(!has_top_10_changed && heap[getHeapIndexForRoute(r)].freq>=last_freq) {
-                        has_top_10_changed = true;
-                }
-	}
-	
-	public String printMaxTen() {
-		String ret_string = "";
-		Comparator<Integer> comparator = new customComparator();
-		PriorityQueue<Integer> queue = new PriorityQueue<Integer>(12, comparator);
-		if(size>0) queue.add(0);
-		int numPrinted = 0;
-		while(queue.size()>0 && numPrinted<10) {
-			int top_index = queue.poll().intValue();
-			ret_string += (heap[top_index].r.fromArea.x+1) + "." + (heap[top_index].r.fromArea.y+1) 
-					+ "," + (heap[top_index].r.toArea.x+1) + "." + (heap[top_index].r.toArea.y+1) + ",";
-			last_freq = heap[top_index].freq;
-			//print_stream.print((heap[top_index].r.fromArea.x+1) + "." + (heap[top_index].r.fromArea.y+1) + ",");
-			//print_stream.print((heap[top_index].r.toArea.x+1) + "." + (heap[top_index].r.toArea.y+1) + ",");
-			if(top_index*2+1 < size) queue.add(top_index*2+1);
-			if(top_index*2+2 < size) queue.add(top_index*2+2);
-			numPrinted++;
-		}
-		while(numPrinted<10) {
-			ret_string += "NULL,";
-			last_freq = 0;
-			//print_stream.print("NULL,");
-			numPrinted++;
-		}
-		has_top_10_changed = false;
-		return ret_string;
-	}
+    public Freq(Freq freq) {
+      this.frequency = freq.frequency;
+      this.ts = freq.ts;
+    }
 
-	public boolean isSameMaxTenKey() {
-		return !has_top_10_changed;
-	}
+    @Override
+    public boolean equals(Object obj) {
+      if(!(obj instanceof Freq))
+        return false;
+
+      if(obj == this)
+        return true;
+
+      Freq v = (Freq) obj;
+      if(v.frequency == this.frequency && v.ts == this.ts)
+        return true;
+
+      return false;
+    }
+
+    @Override
+    public int compareTo(Freq v) {
+      if(this.frequency < v.frequency) {
+        return -1;
+      } else if(this.frequency > v.frequency) {
+        return 1;
+      } else if(this.ts < v.ts) {
+        return -1;
+      } else if(this.ts > v.ts) {
+        return 1;
+      } else {
+        return 0;
+      }
+    }
+  }
+
+  final class PairQ1 {
+    public Route route;
+    public Freq freq;
+
+    public PairQ1(Route r, Freq f) {
+      this.route = r;
+      this.freq = f;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if(!(obj instanceof PairQ1))
+        return false;
+
+      if(obj == this)
+        return true;
+
+      PairQ1 pair = (PairQ1) obj;
+      if(this.route.equals(pair.route) && this.freq.equals(pair.freq))
+        return true;
+
+      return false;
+    }
+  }
+
+  // Note that same object is stored in both* the data structures
+  private ArrayList<ArrayList<HashMap<Area, PairQ1>>> route_freq_map;
+  private ArrayList<ArrayList<TreeMap<Route, PairQ1>>> freq_array;
+  private ArrayList<Long> latest_ts;
+
+  // Max frequency
+  private int max_frequency;
+  private int tenth_frequency;
+
+  // Number of routes for each frequency
+  private ArrayList<Integer> route_count;
+
+  // temporary data so that new need not be called
+  private ArrayList<Route> old_max_ten_routes;
+
+  public TenMaxFrequency() {
+    route_freq_map = new ArrayList<ArrayList<HashMap<Area, PairQ1>>>(300);
+    freq_array = new ArrayList<ArrayList<TreeMap<Route, PairQ1>>>(Constants.FREQ_ARRAY_SIZE);
+    route_count = new ArrayList<Integer>(Constants.FREQ_ARRAY_SIZE);
+    latest_ts = new ArrayList<Long>(Constants.FREQ_ARRAY_SIZE);
+
+    // Initialize frequency array
+    for(int i=0; i<Constants.FREQ_ARRAY_SIZE; i++) {
+      freq_array.add(new ArrayList<TreeMap<Route, PairQ1>>(Constants.MAX_NUM_TS));
+      ArrayList<TreeMap<Route, PairQ1>> array = freq_array.get(i);
+      for(int j=0; j<Constants.MAX_NUM_TS; j++) {
+        array.add(new TreeMap<Route, PairQ1>());
+      }
+      route_count.add(0);
+      latest_ts.add((long)-1);
+    }
+
+    // Initialize route frequency map
+    for(int i=0; i<300; i++) {
+      route_freq_map.add(new ArrayList<HashMap<Area, PairQ1>>(300));
+      ArrayList<HashMap<Area, PairQ1>> array = route_freq_map.get(i);
+      for(int j=0; j<300; j++) {
+        array.add(new HashMap<Area, PairQ1>());
+      }
+    }
+
+    max_frequency = 0;
+    tenth_frequency = 0;
+
+    // temporary data initialization
+    old_max_ten_routes = new ArrayList<Route>(10);
+    for(int i=0; i<10; i++) {
+      old_max_ten_routes.add(null);
+    }
+  }
+
+  public String printMaxTen() {
+    String print_string = "";
+    int temp_frequency = max_frequency;
+    int temp_route_count = route_count.get(temp_frequency);
+    int ts = (int)(long)(latest_ts.get(temp_frequency)) & Constants.MAX_NUM_TS_MINUS_1;
+    int count = 0;
+    while(count < 10 && temp_frequency > 0) {
+      // Number of routes remaining for that frequency = 0
+      // => means take next one
+      if(temp_route_count == 0) {
+        temp_frequency = temp_frequency - 1;
+        temp_route_count = route_count.get(temp_frequency);
+        ts = (int)(long)(latest_ts.get(temp_frequency)) & Constants.MAX_NUM_TS_MINUS_1;
+      } else {
+        // No routes in the current timestamp
+        if(freq_array.get(temp_frequency).get(ts).size() == 0) {
+          ts = ts - 1;
+          if(ts == -1) {
+            ts = Constants.MAX_NUM_TS-1;
+          }
+        }
+
+        // Iterate for routes in the current timestamp
+        else {
+          Iterator<Route> iter;
+          iter = freq_array.get(temp_frequency).get(ts).keySet().iterator();
+          while(iter.hasNext()) {
+            PairQ1 p = freq_array.get(temp_frequency).get(ts).get(iter.next());
+            print_string = print_string + Integer.toString(p.route.fromArea.x + 1) + "." + Integer.toString(p.route.fromArea.y + 1) + "," + Integer.toString(p.route.toArea.x + 1) + "." + Integer.toString(p.route.toArea.y + 1) + ",";
+            temp_route_count = temp_route_count - 1;
+            count = count + 1;
+            if(count >= 10) {
+              break;
+            }
+          }
+
+          ts = ts - 1;
+          if(ts == -1) {
+            ts = Constants.MAX_NUM_TS_MINUS_1;
+          }
+        }
+      }
+    }
+
+    tenth_frequency = temp_frequency;
+
+    while(count < 10) {
+      print_string = print_string + "NULL" + ",";
+      count = count + 1;
+    }
+    return print_string;
+  }
+
+  public void storeMaxTenCopy() {
+    int temp_frequency = max_frequency;
+    int temp_route_count = route_count.get(temp_frequency);
+    int ts = (int)(long)(latest_ts.get(temp_frequency)) & Constants.MAX_NUM_TS_MINUS_1;;
+    int count = 0;
+
+    while(count < 10 && temp_frequency > 0) {
+      // Number of routes remaining for that frequency = 0
+      // => means take next one
+      if(temp_route_count == 0) {
+        temp_frequency = temp_frequency - 1;
+        temp_route_count = route_count.get(temp_frequency);
+        ts = (int)(long)(latest_ts.get(temp_frequency)) & Constants.MAX_NUM_TS_MINUS_1;
+      } else {
+        // No routes in the current timestamp
+        if(freq_array.get(temp_frequency).get(ts).size() == 0) {
+          ts = ts - 1;
+          if(ts == -1) {
+            ts = Constants.MAX_NUM_TS_MINUS_1;
+          }
+        }
+
+        // Iterate for routes in the current timestamp
+        else {
+          Iterator<Route> iter;
+          iter = freq_array.get(temp_frequency).get(ts).keySet().iterator();
+          while(iter.hasNext()) {
+            PairQ1 p = freq_array.get(temp_frequency).get(ts).get(iter.next());
+            old_max_ten_routes.set(count, p.route);
+            temp_route_count = temp_route_count - 1;
+            count = count + 1;
+
+            if(count >= 10) {
+              break;
+            }
+          }
+
+          ts = ts - 1;
+          if(ts == -1) {
+            ts = Constants.MAX_NUM_TS_MINUS_1;
+          }
+        }
+      }
+    }
+
+    while(count < 10) {
+      old_max_ten_routes.set(count, null);
+      count = count + 1;
+    }
+  }
+
+  public boolean isSameMaxTenKey() {
+    int temp_frequency = max_frequency;
+    int temp_route_count = route_count.get(temp_frequency);
+    int ts = (int)(long)(latest_ts.get(temp_frequency)) & Constants.MAX_NUM_TS_MINUS_1;
+    int count = 0;
+    while(count < 10 && temp_frequency > 0) {
+      // Number of routes remaining for that frequency = 0
+      // =>  means take next one
+      if(temp_route_count == 0) {
+        temp_frequency = temp_frequency - 1;
+        temp_route_count = route_count.get(temp_frequency);
+        ts = (int)(long)(latest_ts.get(temp_frequency)) & Constants.MAX_NUM_TS_MINUS_1;
+      } else {
+        // No routes in the current timestamp
+        if(freq_array.get(temp_frequency).get(ts).size() == 0) {
+          ts = ts - 1;
+          if(ts == -1) {
+            ts = Constants.MAX_NUM_TS_MINUS_1;
+          }
+        }
+
+        // Iterate for routes in the current timestamp
+        else {
+          Iterator<Route> iter;
+          iter = freq_array.get(temp_frequency).get(ts).keySet().iterator();
+          while(iter.hasNext()) {
+            PairQ1 p = freq_array.get(temp_frequency).get(ts).get(iter.next());
+            if((old_max_ten_routes.get(count) == null) ||
+                (!p.route.equals(old_max_ten_routes.get(count)))) {
+              return false;
+            }
+
+            temp_route_count = temp_route_count - 1;
+            count = count + 1;
+
+            if(count >= 10) {
+              break;
+            }
+          }
+
+          ts = ts - 1;
+          if(ts == -1) {
+            ts = Constants.MAX_NUM_TS_MINUS_1;
+          }
+        }
+      }
+    }
+
+    if(count >= 10) {
+      return true;
+    }
+
+    while(count < 10) {
+      if(old_max_ten_routes.get(count) != null) {
+        return false;
+      }
+
+      count = count + 1;
+    }
+
+    return true;
+  }
+
+  public boolean increaseFrequency(Route r, long ts) {
+    // Get the pair from hashmap
+    PairQ1 p = route_freq_map.get(r.fromArea.x).get(r.fromArea.y).get(r.toArea);
+    boolean ret_val = false;
+
+    if(p != null) {
+      // Remove from current frequency
+      freq_array.get(p.freq.frequency).get((int)(long)(p.freq.ts*0.001) & Constants.MAX_NUM_TS_MINUS_1).remove(r);
+      int new_count = route_count.get(p.freq.frequency) - 1;
+      route_count.set(p.freq.frequency, new_count);
+      if(p.freq.frequency >= tenth_frequency) {
+        ret_val = true;
+      }
+
+      // Add to next frequency
+      p.freq.frequency = p.freq.frequency + 1;
+      p.freq.ts = ts;
+      freq_array.get(p.freq.frequency).get((int)(long)(ts*0.001) & Constants.MAX_NUM_TS_MINUS_1).put(r, p);
+      if(p.freq.frequency >= tenth_frequency) {
+        ret_val = true;
+      }
+
+      if(latest_ts.get(p.freq.frequency) < (long)(ts*0.001)) {
+        latest_ts.set(p.freq.frequency, (long)(ts*0.001));
+      }
+
+      new_count = route_count.get(p.freq.frequency) + 1;
+      route_count.set(p.freq.frequency, new_count);
+
+      // Increment max frequency if necessary
+      if(max_frequency < p.freq.frequency) {
+        max_frequency = p.freq.frequency;
+      }
+    } else {
+      // Create new objects
+      Freq f = new Freq(1, ts);
+      p = new PairQ1(r, f);
+
+      // Insert in the hashmap
+      route_freq_map.get(r.fromArea.x).get(r.fromArea.y).put(r.toArea, p);
+
+      // Frequency = 1
+      freq_array.get(1).get((int)(long)(ts*0.001) & Constants.MAX_NUM_TS_MINUS_1).put(r, p);
+      if(1 >= tenth_frequency) {
+        ret_val = true;
+      }
+
+      if(latest_ts.get(1) < (long)(ts*0.001)) {
+        latest_ts.set(p.freq.frequency, (long)(ts*0.001));
+      }
+
+      int new_count = route_count.get(1) + 1;
+      route_count.set(1,new_count);
+
+      // Increment max frequency if necessary
+      if(max_frequency == 0) {
+        max_frequency = 1;
+      }
+    }
+
+    return ret_val;
+  }
+
+  public boolean decreaseFrequency(Route r, long ts) {
+    // Get the pair from hashmap
+    PairQ1 p = route_freq_map.get(r.fromArea.x).get(r.fromArea.y).get(r.toArea);
+    boolean ret_val = false;
+
+    // Remove from current frequency
+    freq_array.get(p.freq.frequency).get((int)(long)(p.freq.ts*0.001) & Constants.MAX_NUM_TS_MINUS_1).remove(r);
+    if(p.freq.frequency >= tenth_frequency) {
+      ret_val = true;
+    }
+
+    int new_count = route_count.get(p.freq.frequency) - 1;
+    route_count.set(p.freq.frequency, new_count);
+    if(max_frequency == p.freq.frequency &&
+        route_count.get(p.freq.frequency) == 0) {
+      max_frequency = p.freq.frequency - 1;
+    }
+
+    // Decrement frequency
+    p.freq.frequency = p.freq.frequency - 1;
+
+    // Remove from hashmap if frequency hits zero
+    if(p.freq.frequency == 0) {
+      route_freq_map.get(r.fromArea.x).get(r.fromArea.y).remove(r.toArea);
+    } else {
+      // Add to lower frequency
+      freq_array.get(p.freq.frequency).get((int)(long)(p.freq.ts*0.001) & Constants.MAX_NUM_TS_MINUS_1).put(r, p);
+      if(p.freq.frequency >= tenth_frequency) {
+        ret_val = true;
+      }
+
+      if(latest_ts.get(p.freq.frequency) < (long)(p.freq.ts*0.001)) {
+        latest_ts.set(p.freq.frequency, (long)(p.freq.ts*0.001));
+      }
+
+      new_count = route_count.get(p.freq.frequency) + 1;
+      route_count.set(p.freq.frequency, new_count);
+    }
+
+    return ret_val;
+  }
 }

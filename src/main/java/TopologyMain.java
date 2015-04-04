@@ -4,8 +4,7 @@ import backtype.storm.LocalCluster;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 //import bolts.EventParser;
-import bolts.Q1Process;
-import bolts.Q1Print;
+import bolts.*;
 import utils.Area;
 
 
@@ -20,10 +19,17 @@ public class TopologyMain {
 			.shuffleGrouping("file-reader");
 		*/
 		builder.setBolt("q1-process", new Q1Process())
-			.shuffleGrouping("file-reader");
+			.shuffleGrouping("file-reader","stream1");
 		
 		builder.setBolt("q1-print", new Q1Print())
 			.shuffleGrouping("q1-process");
+
+		builder.setBolt("q2-process", new Q2Process())
+                        .shuffleGrouping("file-reader","stream2");
+
+                builder.setBolt("q2-print", new Q2Print())
+                        .shuffleGrouping("q2-process");
+
 
 		
         //Configuration

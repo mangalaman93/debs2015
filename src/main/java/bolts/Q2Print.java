@@ -9,7 +9,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Tuple;
 
-public class Q1Print extends BaseBasicBolt {
+public class Q2Print extends BaseBasicBolt {
 
 	@Override
 	public void cleanup() {
