@@ -13,6 +13,7 @@ import backtype.storm.tuple.Values;
 import backtype.storm.tuple.Fields;
 
 import utils.*;
+import spouts.*;
 
 public class Q1Process extends BaseBasicBolt {
 
@@ -20,7 +21,7 @@ public class Q1Process extends BaseBasicBolt {
   	LinkedList<Q1Elem> sliding_window;
   	int in_count;
   	long last_time;
-  	private final static int NUM = 5000;
+  	private final static int NUM = 3000;
 
 	@Override
 	public void cleanup() {
@@ -43,12 +44,12 @@ public class Q1Process extends BaseBasicBolt {
 		Q1Elem lastevent = null;
 		long lastms = 0;
 		in_count++;
-
+		//System.out.println("proc " + in_count);
 		if(in_count == NUM) {
-          System.err.println("Query 1 throughput: "+(NUM/(System.currentTimeMillis()-last_time)));
-          in_count = 0;
-          last_time = System.currentTimeMillis();
-        }
+	          System.out.println("Query 1 throughput: "+(NUM/(System.currentTimeMillis()-last_time)));
+        	  in_count = 0;
+          	  last_time = System.currentTimeMillis();
+        	}
 
 		// System.out.println(q1event.route.fromArea.x + "." + q1event.route.fromArea.y + 
 		// 	" " + q1event.route.toArea.x + "." + q1event.route.toArea.y);
@@ -61,6 +62,7 @@ public class Q1Process extends BaseBasicBolt {
 
 	          // Remove the elements from the start of the window
 	          while((currentms-lastms) >= Constants.WINDOW30_SIZE) {
+			//System.out.println("HERE123");
 	            maxfs.decreaseFrequency(lastevent.route, lastevent.dropoff_datetime.getTime());
 	            sliding_window.removeFirst();
 

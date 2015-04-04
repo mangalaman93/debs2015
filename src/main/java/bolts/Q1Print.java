@@ -29,6 +29,6 @@ public class Q1Print extends BaseBasicBolt {
 	@Override
 	public void execute(Tuple input, BasicOutputCollector collector) {
 		String str = input.getString(0);
-		System.out.println(str);
+	//	System.out.println(str);
 	}
 }
