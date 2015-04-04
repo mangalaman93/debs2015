@@ -10,7 +10,15 @@ public class Area {
     this.hash = temp.hashCode();
   }
 
-  public boolean equals(Area a) {
+  @Override
+  public boolean equals(Object obj) {
+    if(!(obj instanceof Area))
+      return false;
+
+    if(obj == this)
+      return true;
+
+    Area a = (Area) obj;
     if(a.x == this.x && a.y == this.y)
       return true;
 
@@ -20,10 +28,5 @@ public class Area {
   @Override
   public int hashCode() {
   	return hash;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    throw new UnsupportedOperationException();
   }
 }

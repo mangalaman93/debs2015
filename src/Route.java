@@ -22,7 +22,15 @@ public class Route implements Comparable<Route> {
     this.hash = temp.hashCode();
   }
 
-  public boolean equals(Route r) {
+  @Override
+  public boolean equals(Object obj) {
+    if(!(obj instanceof Area))
+      return false;
+
+    if(obj == this)
+      return true;
+
+    Route r = (Route) obj;
     if(r.fromArea.equals(this.fromArea) && r.toArea.equals(this.toArea))
       return true;
 
@@ -54,10 +62,5 @@ public class Route implements Comparable<Route> {
     } else {
       return 0;
     }
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    throw new UnsupportedOperationException();
   }
 }

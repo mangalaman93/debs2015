@@ -2,7 +2,6 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.TreeMap;
-import java.io.PrintStream;
 
 public class TenMaxFrequency {
   class Freq implements Comparable<Freq> {

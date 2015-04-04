@@ -127,10 +127,10 @@ public class TenMaxProfitability {
 
   public TenMaxProfitability() {
     area_elem_map = new SetElemMap(Constants.AREA_LIMIT, Constants.AREA_LIMIT);
-    grid_present = new HashMap<String, TaxiInfo>(Constants.SIZE_GRID_PRESENT_HASH);
+    grid_present = new HashMap<String, TaxiInfo>(Constants.HM_INIT_SIZE, Constants.HM_LOAD_FACTOR);
     sorted_ptb_list = new ArrayList<Set<SetElem>>(Constants.NUM_EMPTY_BUCKETS);
     for(int i=0; i<Constants.NUM_EMPTY_BUCKETS; i++) {
-      sorted_ptb_list.add(i, new HashSet<SetElem>(Constants.SIZE_INIT_HASHSET));
+      sorted_ptb_list.add(i, new HashSet<SetElem>(Constants.SIZE_INIT_HASHSET, Constants.LF_INIT_HASHSET));
     }
 
     last_10th_area = null;
@@ -239,8 +239,8 @@ public class TenMaxProfitability {
 
         // Add the updated area
         int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
-        if(new_index > (Constants.QUERY2_MAX_INDEX -1)) {
-          new_index = (int) (Constants.QUERY2_MAX_INDEX -1);
+        if(new_index > (Constants.NUM_EMPTY_BUCKETS -1)) {
+          new_index = (int) (Constants.NUM_EMPTY_BUCKETS -1);
         }
 
         elem.aindex = new_index;
@@ -265,8 +265,8 @@ public class TenMaxProfitability {
 
       // Add the area
       int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
-      if(new_index > (Constants.QUERY2_MAX_INDEX -1)) {
-        new_index = (int) (Constants.QUERY2_MAX_INDEX -1);
+      if(new_index > (Constants.NUM_EMPTY_BUCKETS -1)) {
+        new_index = (int) (Constants.NUM_EMPTY_BUCKETS -1);
       }
       elem.aindex = new_index;
       sorted_ptb_list.get(new_index).add(elem);
@@ -318,8 +318,8 @@ public class TenMaxProfitability {
 
         // Add the updated data
         int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
-        if(new_index > (Constants.QUERY2_MAX_INDEX -1)) {
-          new_index = (int) (Constants.QUERY2_MAX_INDEX -1);
+        if(new_index > (Constants.NUM_EMPTY_BUCKETS -1)) {
+          new_index = (int) (Constants.NUM_EMPTY_BUCKETS -1);
         }
 
         elem.aindex = new_index;
@@ -367,8 +367,8 @@ public class TenMaxProfitability {
 
       // Add the updated data
       int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
-      if(new_index > (Constants.QUERY2_MAX_INDEX -1)) {
-        new_index = (int) (Constants.QUERY2_MAX_INDEX -1);
+      if(new_index > (Constants.NUM_EMPTY_BUCKETS -1)) {
+        new_index = (int) (Constants.NUM_EMPTY_BUCKETS -1);
       }
       elem.aindex = new_index;
       sorted_ptb_list.get(new_index).add(elem);
@@ -384,8 +384,8 @@ public class TenMaxProfitability {
 
       // Add this area
       int new_index = (int) (elem.profitability*Constants.INV_BUCKET_SIZE);
-      if(new_index > (Constants.QUERY2_MAX_INDEX -1)) {
-        new_index = (int) (Constants.QUERY2_MAX_INDEX -1);
+      if(new_index > (Constants.NUM_EMPTY_BUCKETS -1)) {
+        new_index = (int) (Constants.NUM_EMPTY_BUCKETS -1);
       }
       sorted_ptb_list.get(new_index).contains(elem);
       sorted_ptb_list.get(new_index).add(elem);
@@ -417,7 +417,11 @@ public class TenMaxProfitability {
           continue;
         }
 
-        print_string = print_string + String.valueOf(s.area.x+1) + "." + String.valueOf(s.area.y+1) + "," + String.valueOf(elem.num_empty_taxis) + "," +  String.valueOf(elem.mprofit.getMedian()) + "," + String.valueOf(elem.profitability) + ",";
+        print_string = print_string + String.valueOf(s.area.x+1) +
+            "." + String.valueOf(s.area.y+1) +
+            "," + String.valueOf(elem.num_empty_taxis) +
+            "," +  String.valueOf(elem.mprofit.getMedian()) +
+            "," + String.valueOf(elem.profitability) + ",";
         last_10th_ptb = elem.profitability;
         last_10th_area = elem.area;
 	      last_10th_ts = elem.ts;
