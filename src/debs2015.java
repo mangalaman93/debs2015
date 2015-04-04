@@ -28,6 +28,19 @@ class Q2Elem {
   public float total_fare;
   public long time_in;
   public int id;
+  
+  public void print() {
+    System.out.print(medallion_hack_license);
+    System.out.print(pickup_datetime);
+    System.out.print(dropoff_datetime);
+    System.out.print(pickup_area.x);
+    System.out.print(pickup_area.y);
+    System.out.print(dropoff_area.x);
+    System.out.print(dropoff_area.y);
+    System.out.print(total_fare);
+    System.out.print(id);
+    System.out.println();
+  }
 }
 
 /* IoProcessor: Task to perform-
@@ -186,9 +199,7 @@ class IoProcess implements Runnable {
           if(oldstart == startbuffer) {
             continue;
           } else {
-            StringBuilder temp = new StringBuilder();
-            temp.append(buffer, oldstart, startbuffer-oldstart);
-            pickup_longitude = Float.parseFloat(temp.toString());
+            pickup_longitude = Constants.parseFloat(buffer, oldstart, startbuffer);
             startbuffer++;
           }
 
@@ -201,9 +212,7 @@ class IoProcess implements Runnable {
           if(oldstart == startbuffer) {
             continue;
           } else {
-            StringBuilder temp = new StringBuilder();
-            temp.append(buffer, oldstart, startbuffer-oldstart);
-            pickup_latitude = Float.parseFloat(temp.toString());
+            pickup_latitude = Constants.parseFloat(buffer, oldstart, startbuffer);
             startbuffer++;
           }
 
@@ -228,9 +237,7 @@ class IoProcess implements Runnable {
           if(oldstart == startbuffer) {
             continue;
           } else {
-            StringBuilder temp = new StringBuilder();
-            temp.append(buffer, oldstart, startbuffer-oldstart);
-            dropoff_longitude = Float.parseFloat(temp.toString());
+            dropoff_longitude = Constants.parseFloat(buffer, oldstart, startbuffer);
             startbuffer++;
           }
 
@@ -243,9 +250,7 @@ class IoProcess implements Runnable {
           if(oldstart == startbuffer) {
             continue;
           } else {
-            StringBuilder temp = new StringBuilder();
-            temp.append(buffer, oldstart, startbuffer-oldstart);
-            dropoff_latitude = Float.parseFloat(temp.toString());
+            dropoff_latitude = Constants.parseFloat(buffer, oldstart, startbuffer);
             startbuffer++;
           }
 
@@ -283,9 +288,7 @@ class IoProcess implements Runnable {
           if(oldstart == startbuffer) {
             continue;
           } else {
-            StringBuilder temp = new StringBuilder();
-            temp.append(buffer, oldstart, startbuffer-oldstart);
-            q2event.total_fare = Float.parseFloat(temp.toString());
+            q2event.total_fare = Constants.parseFloat(buffer, oldstart, startbuffer);
             startbuffer++;
           }
 
@@ -322,9 +325,7 @@ class IoProcess implements Runnable {
           if(oldstart == startbuffer) {
             continue;
           } else {
-            StringBuilder temp = new StringBuilder();
-            temp.append(buffer, oldstart, startbuffer-oldstart);
-            q2event.total_fare += Float.parseFloat(temp.toString());
+            q2event.total_fare += Constants.parseFloat(buffer, oldstart, startbuffer);
             startbuffer++;
           }
           if(q2event.total_fare < 0) {
@@ -358,6 +359,10 @@ class IoProcess implements Runnable {
           q2event.id = id++;
           queue_q2.put(q2event);
         } catch (Exception e) {
+          for(int i=0; i<startbuffer; i++) {
+            System.out.print(buffer[i]);
+          }
+          System.out.println("");
         }
       }
 
@@ -521,9 +526,7 @@ class IoProcessQ1 implements Runnable {
           if(oldstart == startbuffer) {
             continue;
           } else {
-            StringBuilder temp = new StringBuilder();
-            temp.append(buffer, oldstart, startbuffer-oldstart);
-            pickup_longitude = Float.parseFloat(temp.toString());
+            pickup_longitude = Constants.parseFloat(buffer, oldstart, startbuffer);
             startbuffer++;
           }
 
@@ -536,9 +539,7 @@ class IoProcessQ1 implements Runnable {
           if(oldstart == startbuffer) {
             continue;
           } else {
-            StringBuilder temp = new StringBuilder();
-            temp.append(buffer, oldstart, startbuffer-oldstart);
-            pickup_latitude = Float.parseFloat(temp.toString());
+            pickup_latitude = Constants.parseFloat(buffer, oldstart, startbuffer);
             startbuffer++;
           }
 
@@ -557,9 +558,7 @@ class IoProcessQ1 implements Runnable {
           if(oldstart == startbuffer) {
             continue;
           } else {
-            StringBuilder temp = new StringBuilder();
-            temp.append(buffer, oldstart, startbuffer-oldstart);
-            dropoff_longitude = Float.parseFloat(temp.toString());
+            dropoff_longitude = Constants.parseFloat(buffer, oldstart, startbuffer);
             startbuffer++;
           }
 
@@ -572,9 +571,7 @@ class IoProcessQ1 implements Runnable {
           if(oldstart == startbuffer) {
             continue;
           } else {
-            StringBuilder temp = new StringBuilder();
-            temp.append(buffer, oldstart, startbuffer-oldstart);
-            dropoff_latitude = Float.parseFloat(temp.toString());
+            dropoff_latitude = Constants.parseFloat(buffer, oldstart, startbuffer);
             startbuffer++;
           }
 
@@ -588,6 +585,10 @@ class IoProcessQ1 implements Runnable {
           // Put events into queues for Q1 and Q2
           queue_q1.put(q1event);
         } catch (Exception e) {
+          for(int i=0; i<startbuffer; i++) {
+            System.out.print(buffer[i]);
+          }
+          System.out.println("");
         }
       }
 
@@ -627,7 +628,6 @@ class IoProcessQ2 implements Runnable {
   public void run() {
     FileReader reader;
     float pickup_longitude, pickup_latitude, dropoff_longitude, dropoff_latitude;
-    Area from, to;
 
     char buffer[] = new char[Constants.BUFFER_SIZE + Constants.MAX_LINE_SIZE];
     int startbuffer = -1;
@@ -749,9 +749,7 @@ class IoProcessQ2 implements Runnable {
           if(oldstart == startbuffer) {
             continue;
           } else {
-            StringBuilder temp = new StringBuilder();
-            temp.append(buffer, oldstart, startbuffer-oldstart);
-            pickup_longitude = Float.parseFloat(temp.toString());
+            pickup_longitude = Constants.parseFloat(buffer, oldstart, startbuffer);
             startbuffer++;
           }
 
@@ -764,9 +762,7 @@ class IoProcessQ2 implements Runnable {
           if(oldstart == startbuffer) {
             continue;
           } else {
-            StringBuilder temp = new StringBuilder();
-            temp.append(buffer, oldstart, startbuffer-oldstart);
-            pickup_latitude = Float.parseFloat(temp.toString());
+            pickup_latitude = Constants.parseFloat(buffer, oldstart, startbuffer);
             startbuffer++;
           }
 
@@ -785,9 +781,7 @@ class IoProcessQ2 implements Runnable {
           if(oldstart == startbuffer) {
             continue;
           } else {
-            StringBuilder temp = new StringBuilder();
-            temp.append(buffer, oldstart, startbuffer-oldstart);
-            dropoff_longitude = Float.parseFloat(temp.toString());
+            dropoff_longitude = Constants.parseFloat(buffer, oldstart, startbuffer);
             startbuffer++;
           }
 
@@ -800,9 +794,7 @@ class IoProcessQ2 implements Runnable {
           if(oldstart == startbuffer) {
             continue;
           } else {
-            StringBuilder temp = new StringBuilder();
-            temp.append(buffer, oldstart, startbuffer-oldstart);
-            dropoff_latitude = Float.parseFloat(temp.toString());
+            dropoff_latitude = Constants.parseFloat(buffer, oldstart, startbuffer);
             startbuffer++;
           }
 
@@ -833,9 +825,7 @@ class IoProcessQ2 implements Runnable {
           if(oldstart == startbuffer) {
             continue;
           } else {
-            StringBuilder temp = new StringBuilder();
-            temp.append(buffer, oldstart, startbuffer-oldstart);
-            q2event.total_fare = Float.parseFloat(temp.toString());
+            q2event.total_fare = Constants.parseFloat(buffer, oldstart, startbuffer);
             startbuffer++;
           }
 
@@ -872,9 +862,7 @@ class IoProcessQ2 implements Runnable {
           if(oldstart == startbuffer) {
             continue;
           } else {
-            StringBuilder temp = new StringBuilder();
-            temp.append(buffer, oldstart, startbuffer-oldstart);
-            q2event.total_fare += Float.parseFloat(temp.toString());
+            q2event.total_fare += Constants.parseFloat(buffer, oldstart, startbuffer);
             startbuffer++;
           }
           if(q2event.total_fare < 0) {
@@ -883,15 +871,21 @@ class IoProcessQ2 implements Runnable {
 
           // Put events into queues for Q1 and Q2
           q2event.id = id++;
-          queue_q2.put(q2event);
+          q2event.print();
+//          queue_q2.put(q2event);
         } catch (Exception e) {
+          for(int i=0; i<startbuffer; i++) {
+            System.err.print(buffer[i]);
+          }
+          System.err.println("");
         }
       }
 
       // sentinel in Q2
       Q2Elem q2event = new Q2Elem();
       q2event.time_in = 0;
-      queue_q2.put(q2event);
+      q2event.print();
+//      queue_q2.put(q2event);
       reader.close();
     } catch(Exception e) {
       System.out.println("Error in IoProcess!");
@@ -923,8 +917,6 @@ class Q1Process implements Runnable {
 
   @Override
   public void run() {
-    // int in_count = 0;
-    long last_time = System.currentTimeMillis();
 
     try {
       Q1Elem lastevent, newevent=queue.take();
@@ -933,13 +925,6 @@ class Q1Process implements Runnable {
 
       while(newevent.time_in != 0) {
         ten_max_changed = false;
-        // in_count++;
-        // if(in_count == 100000) {
-        //   System.out.println("Query 1 throughput: "+(100000/(System.currentTimeMillis()-last_time)));
-        //   in_count = 0;
-        //   last_time = System.currentTimeMillis();
-        // }
-        //maxfs.storeMaxTenCopy();
 
         // Check if events are leaving the sliding window and process them
         long currentms = newevent.dropoff_datetime.getTime();
@@ -1034,19 +1019,11 @@ class Q2Process implements Runnable {
 
   @Override
   public void run() {
-    // int in_count = 0;
-    long last_time = System.currentTimeMillis();
     try {
       Q2Elem lastevent, newevent = queue.take();
       long lastms;
 
       while(newevent.time_in != 0) {
-        // in_count++;
-        // if(in_count == 100000) {
-        //   System.out.println("Query 2 throughput: "+(100000/(System.currentTimeMillis()-last_time)));
-        //   in_count = 0;
-        //   last_time = System.currentTimeMillis();
-        // }
 
         // Check if events are leaving the sliding window and process them
         long currentms = newevent.dropoff_datetime.getTime();
@@ -1153,8 +1130,8 @@ class PrintProcess implements Runnable {
         if(!s.equals(prev_string)){
           long delay = System.currentTimeMillis() - time_in;
           s = s + String.valueOf(delay) + "\n";
-          System.err.println(query + "," + String.valueOf(delay));
-          System.out.print(s);
+//          System.err.println(query + "," + String.valueOf(delay));
+//          System.out.print(s);
           prev_string = s;
         }
         s = queue.take();
@@ -1223,7 +1200,7 @@ public class debs2015 {
     if(Constants.TWO_IO_PROCESS || (!(running_q1 && running_q2))) {
       Thread threadForIoProcessQ1 = new Thread(new IoProcessQ1(queue_for_Q1, test_file));
       Thread threadForIoProcessQ2 = new Thread(new IoProcessQ2(queue_for_Q2, test_file));
-      if(running_q1) threadForIoProcessQ1.start();
+//      if(running_q1) threadForIoProcessQ1.start();
       if(running_q2) threadForIoProcessQ2.start();
     } else {
       Thread threadForIoProcess = new Thread(new IoProcess(queue_for_Q1, queue_for_Q2, test_file));
@@ -1234,16 +1211,16 @@ public class debs2015 {
     Thread threadForQ1Process = new Thread(new Q1Process(queue_for_Q1, output_queue_for_Q1, delay_queue_for_Q1));
     Thread threadForQ1Print = new Thread(new PrintProcess(output_queue_for_Q1, delay_queue_for_Q1, q1out, "Q1"));
     if(running_q1) {
-      threadForQ1Process.start();
-      threadForQ1Print.start();
+//      threadForQ1Process.start();
+//      threadForQ1Print.start();
     }
 
     PrintStream q2out = new PrintStream(new FileOutputStream(Constants.Q2_FILE, false));
     Thread threadForQ2Process = new Thread(new Q2Process(queue_for_Q2, output_queue_for_Q2, delay_queue_for_Q2));
     Thread threadForQ2Print = new Thread(new PrintProcess(output_queue_for_Q2, delay_queue_for_Q2, q2out, "Q2"));
     if(running_q2) {
-      threadForQ2Process.start();
-      threadForQ2Print.start();
+//      threadForQ2Process.start();
+//      threadForQ2Print.start();
     }
   }
 }
