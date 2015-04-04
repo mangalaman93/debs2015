@@ -9,8 +9,9 @@ public class Constants {
   public static final float HM_LOAD_FACTOR = 0.75f;
 
   // capacity of queue between IO process and Q* processes
-  public static final int QUEUE1_CAPACITY = 50000;
-  public static final int QUEUE2_CAPACITY = 5000;
+  public static final int QUEUE1_CAPACITY = 10000;
+  public static final int QUEUE2_CAPACITY = 10000;
+  public static final int BLOCK_SIZE = 100;
 
   // capacity of queue between printing process and Q* processes
   public static final int QUEUE_OUTPUT_CAPACITY = 50000;
