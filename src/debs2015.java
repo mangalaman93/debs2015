@@ -1109,15 +1109,13 @@ class PrintProcess implements Runnable {
         if(qout.query == 1) {
           if(!qout.equals(prevq1.data)) {
             long delay = System.currentTimeMillis() - qout.time;
-            qout.data += String.valueOf(delay);
-            System.out.println(qout.data);
+            System.out.println(qout.data+String.valueOf(delay));
             prevq1 = qout;
           }
         } else {
           if(!qout.equals(prevq2.data)) {
             long delay = System.currentTimeMillis() - qout.time;
-            qout.data += String.valueOf(delay);
-            System.out.println(qout.data);
+            System.out.println(qout.data+String.valueOf(delay));
             prevq2 = qout;
           }
         }
