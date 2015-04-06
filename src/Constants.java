@@ -26,10 +26,10 @@ public class Constants {
   public final static int AREA_LIMIT = 600;
   // Max profitability value possible
   public final static int MAX_PFT_SIZE = 1024;
-  public final static int NUM_EMPTY_BUCKETS = 2048;
+  public final static int NUM_EMPTY_BUCKETS = 5120;
   // MAX_PFT_SIZE/ NUM_EMPTY_BUCKETS
-  public final static float BUCKET_SIZE = 1/2;
-  public final static float INV_BUCKET_SIZE = 2;
+  public final static float BUCKET_SIZE = 1/5;
+  public final static float INV_BUCKET_SIZE = 5;
   public final static int SIZE_INIT_HASHSET = 100;
   public final static int LF_INIT_HASHSET = 1;
 
