@@ -70,6 +70,14 @@ local.properties
 hs_err_pid*
 
 ######################
+# NetBeans
+######################
+build.xml
+dist/*
+manifest.mf
+nbproject/*
+
+######################
 # Data Files
 ######################
 out/sorted_data_full.csv

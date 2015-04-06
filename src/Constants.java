@@ -12,6 +12,7 @@ public class Constants {
   public static final int QUEUE1_CAPACITY = 10000;
   public static final int QUEUE2_CAPACITY = 10000;
   public static final int BLOCK_SIZE = 100;
+  public static final int TASK_QUEUE_SIZE = 1000;
 
   // capacity of queue between printing process and Q* processes
   public static final int QUEUE_OUTPUT_CAPACITY = 50000;
