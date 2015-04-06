@@ -111,6 +111,10 @@ public class Reader extends BaseRichSpout {
 				q2event.id = id++;
 				collector.emit("stream2",new Values(q2event));	
 			}
+			else {
+				Thread.sleep(1000);
+				System.exit(0);
+			}
 		} catch(Exception e){
 			//throw new RuntimeException("Error reading tuple",e);
 		} /*finally {

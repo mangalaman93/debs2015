@@ -93,12 +93,12 @@ public class Q2Process extends BaseBasicBolt {
 		if(!maxpft.isSameMaxTenKey()) {
 			String s = newevent.pickup_datetime.toString() + "," + newevent.dropoff_datetime.toString() + ",";
 			s = s + maxpft.printMaxTen();
-			collector.emit(new Values(s));
+			collector.emit(new Values(s,newevent.time_in));
 		}
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("q2output"));
+		declarer.declare(new Fields("q2output","q2delay"));
 	}
 }

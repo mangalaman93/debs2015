@@ -84,13 +84,13 @@ public class Q1Process extends BaseBasicBolt {
         	if(ten_max_changed){
 	        	String s = newevent.pickup_datetime.toString() + "," + newevent.dropoff_datetime.toString() + ",";
 	          	s = s + maxfs.printMaxTen();
-	          	collector.emit(new Values(s));
+	          	collector.emit(new Values(s,newevent.time_in));
 	        }
 		}
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("q1output"));
+		declarer.declare(new Fields("q1output","q1delay"));
 	}
 }
