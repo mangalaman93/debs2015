@@ -18,7 +18,6 @@ if len(sys.argv) == 2:
 # runnin the actual code
 
 start = time.time()
-print start
 os.system("/usr/bin/time java -jar debs2015.jar {} > output.csv".format(datafile))
 print "\nThroughput: {} events/sec".format((NUM_EVENTS/(time.time() - start)))
 os.system('python script/delay_whole.py')
