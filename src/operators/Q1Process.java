@@ -34,7 +34,7 @@ public class Q1Process implements StatelessOperator {
 	boolean ten_max_changed = false;
 
 	int c = 0;
-	int lat_sampler = 0;
+	int delay_sampler = 0;
 	int sec = 0;
 	long init;
 	int latency = 0;
@@ -58,10 +58,9 @@ public class Q1Process implements StatelessOperator {
 		c++;
 		if(c > 100000) {
 			long currentTime = System.currentTimeMillis();
-			System.out.println("Q1P : "+sec+" : "+(c*1000/(currentTime - init))+" : lat : "+latency/100001.0+" : delay : "+delay/100001.0);
+			System.out.println("Q1P : "+sec+" : "+(c*1000/(currentTime - init))+" : lat : "+latency/100001.0+" : delay : "+delay/delay_sampler);
 			c = 0;
 			latency = 0;
-			delay = 0;
 			sec++;
 			init = System.currentTimeMillis();
 		}
@@ -126,7 +125,8 @@ public class Q1Process implements StatelessOperator {
 
         if(!maxfs.isSameMaxTenKey()){
         	delay += (System.currentTimeMillis() - newevent.time_in);
-			DataTuple output = data.setValues(pickup_datetime, dropoff_datetime, maxfs.printMaxTen(), (System.currentTimeMillis() - newevent.time_in) );
+		delay_sampler++;
+			DataTuple output = data.setValues("Q1", pickup_datetime, dropoff_datetime, maxfs.printMaxTen(), (System.currentTimeMillis() - newevent.time_in) );
 			api.send(output);
         }
 	}

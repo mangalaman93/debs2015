@@ -18,6 +18,7 @@ public class Sink implements StatelessOperator{
 				+ data.getString("dropoff_datetime") + "," 
 				+ data.getString("top_ten")
 				+ data.getLong("delay"));
+		System.err.println(data.getString("from_process") + "," +  data.getLong("delay"));
 	}
 
 	@Override

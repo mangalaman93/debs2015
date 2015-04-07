@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import uk.ac.imperial.lsds.seep.GLOBALS;
 import uk.ac.imperial.lsds.seep.comm.serialization.DataTuple;
@@ -136,7 +137,7 @@ public class Source2 implements StatelessOperator {
 			return null;
 		}
 		
-                String line = queue.take();
+                String line = queue.poll(1000, TimeUnit.MILLISECONDS);
 		//String line = reader.readLine();
 //		System.out.println(line);
 		if (line == null)
@@ -338,7 +339,8 @@ class DiskReader implements Runnable {
 		while (true)
 			try {   
 				String line = reader.readLine();
-				ip_queue.put(line);
+				if (line != null)
+					ip_queue.put(line);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -377,7 +379,7 @@ class DataParser implements Runnable {
 
 			String line = null;
 			try {
-				line = ip_queue.take();
+				line = ip_queue.poll(1000, TimeUnit.MILLISECONDS);
 				if (line == null)
 					op_queue.put(null);
 			} catch(InterruptedException ex) {

@@ -41,6 +41,7 @@ public class Base implements QueryComposer {
 		Connectable q2 = QueryBuilder.newStatelessOperator(new Q2Process(), 3, src2Fields);
 		
 		List<String> snkFields = new ArrayList<String>();
+		snkFields.add("from_process");
 		snkFields.add("pickup_datetime");
 		snkFields.add("dropoff_datetime");
 		snkFields.add("top_ten");
