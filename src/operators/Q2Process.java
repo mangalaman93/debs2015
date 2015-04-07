@@ -153,7 +153,7 @@ public class Q2Process implements StatelessOperator {
 
         // add the incoming event
         maxpft.enterProfitSlidingWindow(newevent.pickup_area,newevent.id,
-            newevent.total_fare);
+            newevent.total_fare, newevent.dropoff_datetime.getTime());
         maxpft.enterTaxiSlidingWindow(newevent.medallion_hack_license,
             newevent.dropoff_area, newevent.id);
 
