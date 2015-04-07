@@ -30,11 +30,11 @@ public class TenMaxProfitability {
     
     public SetElem(SetElem elem) {
       this.area = elem.area;
-      this.mprofit = null;
-      this.num_empty_taxis = -1;
+      this.mprofit = elem.mprofit;
+      this.num_empty_taxis = elem.num_empty_taxis;
       this.profitability = elem.profitability;
       this.ts = elem.ts;
-      this.aindex = -1;
+      this.aindex = elem.aindex;
     }
 
 
