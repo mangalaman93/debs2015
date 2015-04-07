@@ -3,7 +3,7 @@
 import csv
 
 # Script to calculate average delay
-FILE = "temp.csv"
+FILE = "output.csv"
 
 rows = {'Q1':0, 'Q2':0}
 delay = {'Q1':0, 'Q2':0}
@@ -22,12 +22,11 @@ with open(FILE, 'r') as qfd:
 
 total_rows = 0
 total_delay = 0;
-print rows, delay
 for key in rows.iterkeys():
   total_rows = total_rows + rows[key]
   total_delay = total_delay + delay[key]
 avg_delay = total_delay/total_rows
-print "average delay = {}".format(avg_delay)
+print "average delay = {} ms".format(avg_delay)
 
 for key in rows.iterkeys():
-  print "{} delay = {}".format(key, delay[key]/rows[key])
+  print "{} delay = {} ms".format(key, delay[key]/rows[key])
