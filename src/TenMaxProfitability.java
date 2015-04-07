@@ -27,6 +27,16 @@ public class TenMaxProfitability {
       this.ts = t;
       this.aindex = -1;
     }
+    
+    public SetElem(SetElem elem) {
+      this.area = elem.area;
+      this.mprofit = null;
+      this.num_empty_taxis = -1;
+      this.profitability = elem.profitability;
+      this.ts = elem.ts;
+      this.aindex = -1;
+    }
+
 
     public void resetProfitability() {
       if(this.mprofit.size() == 0) {
@@ -42,8 +52,7 @@ public class TenMaxProfitability {
     public int compareTo(SetElem elem) {
       if(this == elem || this.area.equals(elem.area)) {
         return 0;
-      }
-      else if(this.profitability < elem.profitability) {
+      } else if(this.profitability < elem.profitability) {
         return -1;
       } else if(this.profitability > elem.profitability) {
         return 1;
@@ -66,15 +75,14 @@ public class TenMaxProfitability {
 
     @Override
     public boolean equals(Object obj) {
-      throw new UnsupportedOperationException();
-    }
+      if(!(obj instanceof SetElem))
+        return false;
 
-    public boolean equals(SetElem elem) {
-      if(elem.area.equals(this.area)) {
+      if(obj == this)
         return true;
-      }
 
-      return false;
+      SetElem elem = (SetElem) obj;
+      return elem.area.equals(this.area);
     }
 
     @Override
@@ -125,6 +133,8 @@ public class TenMaxProfitability {
   private long last_10th_ts;
   private boolean has_top_10_changed;
 
+  BGThread bgthread;
+
   public TenMaxProfitability() {
     area_elem_map = new SetElemMap(Constants.AREA_LIMIT, Constants.AREA_LIMIT);
     grid_present = new HashMap<String, TaxiInfo>(Constants.HM_INIT_SIZE, Constants.HM_LOAD_FACTOR);
@@ -137,6 +147,9 @@ public class TenMaxProfitability {
     last_10th_ptb = 0.0f;
     last_10th_ts = -1;
     has_top_10_changed = false;
+
+    bgthread = new BGThread();
+    bgthread.start();
   }
 
   public void enterTaxiSlidingWindow(String medallion_hack_license,
@@ -197,8 +210,15 @@ public class TenMaxProfitability {
     if(area_elem_map.containsKey(a)) {
       // Delete the old entry corresponding to the area
       SetElem elem = area_elem_map.get(a);
-      int old_index = elem.aindex;
-      sorted_ptb_list.get(old_index).remove(elem);
+      final int old_index = elem.aindex;
+
+      final SetElem se = new SetElem(elem);
+      try {
+        bgthread.put(() -> {
+          sorted_ptb_list.get(old_index).remove(se);
+        });
+      } catch (InterruptedException ex) {
+      }
 
       // Check if top 10 changed
       if(!has_top_10_changed && elem.num_empty_taxis > 0) {
@@ -244,7 +264,14 @@ public class TenMaxProfitability {
         }
 
         elem.aindex = new_index;
-        sorted_ptb_list.get(new_index).add(elem);
+        final SetElem selem = new SetElem(elem);
+        final int temp_index = elem.aindex;
+        try {
+          bgthread.put(() -> {
+            sorted_ptb_list.get(temp_index).add(selem);
+          });
+        } catch (InterruptedException ex) {
+        }
       }
     } else if(diffTaxiNumber > 0) {
       // This area is not present
@@ -268,8 +295,17 @@ public class TenMaxProfitability {
       if(new_index > (Constants.NUM_EMPTY_BUCKETS -1)) {
         new_index = (int) (Constants.NUM_EMPTY_BUCKETS -1);
       }
+
       elem.aindex = new_index;
-      sorted_ptb_list.get(new_index).add(elem);
+
+      final SetElem se = new SetElem(elem);
+      final int temp_index = elem.aindex;
+      try {
+        bgthread.put(() -> {
+          sorted_ptb_list.get(temp_index).add(se);
+        });
+      } catch (InterruptedException ex) {
+      }
     }
   }
 
@@ -279,8 +315,14 @@ public class TenMaxProfitability {
 
       // delete old data
       SetElem elem = area_elem_map.get(a);
-      int old_index = elem.aindex;
-      sorted_ptb_list.get(old_index).remove(elem);
+      final int old_index = elem.aindex;
+      final SetElem se = new SetElem(elem);
+      try {
+        bgthread.put(() -> {
+          sorted_ptb_list.get(old_index).remove(se);
+        });
+      } catch (InterruptedException ex) {
+      }
 
       // Check if top 10 changed
       if(!has_top_10_changed && elem.num_empty_taxis > 0) {
@@ -323,7 +365,15 @@ public class TenMaxProfitability {
         }
 
         elem.aindex = new_index;
-        sorted_ptb_list.get(new_index).add(elem);
+
+        final SetElem selem = new SetElem(elem);
+        final int temp_index = elem.aindex;
+        try {
+          bgthread.put(() -> {
+            sorted_ptb_list.get(temp_index).add(selem);
+          });
+        } catch (InterruptedException ex) {
+        }
       }
     }
   }
@@ -333,8 +383,15 @@ public class TenMaxProfitability {
     if(area_elem_map.containsKey(a)) {
       // delete old data
       SetElem elem = area_elem_map.get(a);
-      int old_index = elem.aindex;
-      sorted_ptb_list.get(old_index).remove(elem);
+
+      final int old_index = elem.aindex;
+      final SetElem se = new SetElem(elem);
+      try {
+        bgthread.put(() -> {
+          sorted_ptb_list.get(old_index).remove(se);
+        });
+      } catch (InterruptedException ex) {
+      }
 
       // Check if top 10 changed
       if(!has_top_10_changed && elem.num_empty_taxis > 0) {
@@ -370,8 +427,17 @@ public class TenMaxProfitability {
       if(new_index > (Constants.NUM_EMPTY_BUCKETS -1)) {
         new_index = (int) (Constants.NUM_EMPTY_BUCKETS -1);
       }
+
       elem.aindex = new_index;
-      sorted_ptb_list.get(new_index).add(elem);
+
+      final SetElem selem = new SetElem(elem);
+      final int temp_index = elem.aindex;
+      try {
+        bgthread.put(() -> {
+          sorted_ptb_list.get(temp_index).add(selem);
+        });
+      } catch (InterruptedException ex) {
+      }
     } else {
       // This area is not present
       // create new entry corresponding to this area
@@ -387,9 +453,17 @@ public class TenMaxProfitability {
       if(new_index > (Constants.NUM_EMPTY_BUCKETS -1)) {
         new_index = (int) (Constants.NUM_EMPTY_BUCKETS -1);
       }
-      sorted_ptb_list.get(new_index).contains(elem);
-      sorted_ptb_list.get(new_index).add(elem);
+
       elem.aindex = new_index;
+
+      final SetElem se = new SetElem(elem);
+      final int temp_index = elem.aindex;
+      try {
+        bgthread.put(() -> {
+          sorted_ptb_list.get(temp_index).add(se);
+        });
+      } catch (InterruptedException ex) {
+      }
     }
   }
 
@@ -445,6 +519,14 @@ public class TenMaxProfitability {
   }
 
   public boolean isSameMaxTenKey() {
+    if(has_top_10_changed) {
+      bgthread.sync();
+    }
+
     return !has_top_10_changed;
+  }
+
+  void stop() throws InterruptedException {
+    bgthread.put(bgthread::doStop);
   }
 }

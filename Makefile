@@ -10,7 +10,7 @@ JC = javac
 JAVA = java
 
 .SUFFIXES: .java .class
-_OBJ = Constants.class Area.class Geo.class Route.class Mc.class \
+_OBJ = Constants.class Area.class Geo.class Route.class Mc.class BGThread.class \
 ListBlockingQueue.class TenMaxProfitability.class TenMaxFrequency.class debs2015.class
 
 OBJ = $(patsubst %,$(SDIR)/%,$(_OBJ))

@@ -1064,6 +1064,8 @@ class Q2Process implements Runnable {
       out.time = 0;
       out.query = 1;
       output_queue.put(out);
+
+      maxpft.stop();
     } catch (Exception e) {
       System.out.println("Error in Q1Process!");
       System.out.println(e.getMessage());
